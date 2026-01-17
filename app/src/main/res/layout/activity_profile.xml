@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    tools:context=".ProfileActivity">
+
+    <!-- 1. ИСПРАВЛЕНИЕ ВЫСОТЫ ШАПКИ -->
+    <!-- Было 0.38, ставим 0.32 (32% от экрана), чтобы она стала меньше -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/headerGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.32" />
+
+    <View
+        android:id="@+id/headerBg"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/header_background"
+        app:layout_constraintBottom_toTopOf="@id/headerGuide"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/separatorLine"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="#B8B8B8"
+        android:alpha="0.5"
+        app:layout_constraintBottom_toBottomOf="@id/headerBg"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- КНОПКА НАСТРОЕК -->
+    <FrameLayout
+        android:id="@+id/btnSettings"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/bg_glass_circle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_settings"
+            app:tint="#5C5C5C" />
+    </FrameLayout>
+
+    <!-- 2. ИСПРАВЛЕНИЕ АВАТАРКИ (КРУГ) -->
+    <!-- Обернули ImageView в CardView. Радиус 45dp (половина от 90dp) делает идеальный круг -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/avatarContainer"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_marginBottom="12dp"
+        app:cardCornerRadius="45dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:layout_constraintBottom_toTopOf="@+id/tvUserName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/headerBg"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <ImageView
+            android:id="@+id/imgAvatar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_placeholder_avatar"
+            android:scaleType="centerCrop" />
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/tvUserName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Марат"
+        android:textSize="28sp"
+        android:textColor="#000000"
+        android:fontFamily="@font/ttcommons_regular"
+        android:includeFontPadding="false"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/avatarContainer"
+        app:layout_constraintBottom_toBottomOf="@id/headerBg"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Текст если пусто -->
+    <TextView
+        android:id="@+id/tvEmptyState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Понравившихся образов пока нет"
+        android:fontFamily="@font/ttcommons_regular"
+        android:textColor="#999999"
+        android:textSize="22sp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@id/headerBg"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/tvFavoritesTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Избранное"
+        android:fontFamily="@font/ttcommons_regular"
+        android:textColor="#999999"
+        android:textSize="22sp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="24dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/headerBg"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- СПИСОК -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFavorites"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="100dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/tvFavoritesTitle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+    <!-- ^^^ Изменил paddingHorizontal на 12dp, чтобы чуть сдвинуть края -->
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/bottomNavBar"
+        android:layout_width="174dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="32dp"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="6dp"
+        app:cardBackgroundColor="#F7F7F7"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_margin="1dp">
+
+            <FrameLayout
+                android:id="@+id/btnHome"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_main"
+                    app:tint="#505050" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btnProfile"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_tab_selection" />
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_profile"
+                    app:tint="#3D5AFE" />
+            </FrameLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

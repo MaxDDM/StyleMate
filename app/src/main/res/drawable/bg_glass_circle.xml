@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <!-- Белый цвет с прозрачностью (CC = 80%, FF = 100%) -->
+    <!-- Попробуй коды прозрачности: 80 (50%), B3 (70%), E6 (90%) -->
+    <solid android:color="#B3FFFFFF"/>
+</shape>
