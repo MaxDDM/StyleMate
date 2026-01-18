@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.content.Intent;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +31,15 @@ public class ProfileActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        View btnSettings = findViewById(R.id.btnSettings);
+
+        if (btnSettings != null) {
+            btnSettings.setOnClickListener(v -> {
+                Intent intent = new Intent(ProfileActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            });
+        }
 
         // 1. НАХОДИМ ЭЛЕМЕНТЫ
         TextView tvEmptyState = findViewById(R.id.tvEmptyState);
@@ -109,5 +119,6 @@ public class ProfileActivity extends AppCompatActivity {
             FavoriteOutfitsAdapter adapter = new FavoriteOutfitsAdapter(myData);
             rvFavorites.setAdapter(adapter);
         }
+
     }
 }
