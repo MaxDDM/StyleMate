@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Градиент как на макете (светло-синий к белому) -->
+    <!-- Цвета примерные, подбери под свой style guide -->
+    <gradient
+        android:startColor="#FFFFFF"
+        android:endColor="#96AAD0"
+        android:angle="270" />
+</shape>

@@ -63,6 +63,14 @@ public class SettingsActivity extends AppCompatActivity {
         if (imgAvatar != null) {
             imgAvatar.setOnClickListener(v -> showChangePhotoDialog());
         }
+
+        Button btnChangePassword = findViewById(R.id.btnChangePassword); // Убедись, что ID совпадает с XML
+        if (btnChangePassword != null) {
+            btnChangePassword.setOnClickListener(v -> {
+                ChangePasswordBottomSheet bottomSheet = new ChangePasswordBottomSheet();
+                bottomSheet.show(getSupportFragmentManager(), "ChangePasswordTag");
+            });
+        }
     }
 
     // === ЛОГИКА ДИАЛОГА (Всплывающего окна) ===
