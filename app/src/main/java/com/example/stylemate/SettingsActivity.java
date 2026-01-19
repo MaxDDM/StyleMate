@@ -1,6 +1,7 @@
 package com.example.stylemate;
 
 import android.app.AlertDialog;
+import android.content.Intent; // Для перехода после выхода
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -9,7 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast; // Добавил для проверки кнопок
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -25,13 +26,9 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        // 1. Находим View
         initViews();
-
-        // 2. Логика кнопок (вынес в отдельный метод для чистоты)
         setupListeners();
 
-        // 3. Данные пользователя
         UserProfile currentUser = new UserProfile(
                 "Марат",
                 "+7 (999) 123 45 67",
@@ -39,8 +36,6 @@ public class SettingsActivity extends AppCompatActivity {
                 "12.01.2001",
                 R.drawable.avatar
         );
-
-        // 4. Заполняем
         updateUI(currentUser);
     }
 
@@ -53,97 +48,107 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        // Кнопка НАЗАД
+        // Назад
         ImageView btnBack = findViewById(R.id.btnBack);
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
+        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
-        // Клик по АВАТАРКЕ -> Открываем диалог
-        if (imgAvatar != null) {
-            imgAvatar.setOnClickListener(v -> showChangePhotoDialog());
-        }
+        // Смена фото
+        if (imgAvatar != null) imgAvatar.setOnClickListener(v -> showChangePhotoDialog());
 
-        Button btnChangePassword = findViewById(R.id.btnChangePassword); // Убедись, что ID совпадает с XML
+        // Смена пароля
+        Button btnChangePassword = findViewById(R.id.btnChangePassword);
         if (btnChangePassword != null) {
             btnChangePassword.setOnClickListener(v -> {
                 ChangePasswordBottomSheet bottomSheet = new ChangePasswordBottomSheet();
                 bottomSheet.show(getSupportFragmentManager(), "ChangePasswordTag");
             });
         }
+
+        // === ВЫХОД ИЗ АККАУНТА ===
+        Button btnLogout = findViewById(R.id.btnLogout);
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> showLogoutDialog());
+        }
     }
 
-    // === ЛОГИКА ДИАЛОГА (Всплывающего окна) ===
+    // Диалог смены фото (твой старый код)
     private void showChangePhotoDialog() {
-        // 1. Подготавливаем диалог
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        // Берем наш XML файл диалога
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_change_photo, null);
         builder.setView(dialogView);
-
-        // 2. Создаем диалог
         AlertDialog dialog = builder.create();
 
-        // ВАЖНО: Делаем фон прозрачным, чтобы углы были скругленными
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            android.view.WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
-
-            // Оставляем гравитацию по центру
-            params.gravity = android.view.Gravity.CENTER;
-
-            params.y = -400;
-
-            // Применяем настройки обратно
-            dialog.getWindow().setAttributes(params);
+            dialog.getWindow().setGravity(android.view.Gravity.CENTER);
+            // dialog.getWindow().getAttributes().y = -400; // Тут можно убрать смещение, если хочешь по центру
         }
 
-        // 3. Находим кнопки ВНУТРИ диалога (используем dialogView.findViewById)
         Button btnGallery = dialogView.findViewById(R.id.btnGallery);
         Button btnCamera = dialogView.findViewById(R.id.btnCamera);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
-        // 4. Вешаем действия на кнопки диалога
         btnGallery.setOnClickListener(v -> {
             Toast.makeText(this, "Открываем галерею...", Toast.LENGTH_SHORT).show();
-
-            dialog.dismiss(); // Закрыть окно
+            dialog.dismiss();
         });
-
         btnCamera.setOnClickListener(v -> {
             Toast.makeText(this, "Открываем камеру...", Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
-
-        btnCancel.setOnClickListener(v -> {
-            dialog.dismiss(); // Просто закрыть окно
-        });
-
-        // 5. Показываем диалог
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
 
+    // === НОВЫЙ ДИАЛОГ ВЫХОДА ===
+    private void showLogoutDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_logout, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+
+        // Прозрачный фон для скругления
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelLogout);
+        Button btnConfirm = dialogView.findViewById(R.id.btnConfirmLogout);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            dialog.dismiss();
+            performLogout();
+        });
+
+        dialog.show();
+    }
+
+    private void performLogout() {
+        // 1. Тут очищаем SharedPreferences / Токены
+        // SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        // prefs.edit().clear().apply();
+
+        Toast.makeText(this, "Выход из аккаунта...", Toast.LENGTH_SHORT).show();
+
+        // 2. Переходим на экран логина
+        // Intent intent = new Intent(this, LoginActivity.class);
+        // intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Чистим стек, чтобы нельзя было вернуться назад
+        // startActivity(intent);
+
+        // Пока просто закроем активити для примера
+        finish();
+    }
+
     private void updateUI(UserProfile user) {
-        if (user == null) {
-            etName.setText("");
-            etPhone.setText("");
-            etEmail.setText("");
-            etDate.setText("");
-            imgAvatar.setImageResource(R.drawable.ic_placeholder_avatar); // Используй consistent placeholder
-            return;
-        }
-
-        etName.setText(user.name != null ? user.name : "");
-        etPhone.setText(user.phone != null ? user.phone : "");
-        etEmail.setText(user.email != null ? user.email : "");
-        etDate.setText(user.birthDate != null ? user.birthDate : "");
-
-        if (user.avatarResId != 0) {
-            imgAvatar.setImageResource(user.avatarResId);
-        } else {
-            imgAvatar.setImageResource(R.drawable.ic_placeholder_avatar);
-        }
+        if (user == null) return;
+        etName.setText(user.name);
+        etPhone.setText(user.phone);
+        etEmail.setText(user.email);
+        etDate.setText(user.birthDate);
+        if (imgAvatar != null) imgAvatar.setImageResource(user.avatarResId != 0 ? user.avatarResId : R.drawable.ic_placeholder_avatar);
     }
 }
