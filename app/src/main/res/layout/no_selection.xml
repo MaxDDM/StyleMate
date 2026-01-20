@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/ic_pic4"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="344dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="330dp"
+        android:fontFamily="@font/ttcommons_regular"
+        android:text="У вас больше нет подборок.\nПройдите тест повторно, чтобы получить рекомендации."
+        android:textSize="24sp"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:layout_gravity="center_horizontal"/>
+
+    <ImageButton
+        android:layout_width="344dp"
+        android:layout_height="90dp"
+        android:layout_marginTop="160dp"
+        android:background="@drawable/ic_pic7"
+        android:layout_gravity="center_horizontal"
+        />
+
+    <ImageButton
+        android:layout_width="344dp"
+        android:layout_height="90dp"
+        android:layout_marginTop="-30dp"
+        android:background="@drawable/ic_pic30"
+        android:layout_gravity="center_horizontal"
+        />
+</LinearLayout>
