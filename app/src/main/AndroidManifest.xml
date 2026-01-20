@@ -19,17 +19,17 @@
         <!-- Обрати внимание: в конце первой строки нет слэша "/" -->
         <activity
             android:name=".ProfileActivity"
+            android:exported="false">
+        </activity> <!-- Закрывающий тег здесь -->
+        <!-- MainActivity теперь обычная, ставим exported="false" -->
+        <activity
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- Закрывающий тег здесь -->
-        <!-- MainActivity теперь обычная, ставим exported="false" -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="false">
         </activity>
     </application>
 
