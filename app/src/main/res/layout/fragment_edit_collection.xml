@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_top_sheet"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="32dp"
+    android:paddingBottom="24dp">
+
+    <!-- В padding сверху добавил побольше места, чтобы не прилипало к статус бару -->
+
+    <!-- Верхний текст -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/ttcommons_regular"
+        android:gravity="center"
+        android:text="Измените название подборки"
+        android:textColor="#9E9E9E"
+        android:textSize="14sp" />
+
+    <!-- Текущее название -->
+    <TextView
+        android:id="@+id/tvCurrentTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="24dp"
+        android:fontFamily="@font/ttcommons_regular"
+        android:text="Название"
+        android:textColor="#000000"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <View
+        android:layout_width="200dp"
+        android:layout_height="1dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="4dp"
+        android:background="#000000" />
+
+    <!-- Поле ввода -->
+    <EditText
+        android:id="@+id/etNewTitle"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/bg_input_field"
+        android:fontFamily="@font/ttcommons_regular"
+        android:hint="Введите новое название подборки"
+        android:paddingHorizontal="16dp"
+        android:textColor="#000000"
+        android:textSize="16sp" />
+
+    <!-- Кнопка СОХРАНИТЬ -->
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/bg_button_oval_light"
+        android:fontFamily="@font/ttcommons_regular"
+        android:text="Сохранить"
+        android:textAllCaps="false"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+
+    <!-- Кнопка ОТМЕНИТЬ -->
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnCancel"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_button_oval_dark"
+        android:fontFamily="@font/ttcommons_regular"
+        android:text="Отменить"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp" />
+
+</LinearLayout>

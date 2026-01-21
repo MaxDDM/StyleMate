@@ -13,24 +13,25 @@
         android:theme="@style/Theme.StyleMate"
         tools:targetApi="31">
         <activity
-            android:name=".SettingsActivity"
+            android:name=".CollectionDetailActivity"
             android:exported="false" />
-        <!-- ВАЖНО: У стартовой Activity должно быть exported="true" -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" /> <!-- ВАЖНО: У стартовой Activity должно быть exported="true" -->
         <!-- Обрати внимание: в конце первой строки нет слэша "/" -->
         <activity
             android:name=".ProfileActivity"
-            android:exported="false">
-        </activity> <!-- Закрывающий тег здесь -->
-        <!-- MainActivity теперь обычная, ставим exported="false" -->
-        <activity
-            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity> <!-- Закрывающий тег здесь -->
+        <!-- MainActivity теперь обычная, ставим exported="false" -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"></activity>
     </application>
 
 </manifest>

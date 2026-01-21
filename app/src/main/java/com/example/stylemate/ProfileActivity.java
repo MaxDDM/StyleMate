@@ -116,7 +116,14 @@ public class ProfileActivity extends AppCompatActivity {
 
             // 5. ПОДКЛЮЧАЕМ АДАПТЕР
             // Передаем туда наш список myData
-            FavoriteOutfitsAdapter adapter = new FavoriteOutfitsAdapter(myData);
+            FavoriteOutfitsAdapter adapter = new FavoriteOutfitsAdapter(myData, item -> {
+                // Код, который сработает при нажатии:
+                Intent intent = new Intent(ProfileActivity.this, CollectionDetailActivity.class);
+                // Передаем название подборки ("На спорте" и т.д.)
+                intent.putExtra("COLLECTION_TITLE", item.title); // Убедись, что в FavouriteOutfits есть геттер getTitle() или используй item.title
+                startActivity(intent);
+            });
+
             rvFavorites.setAdapter(adapter);
         }
 

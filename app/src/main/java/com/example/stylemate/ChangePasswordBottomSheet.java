@@ -153,7 +153,7 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
             return;
         }
 
-        showStylishToast("Пароль изменен");
+        CustomToast.show(getContext(), "Пароль изменен");
         hideKeyboardDirectly();
         new Handler().postDelayed(this::dismiss, 150);
     }
@@ -162,7 +162,7 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
     private void showError(EditText field, String message) {
         // Иконка в поле (черная или красная)
         field.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_error_circle, 0);
-        showStylishToast(message);
+        CustomToast.show(getContext(), message);
 
         // Вибрация (Haptic feedback) для тактильности
         field.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
@@ -185,29 +185,4 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
-    // === СТИЛЬНЫЙ БЕЛЫЙ ТОСТ ===
-    private void showStylishToast(String message) {
-        if (getContext() == null) return;
-
-        TextView textView = new TextView(getContext());
-        textView.setText(message);
-        textView.setTextColor(Color.BLACK); // Черный текст (солидно)
-        textView.setTextSize(15);
-        textView.setTypeface(null); // Жирный шрифт
-        textView.setPadding(40, 24, 40, 24);
-
-        // Устанавливаем наш белый фон
-        textView.setBackgroundResource(R.drawable.bg_toast_white);
-
-        // Добавляем тень (Elevation) - работает на API 21+
-        textView.setElevation(10f);
-
-        Toast toast = new Toast(getContext());
-        toast.setDuration(Toast.LENGTH_SHORT);
-        toast.setView(textView);
-
-        // Позиция сверху
-        toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 160);
-        toast.show();
-    }
 }

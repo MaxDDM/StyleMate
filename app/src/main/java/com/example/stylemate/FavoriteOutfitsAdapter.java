@@ -16,9 +16,18 @@ public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfits
     // Сюда нам прилетит список данных
     private List<FavouriteOutfits> outfitList;
 
-    // Конструктор: сюда мы передадим готовый список из Activity/Fragment
-    public FavoriteOutfitsAdapter(List<FavouriteOutfits> outfitList) {
+    // 1. НОВОЕ: Поле для слушателя кликов
+    private OnItemClickListener listener;
+
+    // 2. НОВОЕ: Интерфейс для передачи клика
+    public interface OnItemClickListener {
+        void onItemClick(FavouriteOutfits item);
+    }
+
+    // 3. ОБНОВИЛИ КОНСТРУКТОР: теперь принимаем и слушателя
+    public FavoriteOutfitsAdapter(List<FavouriteOutfits> outfitList, OnItemClickListener listener) {
         this.outfitList = outfitList;
+        this.listener = listener;
     }
 
     // 1. Этот метод создает "формочку" (View) из нашего XML файла
@@ -46,6 +55,10 @@ public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfits
         holder.img2.setImageResource(outfit.photo2);
         holder.img3.setImageResource(outfit.photo3);
         holder.img4.setImageResource(outfit.photo4);
+
+        holder.itemView.setOnClickListener(v -> {
+            listener.onItemClick(outfit);
+        });
     }
 
     // 3. Этот метод говорит списку, сколько у нас всего элементов

@@ -1,7 +1,6 @@
 package com.example.stylemate;
 
 import android.app.AlertDialog;
-import android.content.Intent; // Для перехода после выхода
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -132,7 +131,7 @@ public class SettingsActivity extends AppCompatActivity {
         // SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         // prefs.edit().clear().apply();
 
-        Toast.makeText(this, "Выход из аккаунта...", Toast.LENGTH_SHORT).show();
+        CustomToast.show(this, "Выход из аккаунта");
 
         // 2. Переходим на экран логина
         // Intent intent = new Intent(this, LoginActivity.class);
@@ -149,6 +148,6 @@ public class SettingsActivity extends AppCompatActivity {
         etPhone.setText(user.phone);
         etEmail.setText(user.email);
         etDate.setText(user.birthDate);
-        if (imgAvatar != null) imgAvatar.setImageResource(user.avatarResId != 0 ? user.avatarResId : R.drawable.ic_placeholder_avatar);
+        if (imgAvatar != null) imgAvatar.setImageResource(user.avatarResId != 0 ? user.avatarResId : R.drawable.ic_edit_avatar);
     }
 }
