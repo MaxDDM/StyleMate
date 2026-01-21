@@ -49,7 +49,22 @@ public class CollectionDetailActivity extends AppCompatActivity {
         });
 
         btnDelete.setOnClickListener(v -> {
-            CustomToast.show(this, "Удаление подборки");
+            // Создаем диалог
+            DeleteCollectionDialog dialog = new DeleteCollectionDialog();
+
+            // Задаем действие при подтверждении
+            dialog.setListener(() -> {
+                // 1. Показываем сообщение
+                CustomToast.show(this, "Подборка удалена");
+
+                // 2. Закрываем текущий экран (возвращаемся в профиль)
+                finish();
+
+                // P.S. В будущем тут будет запрос к базе данных на удаление
+            });
+
+            // Показываем диалог
+            dialog.show(getSupportFragmentManager(), "DeleteDialog");
         });
     }
 }
