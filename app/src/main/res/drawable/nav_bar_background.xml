@@ -1,0 +1,5 @@
+<!-- res/drawable/nav_bar_background.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#F0F0F0"/> <!-- Светло-серый цвет -->
+    <corners android:radius="100dp"/> <!-- Делает форму "пилюли" -->
+</shape>

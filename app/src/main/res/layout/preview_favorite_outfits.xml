@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+    <!-- padding="4dp" здесь создает зазор МЕЖДУ соседними карточками в сетке -->
+
+    <!--
+        ОСНОВНОЙ КВАДРАТ С ФОТКАМИ
+        layout_width="match_parent" -> Занимает всю ширину колонки.
+        layout_height="0dp" + ratio="1:1" -> Высота автоматически становится равна ширине.
+        Это гарантирует идеальный квадрат на любом телефоне.
+    -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        app:layout_constraintDimensionRatio="H,1:1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp">
+
+        <!-- Внутри ставим фон Белый (#FFFFFF).
+             Отступы у картинок (margin) покажут этот белый фон, создавая линии. -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF">
+
+            <!--
+                КАРТИНКИ
+                Мы просто делим квадрат 50/50.
+                margin="2dp" у каждой картинки создаст линии толщиной 4dp.
+            -->
+
+            <!-- 1. Верх-Лево -->
+            <ImageView
+                android:id="@+id/img1"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_margin="3dp"
+                android:scaleType="centerCrop"
+                android:src="#E0E0E0"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/guideline_ver"
+                app:layout_constraintBottom_toTopOf="@+id/guideline_hor" />
+
+            <!-- 2. Верх-Право -->
+            <ImageView
+                android:id="@+id/img2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_margin="3dp"
+                android:scaleType="centerCrop"
+                android:src="#E0E0E0"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/guideline_ver"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/guideline_hor" />
+
+            <!-- 3. Низ-Лево -->
+            <ImageView
+                android:id="@+id/img3"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_margin="3dp"
+                android:scaleType="centerCrop"
+                android:src="#E0E0E0"
+                app:layout_constraintTop_toBottomOf="@+id/guideline_hor"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/guideline_ver"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <!-- 4. Низ-Право -->
+            <ImageView
+                android:id="@+id/img4"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_margin="3dp"
+                android:scaleType="centerCrop"
+                android:src="#E0E0E0"
+                app:layout_constraintTop_toBottomOf="@+id/guideline_hor"
+                app:layout_constraintStart_toEndOf="@+id/guideline_ver"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <!-- Направляющие линии ровно по центру (50%) -->
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline_ver"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.5" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline_hor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:layout_constraintGuide_percent="0.5" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- ТЕКСТ ПОД КВАДРАТОМ -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="4dp"
+        tools:text="На спорте 💪"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:fontFamily="@font/ttcommons_regular"
+        app:layout_constraintTop_toBottomOf="@id/cardContainer"
+        app:layout_constraintStart_toStartOf="@id/cardContainer"
+        app:layout_constraintEnd_toEndOf="@id/cardContainer" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

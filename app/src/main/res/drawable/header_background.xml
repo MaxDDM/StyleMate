@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- СЛОЙ 1: Белая подложка (чтобы не было черноты при прозрачности) -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF"/>
+        </shape>
+    </item>
+
+    <!-- СЛОЙ 2: Градиент-пятно -->
+    <item>
+        <shape android:shape="rectangle">
+            <!--
+               gradientRadius="280dp" -> УМЕНЬШИЛ. Теперь пятно помещается в экран.
+               centerY="0.35" -> Центр пятна чуть выше середины (под аватаркой).
+               endColor="#FFFFFF" -> Уходим в белый, чтобы слиться с фоном.
+            -->
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:gradientRadius="300dp"
+                android:startColor="#96AAD0"
+                android:endColor="#FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

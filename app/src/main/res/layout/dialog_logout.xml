@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="340dp"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="0dp">
+    <!-- cardCornerRadius тоже чуть увеличил до 28dp, чтобы соответствовать размеру -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp"> <!-- Увеличил внутренний отступ -->
+
+        <!-- Заголовок -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ttcommons_regular"
+            android:gravity="center"
+            android:text="Выход"
+            android:textColor="#000000"
+            android:textSize="24sp"
+            android:textStyle="bold" /> <!-- Увеличил шрифт -->
+
+        <!-- Текст вопроса -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp"
+            android:fontFamily="@font/ttcommons_regular"
+            android:gravity="center"
+            android:text="Вы точно хотите выйти из аккаунта?"
+            android:textColor="#8A8A8A"
+            android:textSize="18sp" /> <!-- Увеличил шрифт и отступы -->
+
+        <!-- Кнопки -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <!-- Кнопка Отмена -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnCancelLogout"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_oval_light"
+                android:fontFamily="@font/ttcommons_regular"
+                android:text="Отмена"
+                android:textAllCaps="false"
+                android:textColor="#000000"
+                android:textSize="18sp" /> <!-- Увеличил высоту и шрифт -->
+
+            <!-- Кнопка Выйти -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnConfirmLogout"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_oval_dark"
+                android:fontFamily="@font/ttcommons_regular"
+                android:text="Выйти"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp" /> <!-- Увеличил высоту и шрифт -->
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

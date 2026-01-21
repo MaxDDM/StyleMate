@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:scrollbars="none"
+    android:fillViewport="true"> <!-- ЭТО ВАЖНО: Растягивает контент на весь экран -->
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="24dp"> <!-- Отступ от самого низа экрана -->
+
+        <!-- КНОПКА НАЗАД -->
+        <!-- Убрал FrameLayout, он тут лишний. Добавил padding, чтобы увеличить область нажатия -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_glass_circle"
+            android:contentDescription="Назад"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_back_arrow"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="#000000" />
+
+        <!-- АВАТАР -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardAvatar"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="50dp"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnBack">
+
+            <ImageView
+                android:id="@+id/imgAvatarEdit"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_edit_avatar"
+                tools:srcCompat="@tools:sample/avatars" /> <!-- Заглушка для превью в студии -->
+        </androidx.cardview.widget.CardView>
+
+        <!-- === БЛОК ВВОДА ДАННЫХ === -->
+
+        <!-- ИМЯ -->
+        <TextView
+            android:id="@+id/lblName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="32dp"
+            android:fontFamily="@font/ttcommons_regular"
+            android:text="Имя"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cardAvatar" />
+
+        <EditText
+            android:id="@+id/etName"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_input_field"
+            android:fontFamily="@font/ttcommons_regular"
+            android:hint="Введите имя"
+            android:inputType="textPersonName"
+            android:imeOptions="actionNext"
+            android:nextFocusDown="@id/etPhone"
+            android:paddingHorizontal="16dp"
+            android:textColor="#8A8A8A"
+            android:textColorHint="#8A8A8A"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/lblName" />
+
+        <!-- НОМЕР -->
+        <TextView
+            android:id="@+id/lblPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/ttcommons_regular"
+            android:text="Номер"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/etName" />
+
+        <EditText
+            android:id="@+id/etPhone"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_input_field"
+            android:fontFamily="@font/ttcommons_regular"
+            android:hint="Введите номер"
+            android:inputType="phone"
+            android:paddingHorizontal="16dp"
+            android:textColor="#8A8A8A"
+            android:textColorHint="#8A8A8A"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="@+id/etName"
+            app:layout_constraintStart_toStartOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/lblPhone" />
+
+        <!-- ПОЧТА -->
+        <TextView
+            android:id="@+id/lblEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/ttcommons_regular"
+            android:text="Почта"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/etPhone" />
+
+        <EditText
+            android:id="@+id/etEmail"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_input_field"
+            android:fontFamily="@font/ttcommons_regular"
+            android:hint="Введите почту"
+            android:inputType="textEmailAddress"
+            android:paddingHorizontal="16dp"
+            android:textColor="#8A8A8A"
+            android:textColorHint="#8A8A8A"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="@+id/etName"
+            app:layout_constraintStart_toStartOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/lblEmail" />
+
+        <!-- ДАТА РОЖДЕНИЯ -->
+        <TextView
+            android:id="@+id/lblDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/ttcommons_regular"
+            android:text="Дата рождения"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/etEmail" />
+
+        <EditText
+            android:id="@+id/etDate"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_input_field"
+            android:fontFamily="@font/ttcommons_regular"
+            android:hint="Введите дату рождения"
+            android:inputType="date"
+            android:paddingHorizontal="16dp"
+            android:textColor="#8A8A8A"
+            android:textColorHint="#8A8A8A"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="@+id/etName"
+            app:layout_constraintStart_toStartOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/lblDate" />
+
+        <!-- КНОПКИ -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnChangePassword"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/bg_button_oval_light"
+            android:fontFamily="@font/ttcommons_regular"
+            android:text="Сменить пароль"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="@+id/etName"
+            app:layout_constraintStart_toStartOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/etDate" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnLogout"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_button_oval_dark"
+            android:fontFamily="@font/ttcommons_regular"
+            android:text="Выйти из аккаунта"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="@+id/etName"
+            app:layout_constraintStart_toStartOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/btnChangePassword" />
+
+        <!-- === ФУТЕР (Прибит к низу) === -->
+        <!-- bias=1.0 заставляет этот блок липнуть к низу родителя, если есть свободное место -->
+        <!-- constraintTop_toBottomOf="btnLogout" гарантирует, что они не налезут на кнопку на маленьких экранах -->
+
+        <TextView
+            android:id="@+id/tvFooterLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:fontFamily="@font/ttcommons_regular"
+            android:lineSpacingExtra="4dp"
+            android:text="Наши контакты:\nhelpme@edu.hse.ru\n+7 800 55 35 36"
+            android:textColor="#BDBDBD"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/btnLogout"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <TextView
+            android:id="@+id/tvFooterRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:fontFamily="@font/ttcommons_regular"
+            android:gravity="end"
+            android:lineSpacingExtra="4dp"
+            android:text="Наши соцсети:\ntg: @helpme\nvk: @helpme.ru"
+            android:textColor="#BDBDBD"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/etName"
+            app:layout_constraintTop_toBottomOf="@+id/btnLogout"
+            app:layout_constraintVertical_bias="1.0" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
