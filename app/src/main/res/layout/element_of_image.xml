@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="90dp"
+    android:layout_height="100dp"
+    android:background="@drawable/ic_pic48"
+    android:layout_marginStart="5dp"
+    android:layout_marginTop="0dp"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="75dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/ttcommons_regular"
+        android:text="Футболка"
+        android:textAlignment="viewStart"
+        android:textSize="18sp"
+        android:textColor="@color/black">
+    </TextView>
+
+    <TextView
+        android:layout_width="75dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginTop="33dp"
+        android:fontFamily="@font/ttcommons_regular"
+        android:text="2399 Р"
+        android:textAlignment="viewStart"
+        android:textSize="16sp"
+        android:textColor="#5C5C5C">
+    </TextView>
+
+    <TextView
+        android:layout_width="75dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginTop="53dp"
+        android:fontFamily="@font/ttcommons_regular"
+        android:text="Sela"
+        android:textAlignment="viewStart"
+        android:textSize="16sp"
+        android:textColor="#969696">
+    </TextView>
+
+    <TextView
+        android:layout_width="55dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginTop="73dp"
+        android:fontFamily="@font/ttcommons_regular"
+        android:text="хлопок"
+        android:textAlignment="viewStart"
+        android:textSize="16sp"
+        android:textColor="#969696">
+    </TextView>
+
+    <ImageButton
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="63dp"
+        android:layout_marginTop="72dp"
+        android:background="@drawable/ic_pic47">
+    </ImageButton>
+</FrameLayout>
