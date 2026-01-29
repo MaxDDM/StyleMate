@@ -3,14 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    tools:context=".ProfileActivity">
+    tools:context=".ProfileFragment">
 
-    <!-- 1. ИСПРАВЛЕНИЕ ВЫСОТЫ ШАПКИ -->
-    <!-- Было 0.38, ставим 0.32 (32% от экрана), чтобы она стала меньше -->
+    <!-- 1. ШАПКА -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/headerGuide"
         android:layout_width="wrap_content"
@@ -57,8 +55,7 @@
             app:tint="#5C5C5C" />
     </FrameLayout>
 
-    <!-- 2. ИСПРАВЛЕНИЕ АВАТАРКИ (КРУГ) -->
-    <!-- Обернули ImageView в CardView. Радиус 45dp (половина от 90dp) делает идеальный круг -->
+    <!-- 2. АВАТАРКА -->
     <androidx.cardview.widget.CardView
         android:id="@+id/avatarContainer"
         android:layout_width="110dp"
@@ -96,7 +93,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Текст если пусто -->
+    <!-- ТЕКСТЫ И СПИСОК -->
     <TextView
         android:id="@+id/tvEmptyState"
         android:layout_width="wrap_content"
@@ -124,7 +121,6 @@
         app:layout_constraintTop_toBottomOf="@id/headerBg"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- СПИСОК -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFavorites"
         android:layout_width="0dp"
@@ -138,68 +134,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-    <!-- ^^^ Изменил paddingHorizontal на 12dp, чтобы чуть сдвинуть края -->
 
-    <!-- НИЖНЯЯ ПАНЕЛЬ -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/bottomNavBar"
-        android:layout_width="174dp"
-        android:layout_height="64dp"
-        android:layout_marginBottom="32dp"
-        app:cardCornerRadius="28dp"
-        app:cardElevation="6dp"
-        app:cardBackgroundColor="#F7F7F7"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:weightSum="2"
-            android:layout_margin="1dp">
-
-            <FrameLayout
-                android:id="@+id/btnHome"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless">
-
-                <ImageView
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_main"
-                    app:tint="#505050" />
-            </FrameLayout>
-
-            <FrameLayout
-                android:id="@+id/btnProfile"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/bg_tab_selection" />
-
-                <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_profile"
-                    app:tint="#3D5AFE" />
-            </FrameLayout>
-
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    <!-- НИЖНЕЙ ПАНЕЛИ ТУТ БОЛЬШЕ НЕТ -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
