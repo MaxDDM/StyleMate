@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Цвет, когда чип выбран (Синий как на макете) -->
+    <item android:color="#448AFF" android:state_checked="true" />
+    <!-- Цвет по умолчанию (Серый как на макете) -->
+    <item android:color="#909090" />
+</selector>

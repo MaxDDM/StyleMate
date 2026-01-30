@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.button.MaterialButton
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+    android:id="@+id/filterButton"
+    android:layout_width="wrap_content"
+    android:layout_height="36dp"
+
+    android:text="Текст"
+    android:textSize="14sp"
+    android:textColor="#FFFFFF"
+    android:fontFamily="@font/ttcommons_regular"
+    android:textAllCaps="false"
+
+    android:insetTop="0dp"
+    android:insetBottom="0dp"
+
+    android:checkable="true"
+    app:cornerRadius="18dp"
+
+    android:stateListAnimator="@null"
+
+    app:backgroundTint="@color/selector_filter_btn"/>
+    <!-- ^^^ ВОТ ЗДЕСЬ МАГИЯ ЦВЕТА -->

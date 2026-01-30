@@ -16,6 +16,23 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_home, container, false);
+        // 1. Создаем View из макета
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+
+        // 2. Находим кнопку списка по ID (тот FrameLayout из твоего XML)
+        View btnList = view.findViewById(R.id.btnList);
+
+        // 3. Ставим слушатель нажатия
+        btnList.setOnClickListener(v -> {
+            // Создаем нашу шторку
+            FiltersBottomSheetFragment filtersFragment = new FiltersBottomSheetFragment();
+
+            // Показываем её.
+            // getParentFragmentManager() - менеджер фрагментов
+            // "FiltersTag" - просто тег (имя) для логов или поиска
+            filtersFragment.show(getParentFragmentManager(), "FiltersTag");
+        });
+
+        return view;
     }
 }
