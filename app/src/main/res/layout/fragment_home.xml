@@ -8,8 +8,7 @@
     android:background="#FFFFFF"
     android:paddingTop="16dp">
 
-    <!-- 1. ЛЕВАЯ КНОПКА (СПИСОК) -->
-    <!-- Увеличил размер до 52dp -->
+    <!-- 1. ЛЕВАЯ КНОПКА (МЕНЮ) -->
     <FrameLayout
         android:id="@+id/btnList"
         android:layout_width="50dp"
@@ -19,7 +18,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Иконку внутри тоже увеличил -->
         <ImageView
             android:layout_width="30dp"
             android:layout_height="25dp"
@@ -29,61 +27,7 @@
     </FrameLayout>
 
 
-    <!-- 2. ЦЕНТРАЛЬНАЯ ГРУППА -->
-
-    <!-- Текст заголовка (Увеличил шрифт до 24sp) -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Основная"
-        android:textColor="#595959"
-        android:textSize="20sp"
-        android:fontFamily="@font/ttcommons_regular"
-        android:layout_marginStart="10dp"
-
-        android:layout_marginEnd="0dp"
-        app:layout_constraintBottom_toBottomOf="@id/btnList"
-        app:layout_constraintTop_toTopOf="@id/btnList"
-        app:layout_constraintEnd_toStartOf="@id/btnArrowContainer"
-        app:layout_constraintStart_toEndOf="@id/btnList"
-        app:layout_constraintHorizontal_chainStyle="packed" />
-    <!-- chainStyle="packed" прижимает текст и стрелку друг к другу по центру -->
-
-    <!-- Линия (Привязана СТРОГО к тексту tvTitle) -->
-    <View
-        android:id="@+id/underline"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:background="#595959"
-        android:layout_marginTop="2dp"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle"
-        app:layout_constraintStart_toStartOf="@id/tvTitle"
-        app:layout_constraintEnd_toEndOf="@id/tvTitle" />
-
-    <!-- Стрелочка в кружке (bg_glass_circle) -->
-    <FrameLayout
-        android:id="@+id/btnArrowContainer"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:background="@drawable/bg_glass_circle"
-        android:layout_marginStart="8dp"
-        app:layout_constraintStart_toEndOf="@id/tvTitle"
-        app:layout_constraintEnd_toStartOf="@id/btnCreate"
-        app:layout_constraintTop_toTopOf="@id/tvTitle"
-        app:layout_constraintBottom_toBottomOf="@id/tvTitle">
-
-        <ImageView
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_arrow_down"
-            app:tint="#333333"/>
-    </FrameLayout>
-
-
-    <!-- 3. ПРАВАЯ КНОПКА (СОЗДАТЬ) -->
-    <!-- Увеличил высоту до 52dp, заменил иконку на плюсик -->
+    <!-- 2. ПРАВАЯ КНОПКА (СОЗДАТЬ) -->
     <LinearLayout
         android:id="@+id/btnCreate"
         android:layout_width="wrap_content"
@@ -91,40 +35,82 @@
         android:layout_marginEnd="20dp"
         android:background="@drawable/bg_pill_dark"
         android:gravity="center"
-        android:paddingHorizontal="15dp"
         android:orientation="horizontal"
+        android:paddingHorizontal="15dp"
+        app:layout_constraintBottom_toBottomOf="@+id/btnList"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="@+id/btnList">
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Иконка плюсика (используй ic_add или стандартный android:drawable/ic_input_add) -->
         <ImageView
             android:layout_width="14dp"
             android:layout_height="14dp"
+            android:layout_marginEnd="8dp"
             android:src="@drawable/ic_add"
-            app:tint="#FFFFFF"
-            android:layout_marginEnd="8dp"/>
+            app:tint="#FFFFFF" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/ttcommons_regular"
             android:text="Создать подборку"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:fontFamily="@font/ttcommons_regular"/>
+            android:textSize="16sp" />
     </LinearLayout>
 
 
-    <!-- ЛЕНТА (Оставил место под неё) -->
-    <TextView
+    <!-- ШТОРКА (Overlay) -->
+    <View
+        android:id="@+id/vOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#00000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <!-- 3. СПИСОК (ТЕПЕРЬ ОН ГЛАВНЫЙ) -->
+    <!-- Он стоит там, где раньше был заголовок -->
+    <!-- constrainedWidth ограничивает ширину до кнопки Создать -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvCollections"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="0dp"
+        android:background="@android:color/transparent"
+
+        android:minWidth="100dp"
+        android:overScrollMode="never"
+
+        app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="@id/btnList"
+        app:layout_constraintEnd_toStartOf="@id/btnCreate"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@id/btnList"
+        app:layout_constraintTop_toTopOf="@id/btnList"
+        app:layout_constraintVertical_bias="0.0"
+
+        tools:itemCount="1"
+        tools:listitem="@layout/item_collection_name_list" />
+    <!-- Vertical_bias 0.0 прижимает список к верху при расширении, чтобы он рос ВНИЗ -->
+
+    <!-- ЛЕНТА (КОНТЕНТ) -->
+    <TextView
+        android:id="@+id/tvFeedPlaceholder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
         android:text="Лента товаров..."
         android:textColor="#999999"
         android:textSize="20sp"
-        app:layout_constraintTop_toBottomOf="@id/btnList"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="50dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnList" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
