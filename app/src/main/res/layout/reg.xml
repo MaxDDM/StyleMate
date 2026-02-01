@@ -30,6 +30,7 @@
         android:textColor="@color/black"/>
 
     <EditText
+        android:id="@+id/emailReg"
         android:layout_width="345dp"
         android:layout_height="53dp"
         android:layout_marginTop="0dp"
@@ -54,6 +55,7 @@
         android:textColor="@color/black"/>
 
     <EditText
+        android:id="@+id/passwordReg"
         android:layout_width="345dp"
         android:layout_height="53dp"
         android:layout_marginTop="0dp"
@@ -78,6 +80,7 @@
         android:textColor="@color/black"/>
 
     <EditText
+        android:id="@+id/nameReg"
         android:layout_width="345dp"
         android:layout_height="53dp"
         android:layout_marginTop="0dp"
@@ -102,12 +105,13 @@
         android:textColor="@color/black"/>
 
     <EditText
+        android:id="@+id/birthDateReg"
         android:layout_width="345dp"
         android:layout_height="53dp"
         android:layout_marginTop="0dp"
         android:background="@drawable/ic_pic27"
         android:hint="ДД/ММ/ГГ"
-        android:inputType="textPassword"
+        android:inputType="date"
         android:textColorHint="#5C5C5C"
         android:fontFamily="@font/ttcommons_regular"
         android:textSize="16sp"
@@ -116,6 +120,7 @@
         />
 
     <ImageButton
+        android:id="@+id/continueRegButton"
         android:layout_width="344dp"
         android:layout_height="90dp"
         android:layout_marginTop="21dp"
@@ -124,6 +129,7 @@
         />
 
     <ImageButton
+        android:id="@+id/skipRegButton"
         android:layout_width="344dp"
         android:layout_height="90dp"
         android:layout_marginTop="-30dp"
