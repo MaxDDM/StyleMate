@@ -7,11 +7,9 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.stylemate.R;
+import com.example.stylemate.ui.dialogs.SkipRegDialog;
 
 import org.apache.commons.validator.routines.EmailValidator;
 
@@ -43,7 +41,11 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         skipRegButton.setOnClickListener(v -> {
-            // тут будет переход на тест
+            SkipRegDialog dialog = new SkipRegDialog();
+
+            dialog.setListener(this::finish);
+
+            dialog.show(getSupportFragmentManager(), "DeleteDialog");
         });
     }
 }

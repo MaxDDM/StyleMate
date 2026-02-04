@@ -27,6 +27,7 @@
         android:layout_marginTop="7dp">
 
         <ImageButton
+            android:id="@+id/btnSelTest113"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
@@ -62,11 +63,12 @@
         android:layout_marginTop="7dp">
 
         <ImageButton
+            android:id="@+id/btnSelTest213"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
             android:layout_marginTop="0dp"
-            android:background="@drawable/ic_pic6"
+            android:background="@drawable/ic_pic5"
             android:foregroundTint="@color/white" />
 
         <TextView
@@ -97,6 +99,7 @@
         android:layout_marginTop="7dp">
 
         <ImageButton
+            android:id="@+id/btnSelTest313"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
@@ -132,6 +135,7 @@
         android:layout_marginTop="7dp">
 
         <ImageButton
+            android:id="@+id/btnSelTest413"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
@@ -152,6 +156,7 @@
     </LinearLayout>
 
     <ImageButton
+        android:id="@+id/btnNextQuestSelTest13"
         android:layout_width="344dp"
         android:layout_height="90dp"
         android:layout_marginTop="16dp"
@@ -160,6 +165,7 @@
         />
 
     <ImageButton
+        android:id="@+id/btnSkipQuestSelTest13"
         android:layout_width="344dp"
         android:layout_height="90dp"
         android:layout_marginTop="-30dp"
