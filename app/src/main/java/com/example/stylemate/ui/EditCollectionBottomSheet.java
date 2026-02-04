@@ -1,4 +1,4 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -15,6 +15,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment; // ВАЖНО: теперь DialogFragment
+
+import com.example.stylemate.R;
 
 // Меняем наследование на DialogFragment
 public class EditCollectionBottomSheet extends DialogFragment {

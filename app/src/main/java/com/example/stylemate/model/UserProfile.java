@@ -1,4 +1,4 @@
-package com.example.stylemate;
+package com.example.stylemate.model;
 
 public class UserProfile {
     public String name;

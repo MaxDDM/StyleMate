@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    tools:context=".MainActivity">
+    tools:context=".ui.MainActivity">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -83,7 +83,7 @@
                 android:background="@drawable/ic_pic48"
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="0dp"
-                tools:context=".MainActivity">
+                tools:context=".ui.MainActivity">
 
                 <TextView
                     android:layout_width="75dp"
@@ -149,7 +149,7 @@
                 android:background="@drawable/ic_pic48"
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="0dp"
-                tools:context=".MainActivity">
+                tools:context=".ui.MainActivity">
 
                 <TextView
                     android:layout_width="75dp"
@@ -215,7 +215,7 @@
                 android:background="@drawable/ic_pic48"
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="0dp"
-                tools:context=".MainActivity">
+                tools:context=".ui.MainActivity">
 
                 <TextView
                     android:layout_width="75dp"
@@ -281,7 +281,7 @@
                 android:background="@drawable/ic_pic48"
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="0dp"
-                tools:context=".MainActivity">
+                tools:context=".ui.MainActivity">
 
                 <TextView
                     android:layout_width="75dp"
@@ -347,7 +347,7 @@
                 android:background="@drawable/ic_pic48"
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="0dp"
-                tools:context=".MainActivity">
+                tools:context=".ui.MainActivity">
 
                 <TextView
                     android:layout_width="75dp"
@@ -413,7 +413,7 @@
                 android:background="@drawable/ic_pic48"
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="0dp"
-                tools:context=".MainActivity">
+                tools:context=".ui.MainActivity">
 
                 <TextView
                     android:layout_width="75dp"

@@ -1,4 +1,4 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
 import android.app.AlertDialog;
 import android.graphics.Color;
@@ -11,9 +11,14 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.stylemate.R;
+import com.example.stylemate.model.SettingsViewModel;
 
 public class SettingsActivity extends AppCompatActivity {
 
+    private SettingsViewModel viewModel;
     private EditText etName;
     private EditText etPhone;
     private EditText etEmail;
@@ -25,17 +30,12 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+        // 1. Подключаем ViewModel
+        viewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
+
         initViews();
         setupListeners();
-
-        UserProfile currentUser = new UserProfile(
-                "Марат",
-                "+7 (999) 123 45 67",
-                "marat@edu.hse.ru",
-                "12.01.2001",
-                R.drawable.avatar
-        );
-        updateUI(currentUser);
+        observeViewModel();
     }
 
     private void initViews() {
@@ -68,6 +68,28 @@ public class SettingsActivity extends AppCompatActivity {
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> showLogoutDialog());
         }
+    }
+
+    private void observeViewModel() {
+        // А. Заполняем поля данными
+        viewModel.userProfile.observe(this, user -> {
+            if (user != null) {
+                etName.setText(user.name);
+                etPhone.setText(user.phone);
+                etEmail.setText(user.email);
+                etDate.setText(user.birthDate);
+                if (imgAvatar != null) imgAvatar.setImageResource(user.avatarResId != 0 ? user.avatarResId : R.drawable.ic_edit_avatar);
+            }
+        });
+
+        // Б. Следим за выходом
+        viewModel.logoutEvent.observe(this, isLoggedOut -> {
+            if (isLoggedOut) {
+                CustomToast.show(this, "Выход из аккаунта");
+                // Тут можно открыть экран LoginActivity
+                finish();
+            }
+        });
     }
 
     // Диалог смены фото (твой старый код)
@@ -120,34 +142,10 @@ public class SettingsActivity extends AppCompatActivity {
 
         btnConfirm.setOnClickListener(v -> {
             dialog.dismiss();
-            performLogout();
+            // Мы не делаем логику тут, а зовем ViewModel
+            viewModel.onLogoutConfirmed();
         });
 
         dialog.show();
-    }
-
-    private void performLogout() {
-        // 1. Тут очищаем SharedPreferences / Токены
-        // SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        // prefs.edit().clear().apply();
-
-        CustomToast.show(this, "Выход из аккаунта");
-
-        // 2. Переходим на экран логина
-        // Intent intent = new Intent(this, LoginActivity.class);
-        // intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Чистим стек, чтобы нельзя было вернуться назад
-        // startActivity(intent);
-
-        // Пока просто закроем активити для примера
-        finish();
-    }
-
-    private void updateUI(UserProfile user) {
-        if (user == null) return;
-        etName.setText(user.name);
-        etPhone.setText(user.phone);
-        etEmail.setText(user.email);
-        etDate.setText(user.birthDate);
-        if (imgAvatar != null) imgAvatar.setImageResource(user.avatarResId != 0 ? user.avatarResId : R.drawable.ic_edit_avatar);
     }
 }

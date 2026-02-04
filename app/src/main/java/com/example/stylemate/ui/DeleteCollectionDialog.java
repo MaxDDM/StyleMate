@@ -1,4 +1,4 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -12,6 +12,8 @@ import android.widget.Button;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+
+import com.example.stylemate.R;
 
 public class DeleteCollectionDialog extends DialogFragment {
 

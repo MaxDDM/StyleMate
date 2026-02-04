@@ -1,4 +1,4 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +8,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.stylemate.R;
 
 import java.util.List;
 
@@ -61,10 +63,16 @@ public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfits
         });
     }
 
+    public void updateList(List<FavouriteOutfits> newList) {
+        this.outfitList = newList; // Заменяем старый список на новый
+        notifyDataSetChanged();    // Говорим списку перерисоваться
+    }
+
     // 3. Этот метод говорит списку, сколько у нас всего элементов
     @Override
     public int getItemCount() {
-        return outfitList.size();
+        // Добавил проверку на null, чтобы приложение не падало, если список еще не пришел
+        return (outfitList == null) ? 0 : outfitList.size();
     }
 
     // ВНУТРЕННИЙ КЛАСС (ViewHolder)

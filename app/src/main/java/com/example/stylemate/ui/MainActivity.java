@@ -1,4 +1,4 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -13,6 +13,8 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
+import com.example.stylemate.R;
 
 public class MainActivity extends AppCompatActivity {
 

@@ -1,4 +1,4 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
 // Этот класс - просто контейнер для данных.
 // Он описывает, из чего состоит один "Образ" в твоем списке.

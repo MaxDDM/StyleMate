@@ -19,15 +19,15 @@
             android:name=".ui.AuthActivity"
             android:exported="false" />
         <activity
-            android:name=".CollectionDetailActivity"
+            android:name=".ui.CollectionDetailActivity"
             android:exported="false" />
         <activity
-            android:name=".SettingsActivity"
+            android:name=".ui.SettingsActivity"
             android:exported="false" /> <!-- ВАЖНО: У стартовой Activity должно быть exported="true" -->
         <!-- Обрати внимание: в конце первой строки нет слэша "/" -->
         <!-- MainActivity теперь обычная, ставим exported="false" -->
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

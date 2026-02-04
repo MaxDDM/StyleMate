@@ -1,13 +1,11 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,26 +14,27 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 
+import com.example.stylemate.R;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.example.stylemate.model.ChangePasswordViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
 
+    private ChangePasswordViewModel viewModel; // ViewModel
     private ViewFlipper viewFlipper;
     private EditText etOldPassword;
     private EditText etNewPassword;
 
     // Флаг, чтобы понимать, на каком мы шаге (для восстановления клавиатуры)
     private boolean isSecondStep = false;
-    private final String MOCK_CURRENT_PASSWORD = "123";
 
     @Nullable
     @Override
@@ -92,6 +91,9 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // 1. Подключаем ViewModel
+        viewModel = new ViewModelProvider(this).get(ChangePasswordViewModel.class);
+
         viewFlipper = view.findViewById(R.id.viewFlipper);
         etOldPassword = view.findViewById(R.id.etOldPassword);
         etNewPassword = view.findViewById(R.id.etNewPassword);
@@ -101,17 +103,69 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
         viewFlipper.setInAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.slide_in_right));
         viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.slide_out_left));
 
-        setupInputLogic(etOldPassword, true);
-        setupInputLogic(etNewPassword, false);
+        // Настройка полей
+        setupInputUI(etOldPassword);
+        setupInputUI(etNewPassword);
 
         // Старт
         etOldPassword.requestFocus();
         // Небольшая задержка, чтобы анимация открытия шторки не лагала
         new Handler().postDelayed(this::showKeyboardForCurrentStep, 200);
+
+        // === ПОДПИСКИ НА VIEWMODEL ===
+        observeViewModel();
+
+        // === СЛУШАТЕЛИ ВВОДА ===
+        // Нажатие Enter на клавиатуре
+        etOldPassword.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_ACTION_DONE) {
+                // Передаем ввод во ViewModel
+                viewModel.verifyOldPassword(etOldPassword.getText().toString());
+                return true;
+            }
+            return false;
+        });
+
+        etNewPassword.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_ACTION_DONE) {
+                // Передаем ввод во ViewModel
+                viewModel.submitNewPassword(etNewPassword.getText().toString());
+                return true;
+            }
+            return false;
+        });
     }
 
-    private void setupInputLogic(EditText editText, boolean isOldPass) {
-        // Убираем иконку при вводе
+    private void observeViewModel() {
+        // 1. Успех проверки старого пароля
+        viewModel.oldPasswordCorrect.observe(getViewLifecycleOwner(), success -> {
+            if (success) {
+                isSecondStep = true;
+                viewFlipper.showNext(); // Листаем экран
+
+                etNewPassword.requestFocus();
+                showKeyboardForCurrentStep();
+            }
+        });
+
+        // 2. Успех смены пароля
+        viewModel.passwordChanged.observe(getViewLifecycleOwner(), success -> {
+            if (success) {
+                CustomToast.show(getContext(), "Пароль изменен");
+                hideKeyboardDirectly();
+                new Handler().postDelayed(this::dismiss, 150);
+            }
+        });
+
+        // 3. Ошибка
+        viewModel.errorEvent.observe(getViewLifecycleOwner(), message -> {
+            EditText target = isSecondStep ? etNewPassword : etOldPassword;
+            showError(target, message);
+        });
+    }
+
+    private void setupInputUI(EditText editText) {
+        // Визуальная логика (убрать иконку ошибки при наборе)
         editText.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -119,44 +173,9 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
             }
             @Override public void afterTextChanged(Editable s) {}
         });
-
-        // Enter на клавиатуре
-        editText.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_ACTION_DONE) {
-                if (isOldPass) checkOldPassword();
-                else saveNewPassword();
-                return true;
-            }
-            return false;
-        });
     }
 
-    private void checkOldPassword() {
-        String input = etOldPassword.getText().toString();
-        if (input.equals(MOCK_CURRENT_PASSWORD)) {
-            // Успех -> Переход
-            isSecondStep = true;
-            viewFlipper.showNext(); // Сработает анимация Slide
 
-            // Переносим фокус и клаву
-            etNewPassword.requestFocus();
-            // Клавиатура может моргнуть, поэтому форсируем показ
-            showKeyboardForCurrentStep();
-        } else {
-            showError(etOldPassword, "Неверный текущий пароль");
-        }
-    }
-
-    private void saveNewPassword() {
-        if (etNewPassword.getText().length() < 4) {
-            showError(etNewPassword, "Слишком короткий пароль");
-            return;
-        }
-
-        CustomToast.show(getContext(), "Пароль изменен");
-        hideKeyboardDirectly();
-        new Handler().postDelayed(this::dismiss, 150);
-    }
 
     // Показывает иконку и тост
     private void showError(EditText field, String message) {

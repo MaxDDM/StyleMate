@@ -1,4 +1,4 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -11,9 +11,11 @@ import java.util.List;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.example.stylemate.R;
+
 public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsNameAdapter.ViewHolder> {
 
-    private final List<String> collectionNames;
+    private List<String> collectionNames;
     private final OnItemClickListener listener;
 
     // --- СОСТОЯНИЕ ---
@@ -141,6 +143,11 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsName
         }
 
         return collectionNames.size();
+    }
+
+    public void updateList(List<String> newList) {
+        this.collectionNames = newList; // Обновляем данные внутри адаптера
+        notifyDataSetChanged(); // Перерисовываем
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

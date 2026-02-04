@@ -7,7 +7,7 @@
     android:background="@drawable/ic_pic48"
     android:layout_marginStart="5dp"
     android:layout_marginTop="0dp"
-    tools:context=".MainActivity">
+    tools:context=".ui.MainActivity">
 
     <TextView
         android:layout_width="75dp"

@@ -1,18 +1,20 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.lifecycle.ViewModelProvider;
 
-import java.util.Arrays;
-import java.util.List;
+import com.example.stylemate.model.HomeViewModel;
+import com.example.stylemate.R;
+
+import java.util.ArrayList;
 
 public class HomeFragment extends Fragment {
 
@@ -20,38 +22,24 @@ public class HomeFragment extends Fragment {
     private View vOverlay;
 
     private CollectionsNameAdapter adapter;
+    private HomeViewModel viewModel;
     private boolean isListExpanded = false; // Состояние
-
-    // Текущий подтвержденный выбор
-    private String currentSelectedName = "Основная";
-
-    public HomeFragment() {
-    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+        viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+
         View btnList = view.findViewById(R.id.btnList);
         rvCollections = view.findViewById(R.id.rvCollections);
         vOverlay = view.findViewById(R.id.vOverlay);
 
-        // Список данных
-        List<String> myCollections = Arrays.asList(
-                "Основная",
-                "Спорт",
-                "Улица",
-                "Офис",
-                "Свидание",
-                "Дом",
-                "Вечеринка"
-        );
-
         rvCollections.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // Создаем адаптер
-        adapter = new CollectionsNameAdapter(myCollections, currentSelectedName, clickedName -> {
+        adapter = new CollectionsNameAdapter(new ArrayList<>(), "Основная", clickedName -> {
             if (clickedName == null) {
                 // Нажали на заголовок в свернутом виде -> ОТКРЫВАЕМ
                 toggleListState();
@@ -60,11 +48,25 @@ public class HomeFragment extends Fragment {
 
                 // 1. Просто выделяем синим в списке (список НЕ закрываем)
                 adapter.setSelectedName(clickedName);
-                currentSelectedName = clickedName; // Запоминаем новый выбор
+                // СООБЩАЕМ VIEWMODEL О ВЫБОРЕ
+                viewModel.onCollectionSelected(clickedName);
             }
         });
 
         rvCollections.setAdapter(adapter);
+
+        // --- ПОДПИСЫВАЕМСЯ НА ДАННЫЕ (OBSERVE) ---
+
+        // 1. Следим за списком категорий
+        viewModel.collections.observe(getViewLifecycleOwner(), list -> {
+            // Как только данные загрузятся (из Репозитория), этот код сработает
+            adapter.updateList(list); // Тебе нужно добавить метод updateList в адаптер!
+        });
+
+        // 2. Следим за выбранным элементом (если вдруг выбор изменится из другого места)
+        viewModel.selectedName.observe(getViewLifecycleOwner(), name -> {
+            adapter.setSelectedName(name);
+        });
 
         // --- ОБРАБОТЧИКИ ---
 

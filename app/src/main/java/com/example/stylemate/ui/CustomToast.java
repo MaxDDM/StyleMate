@@ -1,10 +1,12 @@
-package com.example.stylemate;
+package com.example.stylemate.ui;
 
 import android.content.Context;
 import android.graphics.Color;
 import android.view.Gravity;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.stylemate.R;
 
 public class CustomToast {
 
