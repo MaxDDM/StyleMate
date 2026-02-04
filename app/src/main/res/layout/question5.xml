@@ -27,6 +27,7 @@
         android:layout_marginTop="0dp">
 
         <ImageButton
+            android:id="@+id/btnTest15"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
@@ -62,11 +63,12 @@
         android:layout_marginTop="0dp">
 
         <ImageButton
+            android:id="@+id/btnTest25"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
             android:layout_marginTop="0dp"
-            android:background="@drawable/ic_pic6"
+            android:background="@drawable/ic_pic5"
             android:foregroundTint="@color/white" />
 
         <TextView
@@ -97,6 +99,7 @@
         android:layout_marginTop="0dp">
 
         <ImageButton
+            android:id="@+id/btnTest35"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
@@ -132,6 +135,7 @@
         android:layout_marginTop="0dp">
 
         <ImageButton
+            android:id="@+id/btnTest45"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
@@ -167,6 +171,7 @@
         android:layout_marginTop="0dp">
 
         <ImageButton
+            android:id="@+id/btnTest55"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
@@ -202,6 +207,7 @@
         android:layout_marginTop="0dp">
 
         <ImageButton
+            android:id="@+id/btnTest65"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
@@ -222,6 +228,7 @@
     </LinearLayout>
 
     <ImageButton
+        android:id="@+id/btnNextQuestTest5"
         android:layout_width="344dp"
         android:layout_height="90dp"
         android:layout_gravity="center_horizontal"
@@ -230,6 +237,7 @@
         />
 
     <ImageButton
+        android:id="@+id/btnSkipQuestTest5"
         android:layout_width="344dp"
         android:layout_height="90dp"
         android:layout_gravity="center_horizontal"

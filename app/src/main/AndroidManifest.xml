@@ -13,10 +13,67 @@
         android:theme="@style/Theme.StyleMate"
         tools:targetApi="31">
         <activity
+            android:name=".ui.new_select_test.NewSelectQ14Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ13Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ12Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ11Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ10Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ9Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ8Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ7Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ6Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ5Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ4Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ3Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ2Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.new_select_test.NewSelectQ1Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.test.TestQ5Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.test.TestQ4Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.test.TestQ3Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.test.TestQ2Activity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.test.TestQ1Activity"
+            android:exported="false" />
+        <activity
             android:name=".ui.RegisterActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.AuthActivity"
+            android:name=".MainActivity"
             android:exported="false" />
         <activity
             android:name=".CollectionDetailActivity"
@@ -27,7 +84,7 @@
         <!-- Обрати внимание: в конце первой строки нет слэша "/" -->
         <!-- MainActivity теперь обычная, ставим exported="false" -->
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.AuthActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -42,7 +42,7 @@ public class AuthActivity extends AppCompatActivity {
                 Toast.makeText(AuthActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
             }
 
-            // тут будет проверка наличия пользователя в бд
+            // тут будет проверка наличия пользователя в бд и переход на главную
         });
 
         switchToRegButton.setOnClickListener(v -> {
