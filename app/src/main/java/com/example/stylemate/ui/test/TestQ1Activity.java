@@ -7,17 +7,36 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.stylemate.R;
-import com.example.stylemate.ui.ActiveUserInfo;
+import com.example.stylemate.ui.AuthActivity;
+import com.example.stylemate.model.TestViewModel;
 
 public class TestQ1Activity extends AppCompatActivity {
+    private TestViewModel viewModel;
 
     int ans = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        viewModel = new ViewModelProvider(this).get(TestViewModel.class);
         super.onCreate(savedInstanceState);
+
+        // 2. ПОДПИСКА НА ДАННЫЕ (СНИЗУ ВВЕРХ)
+        // Следим за статусом сессии. Если ViewModel скажет "false", уходим.
+        viewModel.getSessionValidState().observe(this, isValid -> {
+            if (!isValid) {
+                Toast.makeText(this, "Время сессии истекло. Пожалуйста, зарегистрируйтесь.", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(TestQ1Activity.this, AuthActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        // Запускаем проверку сессии (событие сверху вниз)
+        viewModel.checkSession();
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.question1);
 
@@ -29,10 +48,9 @@ public class TestQ1Activity extends AppCompatActivity {
         ImageButton nextButton = findViewById(R.id.btnNextQuestTest1);
         ImageButton skipButton = findViewById(R.id.btnSkipQuestTest1);
 
-
+        // Логика переключения кнопок (визуал) остается без изменений
         test1Button.setOnClickListener(v -> {
             ans = 1;
-
             test1Button.setBackgroundResource(R.drawable.ic_pic6);
             test2Button.setBackgroundResource(R.drawable.ic_pic5);
             test3Button.setBackgroundResource(R.drawable.ic_pic5);
@@ -42,7 +60,6 @@ public class TestQ1Activity extends AppCompatActivity {
 
         test2Button.setOnClickListener(v -> {
             ans = 2;
-
             test1Button.setBackgroundResource(R.drawable.ic_pic5);
             test2Button.setBackgroundResource(R.drawable.ic_pic6);
             test3Button.setBackgroundResource(R.drawable.ic_pic5);
@@ -52,7 +69,6 @@ public class TestQ1Activity extends AppCompatActivity {
 
         test3Button.setOnClickListener(v -> {
             ans = 3;
-
             test1Button.setBackgroundResource(R.drawable.ic_pic5);
             test2Button.setBackgroundResource(R.drawable.ic_pic5);
             test3Button.setBackgroundResource(R.drawable.ic_pic6);
@@ -62,7 +78,6 @@ public class TestQ1Activity extends AppCompatActivity {
 
         test4Button.setOnClickListener(v -> {
             ans = 4;
-
             test1Button.setBackgroundResource(R.drawable.ic_pic5);
             test2Button.setBackgroundResource(R.drawable.ic_pic5);
             test3Button.setBackgroundResource(R.drawable.ic_pic5);
@@ -72,7 +87,6 @@ public class TestQ1Activity extends AppCompatActivity {
 
         test5Button.setOnClickListener(v -> {
             ans = 5;
-
             test1Button.setBackgroundResource(R.drawable.ic_pic5);
             test2Button.setBackgroundResource(R.drawable.ic_pic5);
             test3Button.setBackgroundResource(R.drawable.ic_pic5);
@@ -80,19 +94,28 @@ public class TestQ1Activity extends AppCompatActivity {
             test5Button.setBackgroundResource(R.drawable.ic_pic6);
         });
 
+        // 2. ЛОГИКА КНОПКИ "ДАЛЕЕ"
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
-                ActiveUserInfo.setDefaults("test" + ans, String.valueOf(ans), TestQ1Activity.this);
+                // А. Сообщаем ViewModel о выборе (1 - номер вопроса)
+                // Внутри ViewModel сама вызовет репозиторий и сохранит прогресс
+                viewModel.processAnswer(1, ans);
+
+                // В. Переходим дальше
+                Intent intent = new Intent(TestQ1Activity.this, TestQ2Activity.class);
+                startActivity(intent);
             } else {
                 Toast.makeText(TestQ1Activity.this, "Вы не выбрали ни один из вариантов", Toast.LENGTH_LONG).show();
-                return;
             }
-
-            Intent intent = new Intent(TestQ1Activity.this, TestQ2Activity.class);
-            startActivity(intent);
         });
 
+        // 3. ЛОГИКА КНОПКИ "ПРОПУСТИТЬ"
         skipButton.setOnClickListener(v -> {
+            // Баллы НЕ начисляем (ans нас не интересует)
+
+            // Сохраняем только время активности
+            viewModel.saveProgressOnly();
+
             Intent intent = new Intent(TestQ1Activity.this, TestQ2Activity.class);
             startActivity(intent);
         });

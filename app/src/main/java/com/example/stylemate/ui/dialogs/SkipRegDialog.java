@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.stylemate.R;
-import com.example.stylemate.ui.ActiveUserInfo;
+import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.ui.test.TestQ1Activity;
 
 public class SkipRegDialog extends DialogFragment {

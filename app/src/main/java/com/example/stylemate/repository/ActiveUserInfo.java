@@ -1,4 +1,4 @@
-package com.example.stylemate.ui;
+package com.example.stylemate.repository;
 
 import android.content.Context;
 import android.content.SharedPreferences;

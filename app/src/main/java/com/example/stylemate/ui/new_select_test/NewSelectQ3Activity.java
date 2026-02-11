@@ -7,12 +7,9 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.stylemate.R;
-import com.example.stylemate.ui.ActiveUserInfo;
+import com.example.stylemate.repository.ActiveUserInfo;
 
 public class NewSelectQ3Activity extends AppCompatActivity {
     int ans = -1;

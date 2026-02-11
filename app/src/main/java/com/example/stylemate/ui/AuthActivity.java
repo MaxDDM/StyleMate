@@ -10,6 +10,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.stylemate.R;
+import com.example.stylemate.repository.ActiveUserInfo;
 
 import org.apache.commons.validator.routines.EmailValidator;
 
