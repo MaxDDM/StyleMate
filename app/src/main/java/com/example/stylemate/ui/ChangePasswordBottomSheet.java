@@ -120,7 +120,7 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
         etOldPassword.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_ACTION_DONE) {
                 // Передаем ввод во ViewModel
-                viewModel.verifyOldPassword(etOldPassword.getText().toString());
+                viewModel.verifyOldPassword(etOldPassword.getText().toString(), requireContext());
                 return true;
             }
             return false;
@@ -129,7 +129,7 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
         etNewPassword.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_ACTION_DONE) {
                 // Передаем ввод во ViewModel
-                viewModel.submitNewPassword(etNewPassword.getText().toString());
+                viewModel.submitNewPassword(etNewPassword.getText().toString(), requireContext());
                 return true;
             }
             return false;

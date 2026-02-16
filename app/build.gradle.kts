@@ -1,10 +1,28 @@
 plugins {
     alias(libs.plugins.androidApplication)
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.stylemate"
     compileSdk = 34
+
+    flavorDimensions += "firebase"
+
+    productFlavors {
+        create("usersFirebase") {
+            dimension = "firebase"
+            applicationId = "com.example.stylemate"
+        }
+        create("imageOfClothingFirebase") {
+            dimension = "firebase"
+            applicationId = "com.example.stylemate"
+        }
+        create("selectionFirebase") {
+            dimension = "firebase"
+            applicationId = "com.example.stylemate"
+        }
+    }
 
     defaultConfig {
         applicationId = "com.example.stylemate"
@@ -42,4 +60,8 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("commons-validator:commons-validator:1.9.0")
+    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.google.firebase:firebase-analytics")
+
 }

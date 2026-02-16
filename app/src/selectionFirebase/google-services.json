@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "815638920548",
+    "firebase_url": "https://selection-d4a21-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "selection-d4a21",
+    "storage_bucket": "selection-d4a21.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815638920548:android:767b8d5fdb3ec171900e71",
+        "android_client_info": {
+          "package_name": "com.example.stylemate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC_doIfSDAq59ij6pUJ0PqVIvBo_WX8Qw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

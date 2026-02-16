@@ -1,5 +1,7 @@
 package com.example.stylemate.model;
 
+import android.content.Context;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -25,8 +27,8 @@ public class ChangePasswordViewModel extends ViewModel {
 
 
     // Логика проверки старого пароля
-    public void verifyOldPassword(String input) {
-        if (repository.checkCurrentPassword(input)) {
+    public void verifyOldPassword(String input, Context context) {
+        if (repository.checkCurrentPassword(input, context)) {
             _oldPasswordCorrect.setValue(true);
         } else {
             _errorEvent.setValue("Неверный текущий пароль");
@@ -34,13 +36,13 @@ public class ChangePasswordViewModel extends ViewModel {
     }
 
     // Логика сохранения нового
-    public void submitNewPassword(String input) {
+    public void submitNewPassword(String input, Context context) {
         if (input.length() < 4) {
             _errorEvent.setValue("Слишком короткий пароль");
             return;
         }
 
-        repository.changePassword(input);
+        repository.changePassword(input, context);
         _passwordChanged.setValue(true);
     }
 }

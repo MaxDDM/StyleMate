@@ -9,11 +9,14 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.stylemate.R;
+import com.example.stylemate.repository.ActiveUserInfo;
+import com.example.stylemate.repository.UserRepository;
 import com.example.stylemate.ui.dialogs.SkipRegDialog;
 
 import org.apache.commons.validator.routines.EmailValidator;
 
 public class RegisterActivity extends AppCompatActivity {
+    UserRepository repo = new UserRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +26,8 @@ public class RegisterActivity extends AppCompatActivity {
 
         EditText email = findViewById(R.id.emailReg);
         EditText password = findViewById(R.id.passwordReg);
+        EditText name = findViewById(R.id.nameReg);
+        EditText birth = findViewById(R.id.birthDateReg);
         ImageButton continueButton = findViewById(R.id.continueRegButton);
         ImageButton skipRegButton = findViewById(R.id.skipRegButton);
 
@@ -37,7 +42,11 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
             }
 
-            // тут будет регистрация пользователя в бд
+            if (repo.login(name.getText().toString(), "", email.getText().toString(), birth.getText().toString(), -1, password.getText().toString(), RegisterActivity.this)) {
+                ActiveUserInfo.setDefaults("isRegistered", email.getText().toString().replace(".", "|"), RegisterActivity.this);
+
+                // переход на главную
+            }
         });
 
         skipRegButton.setOnClickListener(v -> {

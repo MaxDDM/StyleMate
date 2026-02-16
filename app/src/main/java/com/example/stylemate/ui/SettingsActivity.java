@@ -143,7 +143,7 @@ public class SettingsActivity extends AppCompatActivity {
         btnConfirm.setOnClickListener(v -> {
             dialog.dismiss();
             // Мы не делаем логику тут, а зовем ViewModel
-            viewModel.onLogoutConfirmed();
+            viewModel.onLogoutConfirmed(SettingsActivity.this);
         });
 
         dialog.show();

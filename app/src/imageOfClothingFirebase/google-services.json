@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "185637242791",
+    "firebase_url": "https://imageofclothing-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "imageofclothing",
+    "storage_bucket": "imageofclothing.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:185637242791:android:a1d839527ddbc141609882",
+        "android_client_info": {
+          "package_name": "com.example.stylemate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBV8nJWcw-BI8cM-zoN3p2fd8075cTK2Ys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
