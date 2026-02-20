@@ -10,15 +10,7 @@ android {
     flavorDimensions += "firebase"
 
     productFlavors {
-        create("usersFirebase") {
-            dimension = "firebase"
-            applicationId = "com.example.stylemate"
-        }
-        create("imageOfClothingFirebase") {
-            dimension = "firebase"
-            applicationId = "com.example.stylemate"
-        }
-        create("selectionFirebase") {
+        create("styleMateFirebase") {
             dimension = "firebase"
             applicationId = "com.example.stylemate"
         }

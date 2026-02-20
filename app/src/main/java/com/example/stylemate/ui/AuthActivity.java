@@ -11,10 +11,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.stylemate.R;
 import com.example.stylemate.repository.ActiveUserInfo;
+import com.example.stylemate.repository.UserRepository;
 
 import org.apache.commons.validator.routines.EmailValidator;
 
 public class AuthActivity extends AppCompatActivity {
+    UserRepository repo = new UserRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,7 +26,8 @@ public class AuthActivity extends AppCompatActivity {
 
         String isAuthorized = ActiveUserInfo.getDefaults("isRegistered", this);
         if (isAuthorized != null && !isAuthorized.isEmpty()) {
-            // тут будет переход на главную активити
+            Intent intent = new Intent(AuthActivity.this, MainActivity.class);
+            startActivity(intent);
         }
 
         EditText email = findViewById(R.id.emailAuth);
@@ -43,7 +46,18 @@ public class AuthActivity extends AppCompatActivity {
                 Toast.makeText(AuthActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
             }
 
-            // тут будет проверка наличия пользователя в бд и переход на главную
+            if (repo.exists(email.getText().toString().replace(".", "|"), AuthActivity.this)) {
+                if (repo.checkCurrentPassword(password.getText().toString(), AuthActivity.this)) {
+                    ActiveUserInfo.setDefaults("isRegistered", email.getText().toString().replace(".", "|"), AuthActivity.this);
+
+                    Intent intent = new Intent(AuthActivity.this, MainActivity.class);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(AuthActivity.this, "Введён неверный пароль", Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Toast.makeText(AuthActivity.this, "Пользователь с такой почтой не зарегистрирован", Toast.LENGTH_LONG).show();
+            }
         });
 
         switchToRegButton.setOnClickListener(v -> {

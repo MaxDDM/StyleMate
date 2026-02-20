@@ -46,6 +46,25 @@ public class UserRepository {
         return data;
     }
 
+    public boolean exists(String email, Context context) {
+        final boolean[] res = {false};
+        table.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.child(email).exists()) {
+                    res[0] = true;
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(context, "Возникла проблема, скорее всего нет соединения с интернетом", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        return res[0];
+    }
+
     public UserProfile getUserProfile(Context context) {
         String email = ActiveUserInfo.getDefaults("isRegistered", context);
 
@@ -72,17 +91,17 @@ public class UserRepository {
     public boolean login(String name, String phone, String email, String birthDate, int avatarResId, String password, Context context) {
         UserProfile user = new UserProfile(name, phone, email, birthDate, password, avatarResId);
 
+        if (exists(user.email, context)) {
+            Toast.makeText(context, "Это имя занято", Toast.LENGTH_LONG).show();
+            return false;
+        }
+
         final boolean[] res = {true};
         table.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.child(user.email).exists()) {
-                    Toast.makeText(context, "Это имя занято", Toast.LENGTH_LONG).show();
-                    res[0] = false;
-                } else {
-                    table.child(user.email).setValue(user);
-                    Toast.makeText(context, "Успешная регистрация", Toast.LENGTH_LONG).show();
-                }
+                table.child(user.email).setValue(user);
+                Toast.makeText(context, "Успешная регистрация", Toast.LENGTH_LONG).show();
             }
 
             @Override

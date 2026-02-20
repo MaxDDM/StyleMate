@@ -1,5 +1,6 @@
 package com.example.stylemate.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -12,6 +13,7 @@ import com.example.stylemate.R;
 import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.repository.UserRepository;
 import com.example.stylemate.ui.dialogs.SkipRegDialog;
+import com.example.stylemate.ui.test.TestQ1Activity;
 
 import org.apache.commons.validator.routines.EmailValidator;
 
@@ -45,7 +47,8 @@ public class RegisterActivity extends AppCompatActivity {
             if (repo.login(name.getText().toString(), "", email.getText().toString(), birth.getText().toString(), -1, password.getText().toString(), RegisterActivity.this)) {
                 ActiveUserInfo.setDefaults("isRegistered", email.getText().toString().replace(".", "|"), RegisterActivity.this);
 
-                // переход на главную
+                Intent intent = new Intent(RegisterActivity.this, TestQ1Activity.class);
+                startActivity(intent);
             }
         });
 
