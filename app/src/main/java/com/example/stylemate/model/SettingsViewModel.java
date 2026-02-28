@@ -15,8 +15,8 @@ public class SettingsViewModel extends AndroidViewModel {
     private final UserRepository repository = new UserRepository();
 
     // 1. Данные профиля
-    private final MutableLiveData<UserProfile> _userProfile = new MutableLiveData<>();
-    public LiveData<UserProfile> userProfile = _userProfile;
+    private final MutableLiveData<Resource<UserProfile>> _userProfile = new MutableLiveData<>();
+    public LiveData<Resource<UserProfile>> userProfile = _userProfile;
 
     // 2. Событие выхода
     private final MutableLiveData<Boolean> _logoutEvent = new MutableLiveData<>();
@@ -30,8 +30,9 @@ public class SettingsViewModel extends AndroidViewModel {
 
     private void loadData() {
         // 3. getApplication() — это тот самый Context, который ты искал
-        UserProfile profile = repository.getUserProfile(getApplication());
-        _userProfile.setValue(profile);
+        repository.getUserProfile(getApplication()).observeForever(resource -> {
+            _userProfile.setValue(resource);
+        });
     }
 
     public void onLogoutConfirmed(Context context) {

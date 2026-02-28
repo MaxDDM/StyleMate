@@ -9,6 +9,8 @@ public class UserProfile {
 
     public String password;
 
+    public UserProfile() {}
+
     public UserProfile(String name, String phone, String email, String birthDate, String password, int avatarResId) {
         this.name = name;
         this.phone = phone;

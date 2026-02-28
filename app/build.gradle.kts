@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.stylemate"
-    compileSdk = 34
+    compileSdk = 36
 
     flavorDimensions += "firebase"
 

@@ -7,11 +7,14 @@ import android.content.Intent;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.example.stylemate.R;
 // Убедись, что FavouriteOutfits импортирован правильно.
 // Если он лежит просто в корне пакета com.example.stylemate, импорт не нужен.
 // Если перенес в model - добавь import.
+import com.example.stylemate.model.Resource;
 import com.example.stylemate.ui.AuthActivity;
 import com.example.stylemate.ui.FavouriteOutfits;
 import com.example.stylemate.model.UserProfile;
@@ -65,14 +68,17 @@ public class UserRepository {
         return res[0];
     }
 
-    public UserProfile getUserProfile(Context context) {
+    public LiveData<Resource<UserProfile>> getUserProfile(Context context) {
+        MutableLiveData<Resource<UserProfile>> liveData = new MutableLiveData<>();
+        liveData.setValue(Resource.loading());
+
         String email = ActiveUserInfo.getDefaults("isRegistered", context);
 
-        final UserProfile[] user = new UserProfile[1];
-        table.addValueEventListener(new ValueEventListener() {
+        table.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                user[0] = snapshot.child(email).getValue(UserProfile.class);
+                UserProfile user = snapshot.child(email).getValue(UserProfile.class);
+                liveData.setValue(Resource.success(user));
             }
 
             @Override
@@ -81,7 +87,7 @@ public class UserRepository {
             }
         });
 
-        return user[0];
+        return liveData;
     }
 
     public void logout(Context context) {
@@ -115,7 +121,7 @@ public class UserRepository {
     }
 
     public boolean checkCurrentPassword(String input, Context context) {
-        UserProfile user = getUserProfile(context);
+        UserProfile user = Objects.requireNonNull(getUserProfile(context).getValue()).data;
 
         if (Objects.equals(user.password, input)) {
             return true;
@@ -125,7 +131,7 @@ public class UserRepository {
     }
 
     public void changePassword(String newPassword, Context context) {
-        UserProfile user = getUserProfile(context);
+        UserProfile user = Objects.requireNonNull(getUserProfile(context).getValue()).data;
         user.password = newPassword;
 
         table.addValueEventListener(new ValueEventListener() {

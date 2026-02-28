@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.stylemate.R;
+import com.example.stylemate.model.Resource;
 import com.example.stylemate.model.SettingsViewModel;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -74,11 +75,20 @@ public class SettingsActivity extends AppCompatActivity {
         // А. Заполняем поля данными
         viewModel.userProfile.observe(this, user -> {
             if (user != null) {
-                etName.setText(user.name);
-                etPhone.setText(user.phone);
-                etEmail.setText(user.email);
-                etDate.setText(user.birthDate);
-                if (imgAvatar != null) imgAvatar.setImageResource(user.avatarResId != 0 ? user.avatarResId : R.drawable.ic_edit_avatar);
+                switch (user.status) {
+                    case LOADING:
+                        break;
+                    case SUCCESS:
+                        etName.setText(user.data.name);
+                        etPhone.setText(user.data.phone);
+                        etEmail.setText(user.data.email);
+                        etDate.setText(user.data.birthDate);
+                        if (imgAvatar != null && user.data.avatarResId != -1) imgAvatar.setImageResource(user.data.avatarResId != 0 ? user.data.avatarResId : R.drawable.ic_edit_avatar);
+                        break;
+                    case ERROR:
+                        break;
+                }
+
             }
         });
 
