@@ -67,9 +67,7 @@ public class HomeFragment extends Fragment {
             if (clickedName == null) {
                 toggleListState();
             } else {
-                adapter.setSelectedName(clickedName);
                 viewModel.onCollectionSelected(clickedName);
-                toggleListState(); // Закрываем список после выбора
             }
         });
         rvCollections.setAdapter(adapter);
@@ -128,9 +126,6 @@ public class HomeFragment extends Fragment {
         // 2. Выбранная коллекция (обновленное)
         viewModel.selectedName.observe(getViewLifecycleOwner(), name -> {
             adapter.setSelectedName(name);
-
-            // --- НОВОЕ: Когда меняется коллекция, грузим для неё картинки
-            viewModel.loadOutfitsForStyle(userStyleId); // (можно передать name, если логика зависит от коллекции)
         });
 
         // --- НОВОЕ: 3. Список картинок (обновляем адаптер сетки)
