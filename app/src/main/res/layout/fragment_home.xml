@@ -57,6 +57,23 @@
             android:textSize="16sp" />
     </LinearLayout>
 
+    <!-- 3. ЛЕНТА ТОВАРОВ (СЕТКА) -->
+    <!-- ВАЖНО: Она идет ДО vOverlay, чтобы быть на заднем плане -->
+    <!-- clipToPadding="false" нужен, чтобы контент не обрезался при скролле снизу -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvOutfitsGrid"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnList"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+    <!-- paddingBottom нужен, чтобы нижнее меню (домик) не перекрывало контент -->
+
 
     <!-- ШТОРКА (Overlay) -->
     <View
@@ -99,18 +116,5 @@
         tools:itemCount="1"
         tools:listitem="@layout/item_collection_name_list" />
     <!-- Vertical_bias 0.0 прижимает список к верху при расширении, чтобы он рос ВНИЗ -->
-
-    <!-- ЛЕНТА (КОНТЕНТ) -->
-    <TextView
-        android:id="@+id/tvFeedPlaceholder"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        android:text="Лента товаров..."
-        android:textColor="#999999"
-        android:textSize="20sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnList" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
