@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="40dp">
+
+        <!-- 1. КАРТОЧКА ОБРАЗА (Скругление + Картинка) -->
+        <!-- CardView скругляет всё содержимое внутри -->
+        <!-- layout_margin="8dp" чтобы было видно скругление и тень -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="32dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- КАРТИНКА -->
+                <!-- adjustViewBounds=true + maxHeight = картинка ужмется, но не будет выше 550dp -->
+                <ImageView
+                    android:id="@+id/ivDetailImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:maxHeight="550dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_launcher_background" />
+
+                <!-- ЦЕНА -->
+                <!-- Используем новый фон @drawable/bg_pill_light -->
+                <TextView
+                    android:id="@+id/tvTotalPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:layout_gravity="bottom|start"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginBottom="20dp"
+                    android:background="@drawable/bg_pill_light"
+                    android:fontFamily="@font/ttcommons_regular"
+                    android:gravity="center"
+                    android:paddingHorizontal="24dp"
+                    android:text="7896 Р"
+                    android:textColor="#333333"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
+
+                <!-- Кнопка Назад -->
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/bg_glass_circle"
+                    android:src="@drawable/ic_back_arrow"
+                    android:padding="10dp"
+                    android:scaleType="fitCenter"/>
+
+                <!-- Кнопка Лайк -->
+                <ImageButton
+                    android:id="@+id/btnDetailLike"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@drawable/bg_glass_circle"
+                    android:src="@drawable/ic_heart_outline"
+                    android:padding="10dp"
+                    android:scaleType="fitCenter"/>
+            </FrameLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ЗАГОЛОВОК -->
+        <TextView
+            android:id="@+id/tvOutfitTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ttcommons_regular"
+            android:paddingHorizontal="20dp"
+            android:layout_marginTop="16dp"
+            android:text="Образ на лето в классическом стиле"
+            android:textColor="@color/black"
+            android:textSize="28sp"
+            android:lineSpacingExtra="4dp"/>
+
+        <!-- 2. СПИСОК ТОВАРОВ (Горизонтальный скролл) -->
+        <!-- Вместо кучи кода тут теперь одна строчка -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvProducts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:paddingStart="12dp"
+            android:clipToPadding="false"
+            android:orientation="horizontal" />
+
+    </LinearLayout>
+</ScrollView>

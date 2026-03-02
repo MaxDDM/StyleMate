@@ -84,6 +84,9 @@
             android:name=".ui.SettingsActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.OutfitDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.AuthActivity"
             android:exported="true">
             <intent-filter>

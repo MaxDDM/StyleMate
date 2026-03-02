@@ -100,10 +100,22 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onImageClick(Outfit outfit) {
-                Toast.makeText(getContext(), "Открыть товар: " + outfit.getId(), Toast.LENGTH_SHORT).show();
+                // --- ВОТ ТУТ ОТКРЫВАЕМ НОВУЮ КАРТОЧКУ ---
+
+                Intent intent = new Intent(getContext(), OutfitDetailActivity.class);
+
+                // Передаем ID картинки, чтобы в деталях открылась именно она
+                intent.putExtra("image_res_id", outfit.getImageResId());
+
+                // Можно передать ID образа, чтобы потом подгрузить цену и товары из БД
+                // intent.putExtra("outfit_id", outfit.getId());
+
+                startActivity(intent);
             }
         });
         rvGrid.setAdapter(gridAdapter);
+
+
 
 
         // --- ПОДПИСКА НА ДАННЫЕ (OBSERVERS) ---
