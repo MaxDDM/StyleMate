@@ -4,6 +4,7 @@ import android.content.Context;
 
 import android.app.Application;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.AndroidViewModel;
@@ -15,8 +16,9 @@ public class SettingsViewModel extends AndroidViewModel {
     private final UserRepository repository = new UserRepository();
 
     // 1. Данные профиля
-    private final MutableLiveData<Resource<UserProfile>> _userProfile = new MutableLiveData<>();
+    private final MediatorLiveData<Resource<UserProfile>> _userProfile = new MediatorLiveData<>();
     public LiveData<Resource<UserProfile>> userProfile = _userProfile;
+    private LiveData<Resource<UserProfile>> source;
 
     // 2. Событие выхода
     private final MutableLiveData<Boolean> _logoutEvent = new MutableLiveData<>();
@@ -29,10 +31,12 @@ public class SettingsViewModel extends AndroidViewModel {
     }
 
     private void loadData() {
-        // 3. getApplication() — это тот самый Context, который ты искал
-        repository.getUserProfile(getApplication()).observeForever(resource -> {
-            _userProfile.setValue(resource);
-        });
+        if (source != null) {
+            _userProfile.removeSource(source);
+        }
+
+        source = repository.getUserProfile(getApplication());
+        _userProfile.addSource(source, _userProfile::setValue);
     }
 
     public void onLogoutConfirmed(Context context) {

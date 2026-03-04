@@ -1,9 +1,12 @@
 package com.example.stylemate.model;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 import com.example.stylemate.repository.UserRepository;
 
@@ -14,8 +17,9 @@ public class ChangePasswordViewModel extends ViewModel {
     // СОБЫТИЯ (Events) для Фрагмента
 
     // 1. Успешный ввод старого пароля (переход на шаг 2)
-    private final MutableLiveData<Boolean> _oldPasswordCorrect = new MutableLiveData<>();
-    public LiveData<Boolean> oldPasswordCorrect = _oldPasswordCorrect;
+    private final MediatorLiveData<Resource<Boolean>> _oldPasswordCorrect = new MediatorLiveData<Resource<Boolean>>();
+    public LiveData<Resource<Boolean>> oldPasswordCorrect = _oldPasswordCorrect;
+    private LiveData<Resource<Boolean>> source;
 
     // 2. Успешная смена пароля (закрыть окно)
     private final MutableLiveData<Boolean> _passwordChanged = new MutableLiveData<>();
@@ -28,11 +32,12 @@ public class ChangePasswordViewModel extends ViewModel {
 
     // Логика проверки старого пароля
     public void verifyOldPassword(String input, Context context) {
-        if (repository.checkCurrentPassword(input, context)) {
-            _oldPasswordCorrect.setValue(true);
-        } else {
-            _errorEvent.setValue("Неверный текущий пароль");
+        if (source != null) {
+            _oldPasswordCorrect.removeSource(source);
         }
+
+        source = repository.checkCurrentPassword(input, context);
+        _oldPasswordCorrect.addSource(source, _oldPasswordCorrect::setValue);
     }
 
     // Логика сохранения нового

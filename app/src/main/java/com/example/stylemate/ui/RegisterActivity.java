@@ -38,17 +38,26 @@ public class RegisterActivity extends AppCompatActivity {
 
             if (!validator.isValid(email.getText().toString())) {
                 Toast.makeText(RegisterActivity.this, "Указан некорретный адрес", Toast.LENGTH_LONG).show();
-            }
-
-            if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
+            } else if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
                 Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
-            }
-
-            if (repo.login(name.getText().toString(), "", email.getText().toString(), birth.getText().toString(), -1, password.getText().toString(), RegisterActivity.this)) {
-                ActiveUserInfo.setDefaults("isRegistered", email.getText().toString().replace(".", "|"), RegisterActivity.this);
-
-                Intent intent = new Intent(RegisterActivity.this, TestQ1Activity.class);
-                startActivity(intent);
+            } else {
+                repo.exists(email.getText().toString().replace(".", "|"), RegisterActivity.this).observe(this, resource -> {
+                    if (resource != null) {
+                        switch(resource.status) {
+                            case LOADING:
+                                break;
+                            case SUCCESS:
+                                if (resource.data) {
+                                    Toast.makeText(RegisterActivity.this, "Пользователь с этим email уже зарегистрирован", Toast.LENGTH_LONG).show();
+                                } else {
+                                    login(name.getText().toString(), email.getText().toString(), birth.getText().toString(), password.getText().toString());
+                                }
+                                break;
+                            case ERROR:
+                                break;
+                        }
+                    }
+                });
             }
         });
 
@@ -58,6 +67,27 @@ public class RegisterActivity extends AppCompatActivity {
             dialog.setListener(this::finish);
 
             dialog.show(getSupportFragmentManager(), "DeleteDialog");
+        });
+    }
+
+    private void login(String name, String email, String birth, String password) {
+        repo.login(name, "", email, birth, -1, password, RegisterActivity.this).observe(this, resource -> {
+            if (resource != null) {
+                switch (resource.status) {
+                    case LOADING:
+                        break;
+                    case SUCCESS:
+                        if (resource.data) {
+                            ActiveUserInfo.setDefaults("isRegistered", email.replace(".", "|"), RegisterActivity.this);
+
+                            Intent intent = new Intent(RegisterActivity.this, TestQ1Activity.class);
+                            startActivity(intent);
+                        }
+                        break;
+                    case ERROR:
+                        break;
+                }
+            }
         });
     }
 }

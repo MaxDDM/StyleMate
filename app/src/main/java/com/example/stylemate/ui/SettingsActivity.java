@@ -1,6 +1,9 @@
 package com.example.stylemate.ui;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -96,7 +99,8 @@ public class SettingsActivity extends AppCompatActivity {
         viewModel.logoutEvent.observe(this, isLoggedOut -> {
             if (isLoggedOut) {
                 CustomToast.show(this, "Выход из аккаунта");
-                // Тут можно открыть экран LoginActivity
+                Intent intent = new Intent(SettingsActivity.this, AuthActivity.class);
+                startActivity(intent);
                 finish();
             }
         });
