@@ -107,18 +107,22 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onImageClick(Outfit outfit) {
-                // --- ВРЕМЕННАЯ ЗАГЛУШКА ---
-                // Мы закомментировали переход, чтобы приложение не падало,
-                // пока мы не настроили OutfitDetailActivity под новые данные.
-
-                Toast.makeText(getContext(), "Детальный просмотр скоро будет доступен", Toast.LENGTH_SHORT).show();
-
-                /* ПОКА СКРЫТО
                 Intent intent = new Intent(getContext(), OutfitDetailActivity.class);
-                intent.putExtra("image_url", outfit.getImageUrl());
+
+                // Передаем основные данные
                 intent.putExtra("outfit_id", outfit.getId());
+                intent.putExtra("image_url", outfit.getImageUrl());
+                intent.putExtra("style", outfit.getStyle());
+                intent.putExtra("season", outfit.getFilter_season()); // Важно: нужен этот геттер!
+
+                // Передаем список ID вещей
+                // Преобразуем Map<String, Boolean> в ArrayList<String>
+                if (outfit.getItems() != null) {
+                    ArrayList<String> ids = new ArrayList<>(outfit.getItems().keySet());
+                    intent.putStringArrayListExtra("item_ids", ids);
+                }
+
                 startActivity(intent);
-                */
             }
         });
         rvGrid.setAdapter(gridAdapter);
