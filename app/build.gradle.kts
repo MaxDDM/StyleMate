@@ -55,5 +55,6 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-analytics")
-
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.google.android.flexbox:flexbox:3.0.0")
 }

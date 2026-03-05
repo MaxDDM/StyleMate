@@ -50,12 +50,13 @@
                 android:layout_marginStart="4dp"/>
 
             <!-- columnCount="3" - ДЕЛАЕТ ВСЮ РАБОТУ ЗА НАС -->
-            <GridLayout
+            <com.google.android.flexbox.FlexboxLayout
                 android:id="@+id/gridTypes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnCount="3"
-                android:orientation="horizontal" />
+                app:flexWrap="wrap"
+                app:alignItems="stretch"
+                app:justifyContent="flex_start" />
 
             <!-- ЦВЕТ -->
             <TextView
@@ -69,12 +70,13 @@
                 android:layout_marginBottom="10dp"
                 android:layout_marginStart="4dp"/>
 
-            <GridLayout
+            <com.google.android.flexbox.FlexboxLayout
                 android:id="@+id/gridColors"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnCount="3"
-                android:orientation="horizontal" />
+                app:flexWrap="wrap"
+                app:alignItems="stretch"
+                app:justifyContent="flex_start" />
 
             <!-- СЕЗОН -->
             <TextView
@@ -88,12 +90,13 @@
                 android:layout_marginBottom="10dp"
                 android:layout_marginStart="4dp"/>
 
-            <GridLayout
+            <com.google.android.flexbox.FlexboxLayout
                 android:id="@+id/gridSeasons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnCount="3"
-                android:orientation="horizontal" />
+                app:flexWrap="wrap"
+                app:alignItems="stretch"
+                app:justifyContent="flex_start" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

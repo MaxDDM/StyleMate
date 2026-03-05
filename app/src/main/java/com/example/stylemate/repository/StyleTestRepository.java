@@ -149,6 +149,17 @@ public class StyleTestRepository {
         return 1; // Заглушка
     }
 
+    // Перевод числа в строку для БД
+    public String getStyleName(int index) {
+        switch (index) {
+            case 2: return "classic";
+            case 3: return "grunge";
+            case 4: return "old_money";
+            case 5: return "sport";
+            default: return "casual";
+        }
+    }
+
     // -----------------------------------------------------
     // СОХРАНЕНИЕ И СЕССИЯ (30 МИНУТ)
     // -----------------------------------------------------

@@ -1,72 +1,171 @@
 package com.example.stylemate.model;
 
+import android.app.Application;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.example.stylemate.repository.UserCollectionsRepository;
-import com.example.stylemate.model.Outfit;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class HomeViewModel extends ViewModel {
+public class HomeViewModel extends AndroidViewModel {
 
-    private final UserCollectionsRepository repository = new UserCollectionsRepository();
+    private final UserCollectionsRepository repository;
 
-    // 1. Список имен коллекций
+    // Списки данных
     private final MutableLiveData<List<String>> _collections = new MutableLiveData<>();
     public LiveData<List<String>> collections = _collections;
 
-    // 2. Текущее выбранное имя
     private final MutableLiveData<String> _selectedName = new MutableLiveData<>();
     public LiveData<String> selectedName = _selectedName;
 
-    // 3. Список картинок (образов)
+    // --- ИЗМЕНЕНИЕ: Два списка ---
+    // 1. Полный список (кеш текущей коллекции), никогда не фильтруется
+    private List<Outfit> allOutfits = new ArrayList<>();
+
+    // 2. Список для отображения (LiveData), который меняется фильтрами
     private final MutableLiveData<List<Outfit>> _outfits = new MutableLiveData<>();
     public LiveData<List<Outfit>> outfits = _outfits;
 
-    public HomeViewModel() {
-        // 1. Грузим список имен ("Спорт", "Офис"...)
-        loadCollectionsList();
+    // Событие ошибки фильтрации (для показа Toast/Dialog во фрагменте)
+    private final MutableLiveData<Boolean> _filterEmptyEvent = new MutableLiveData<>();
+    public LiveData<Boolean> filterEmptyEvent = _filterEmptyEvent;
 
-        // 2. Ставим дефолт
-        onCollectionSelected("Основная");
+
+    public HomeViewModel(@NonNull Application application) {
+        super(application);
+        repository = new UserCollectionsRepository();
+        loadCollectionsList();
     }
 
     private void loadCollectionsList() {
-        List<String> data = repository.getCollections();
-        _collections.setValue(data);
+        repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
+            @Override
+            public void onDataLoaded(List<String> data) {
+                _collections.setValue(data);
+                if (data != null && !data.isEmpty() && _selectedName.getValue() == null) {
+                    onCollectionSelected(data.get(0));
+                }
+            }
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getApplication(), "Ошибка: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    // ЭТОТ МЕТОД ВЫЗЫВАЕТСЯ ПРИ КЛИКЕ НА СПИСОК
     public void onCollectionSelected(String name) {
-        // 1. Обновляем выбранное имя (чтобы UI знал, что выделить синим)
         _selectedName.setValue(name);
-
-        // 2. Запрашиваем у Репозитория картинки именно для ЭТОГО имени
         loadOutfits(name);
     }
 
-    // Внутренний метод загрузки
     private void loadOutfits(String collectionName) {
-        // Идем в репозиторий за данными
-        List<Outfit> specificOutfits = repository.getOutfitsForCollection(collectionName);
+        repository.getOutfitsForCollection(collectionName, getApplication(), new UserCollectionsRepository.DataCallback<List<Outfit>>() {
+            @Override
+            public void onDataLoaded(List<Outfit> data) {
+                // --- ВАЖНО: Сохраняем в ОБА списка ---
+                allOutfits = data != null ? data : new ArrayList<>();
+                _outfits.setValue(allOutfits); // Сначала показываем всё
+            }
 
-        // Обновляем LiveData -> Фрагмент увидит это и обновит сетку
-        _outfits.setValue(specificOutfits);
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getApplication(), "Ошибка загрузки: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    // Метод для обновления лайка (визуально)
-    public void toggleLike(int outfitId) {
+    // --- ГЛАВНЫЙ МЕТОД ФИЛЬТРАЦИИ ---
+    public void applyFilters(FilterState state) {
+        android.util.Log.d("FILTER_DEBUG", "ViewModel: Начал фильтрацию. Всего вещей в базе: " + allOutfits.size()); // <--- ЛОГ
+        // Если база пустая или фильтры пустые -> сбрасываем фильтр (показываем всё)
+        if (allOutfits.isEmpty()) return;
+
+        if (state.isEmpty()) {
+            _outfits.setValue(allOutfits);
+            return;
+        }
+
+        List<Outfit> tempResult = new ArrayList<>();
+
+        for (Outfit outfit : allOutfits) {
+            // 1. Проверка ТИПОВ (ИЛИ внутри категории)
+            boolean typeMatch = checkMatch(state.getSelectedTypes(), outfit.getFilter_types());
+
+            // 2. Проверка ЦВЕТОВ (ИЛИ внутри категории)
+            boolean colorMatch = checkMatch(state.getSelectedColors(), outfit.getFilter_colors());
+
+            // 3. Проверка СЕЗОНОВ (Сравниваем строку сезона с набором)
+            boolean seasonMatch = true;
+            if (!state.getSelectedSeasons().isEmpty()) {
+                // Если у аутфита нет сезона, а фильтр включен -> не подходит
+                // Если есть -> проверяем наличие в списке выбранных
+                if (outfit.getFilter_season() == null || !state.getSelectedSeasons().contains(outfit.getFilter_season())) {
+                    seasonMatch = false;
+                }
+            }
+
+            // ЛОГИЧЕСКОЕ И: Должны совпасть все категории
+            if (typeMatch && colorMatch && seasonMatch) {
+                tempResult.add(outfit);
+            }
+        }
+
+        if (tempResult.isEmpty()) {
+            // Ничего не нашли -> Сообщаем UI, список на экране НЕ трогаем
+            _filterEmptyEvent.setValue(true);
+            // Нужно сбросить ивент сразу (можно использовать SingleLiveEvent, но пока так)
+            _filterEmptyEvent.setValue(false);
+        } else {
+            // Нашли -> Обновляем экран
+            _outfits.setValue(tempResult);
+        }
+    }
+
+    // Хелпер: проверяет, есть ли пересечение между выбранными фильтрами и тегами вещи
+    private boolean checkMatch(Set<String> selectedFilters, Map<String, Boolean> itemTags) {
+        if (selectedFilters.isEmpty()) return true; // Фильтр не выбран -> подходит всё
+        if (itemTags == null) return false;
+
+        // Бежим по выбранным фильтрам (например, "белый", "синий")
+        for (String filter : selectedFilters) {
+            // Бежим по тегам вещи (например, "Белый": true, "Красный": true)
+            for (String tagKey : itemTags.keySet()) {
+                // Сравниваем игнорируя регистр (case-insensitive)
+                if (tagKey.equalsIgnoreCase(filter)) {
+                    return true; // Нашли совпадение!
+                }
+            }
+        }
+        return false;
+    }
+
+    public void toggleLike(String outfitId) {
+        // Меняем лайк в отображаемом списке
         List<Outfit> currentList = _outfits.getValue();
         if (currentList != null) {
             for (Outfit o : currentList) {
-                if (o.getId() == outfitId) {
+                if (o.getId().equals(outfitId)) {
                     o.setLiked(!o.isLiked());
                     break;
                 }
             }
-            _outfits.setValue(currentList); // Триггерим обновление адаптера
+            _outfits.setValue(currentList);
+
+            // Надо бы обновить и в allOutfits, чтобы при сбросе фильтра лайк не пропал
+            for (Outfit o : allOutfits) {
+                if (o.getId().equals(outfitId)) {
+                    o.setLiked(o.isLiked()); // Синхронизируем
+                    break;
+                }
+            }
         }
     }
 }

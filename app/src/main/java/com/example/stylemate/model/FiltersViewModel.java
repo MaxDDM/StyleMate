@@ -14,43 +14,78 @@ public class FiltersViewModel extends ViewModel {
 
     private final FiltersRepository repository = new FiltersRepository();
 
-    // Данные для отображения кнопок (Списки)
+    // 1. Списки доступных опций (из репозитория) — остаются как были
     public final LiveData<List<String>> typesList = new MutableLiveData<>(repository.getTypes());
     public final LiveData<List<String>> colorsList = new MutableLiveData<>(repository.getColors());
     public final LiveData<List<String>> seasonsList = new MutableLiveData<>(repository.getSeasons());
 
-    // Состояние: Какие кнопки сейчас нажаты (активны)
-    // Храним все выбранные названия в одном наборе ("синий", "зима")
-    private final MutableLiveData<Set<String>> _selectedFilters = new MutableLiveData<>(new HashSet<>());
-    public LiveData<Set<String>> selectedFilters = _selectedFilters;
+    // 2. СОСТОЯНИЕ: Теперь у нас ТРИ отдельных набора для галочек
+    private final MutableLiveData<Set<String>> _selectedTypes = new MutableLiveData<>(new HashSet<>());
+    public LiveData<Set<String>> selectedTypes = _selectedTypes;
 
-    // Событие: "Фильтры применены" (Чтобы фрагмент закрылся)
-    private final MutableLiveData<Boolean> _applyEvent = new MutableLiveData<>();
-    public LiveData<Boolean> applyEvent = _applyEvent;
+    private final MutableLiveData<Set<String>> _selectedColors = new MutableLiveData<>(new HashSet<>());
+    public LiveData<Set<String>> selectedColors = _selectedColors;
+
+    private final MutableLiveData<Set<String>> _selectedSeasons = new MutableLiveData<>(new HashSet<>());
+    public LiveData<Set<String>> selectedSeasons = _selectedSeasons;
+
+    // 3. СОБЫТИЕ: Теперь Apply передает не просто Boolean, а готовый объект FilterState
+    private final MutableLiveData<FilterState> _applyEvent = new MutableLiveData<>();
+    public LiveData<FilterState> applyEvent = _applyEvent;
 
 
     // Логика нажатия на фильтр (Вкл/Выкл)
-    public void toggleFilter(String filterName) {
-        Set<String> currentSet = new HashSet<>(_selectedFilters.getValue()); // Копируем текущий набор
-
-        if (currentSet.contains(filterName)) {
-            currentSet.remove(filterName); // Если был - убираем
-        } else {
-            currentSet.add(filterName); // Если не было - добавляем
+    // Метод теперь принимает категорию, чтобы знать, в какой список лезть
+    public void toggleFilter(String filterName, FilterCategory category) {
+        switch (category) {
+            case TYPE:
+                updateSet(_selectedTypes, filterName);
+                break;
+            case COLOR:
+                updateSet(_selectedColors, filterName);
+                break;
+            case SEASON:
+                updateSet(_selectedSeasons, filterName);
+                break;
         }
+    }
 
-        _selectedFilters.setValue(currentSet); // Обновляем LiveData
+    // Вспомогательный метод для обновления Set внутри LiveData
+    private void updateSet(MutableLiveData<Set<String>> liveData, String item) {
+        Set<String> currentSet = new HashSet<>(liveData.getValue()); // Копируем текущий
+        if (currentSet.contains(item)) {
+            currentSet.remove(item);
+        } else {
+            currentSet.add(item);
+        }
+        liveData.setValue(currentSet); // Триггерим обновление UI
+    }
+
+    // Метод для инициализации (вызывается при открытии шторки)
+    public void setInitialState(FilterState state) {
+        if (state != null) {
+            _selectedTypes.setValue(new HashSet<>(state.getSelectedTypes()));
+            _selectedColors.setValue(new HashSet<>(state.getSelectedColors()));
+            _selectedSeasons.setValue(new HashSet<>(state.getSelectedSeasons()));
+        }
     }
 
     // Логика кнопки "Сбросить"
+    // Сбросить всё
     public void resetAll() {
-        _selectedFilters.setValue(new HashSet<>()); // Пустой набор
+        _selectedTypes.setValue(new HashSet<>());
+        _selectedColors.setValue(new HashSet<>());
+        _selectedSeasons.setValue(new HashSet<>());
     }
 
     // Логика кнопки "Применить"
+    // Применить: Собираем всё в кучу и отправляем
     public void apply() {
-        // Тут можно сохранить данные в глобальное хранилище или передать в HomeViewModel
-        // Пока просто даем сигнал фрагменту закрыться
-        _applyEvent.setValue(true);
+        FilterState state = new FilterState(
+                _selectedTypes.getValue(),
+                _selectedColors.getValue(),
+                _selectedSeasons.getValue()
+        );
+        _applyEvent.setValue(state);
     }
 }

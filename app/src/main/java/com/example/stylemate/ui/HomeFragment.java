@@ -16,10 +16,12 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager; // Важный 
 
 import com.example.stylemate.R;
 import com.example.stylemate.model.HomeViewModel;
+import com.example.stylemate.model.FilterState; // Импортируем наш новый класс
 import com.example.stylemate.model.Outfit;
 import com.example.stylemate.repository.ActiveUserInfo;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class HomeFragment extends Fragment {
 
@@ -35,6 +37,13 @@ public class HomeFragment extends Fragment {
     private boolean isListExpanded = false;
     private boolean isGuest;     // --- НОВОЕ: Флаг гостя
     private int userStyleId;     // --- НОВОЕ: Стиль юзера
+
+    // Храним текущие фильтры (по умолчанию пустые)
+    private FilterState currentFilterState = new FilterState(new HashSet<>(), new HashSet<>(), new HashSet<>());
+
+    // Для таймера 30 минут
+    private long lastPauseTime = 0;
+    private static final long SESSION_TIMEOUT = 30 * 60 * 1000; // 30 минут в миллисекундах
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -84,31 +93,32 @@ public class HomeFragment extends Fragment {
         rvGrid.setLayoutManager(layoutManager);
 
         // Создаем адаптер
-        gridAdapter = new OutfitAdapter(new ArrayList<>(), new OutfitAdapter.OnOutfitClickListener() {
+        // ВАЖНО: Первым аргументом передаем getContext(), так как мы обновили адаптер для Glide
+        gridAdapter = new OutfitAdapter(getContext(), new ArrayList<>(), new OutfitAdapter.OnOutfitClickListener() {
             @Override
             public void onHeartClick(Outfit outfit, int position) {
-                // Если гость -> ругаемся, если юзер -> лайкаем
                 if (isGuest) {
                     Toast.makeText(getContext(), "Войдите или зарегистрируйтесь, чтобы сохранять", Toast.LENGTH_SHORT).show();
-                    // Можно тут открыть AuthActivity
                 } else {
+                    // outfit.getId() теперь возвращает String (ID из базы), это правильно
                     viewModel.toggleLike(outfit.getId());
                 }
             }
 
             @Override
             public void onImageClick(Outfit outfit) {
-                // --- ВОТ ТУТ ОТКРЫВАЕМ НОВУЮ КАРТОЧКУ ---
+                // --- ВРЕМЕННАЯ ЗАГЛУШКА ---
+                // Мы закомментировали переход, чтобы приложение не падало,
+                // пока мы не настроили OutfitDetailActivity под новые данные.
 
+                Toast.makeText(getContext(), "Детальный просмотр скоро будет доступен", Toast.LENGTH_SHORT).show();
+
+                /* ПОКА СКРЫТО
                 Intent intent = new Intent(getContext(), OutfitDetailActivity.class);
-
-                // Передаем ID картинки, чтобы в деталях открылась именно она
-                intent.putExtra("image_res_id", outfit.getImageResId());
-
-                // Можно передать ID образа, чтобы потом подгрузить цену и товары из БД
-                // intent.putExtra("outfit_id", outfit.getId());
-
+                intent.putExtra("image_url", outfit.getImageUrl());
+                intent.putExtra("outfit_id", outfit.getId());
                 startActivity(intent);
+                */
             }
         });
         rvGrid.setAdapter(gridAdapter);
@@ -116,21 +126,46 @@ public class HomeFragment extends Fragment {
 
 
 
+        // =========================================================================
+        // --- ЭТАП 5: СВЯЗКА ФИЛЬТРОВ (Fragment Result Listener) ---
+        // Слушаем результат от FiltersBottomSheetFragment
+        // =========================================================================
+
+        getParentFragmentManager().setFragmentResultListener(
+                FiltersBottomSheetFragment.REQUEST_KEY, // Ключ запроса (должен совпадать)
+                getViewLifecycleOwner(),
+                (requestKey, result) -> {
+                    // Достаем объект FilterState из Bundle
+                    android.util.Log.d("FILTER_DEBUG", "Фрагмент: Получил сигнал!"); // <--- ЛОГ
+                    FilterState state = (FilterState) result.getSerializable(FiltersBottomSheetFragment.RESULT_KEY);
+
+                    if (state != null) {
+                        // 1. Сохраняем себе, чтобы потом передать обратно в шторку
+                        this.currentFilterState = state;
+                        // 2. Применяем
+                        viewModel.applyFilters(state);
+                    }
+                }
+        );
+
+
         // --- ПОДПИСКА НА ДАННЫЕ (OBSERVERS) ---
 
-        // 1. Список названий коллекций (старое)
-        viewModel.collections.observe(getViewLifecycleOwner(), list -> {
-            adapter.updateList(list);
-        });
+        // 1. Список коллекций
+        viewModel.collections.observe(getViewLifecycleOwner(), list -> adapter.updateList(list));
 
-        // 2. Выбранная коллекция (обновленное)
-        viewModel.selectedName.observe(getViewLifecycleOwner(), name -> {
-            adapter.setSelectedName(name);
-        });
+        // 2. Выбранная коллекция
+        viewModel.selectedName.observe(getViewLifecycleOwner(), name -> adapter.setSelectedName(name));
 
-        // --- НОВОЕ: 3. Список картинок (обновляем адаптер сетки)
-        viewModel.outfits.observe(getViewLifecycleOwner(), outfits -> {
-            gridAdapter.updateList(outfits);
+        // 3. Список картинок (обновляем адаптер)
+        viewModel.outfits.observe(getViewLifecycleOwner(), outfits -> gridAdapter.updateList(outfits));
+
+        // 4. --- НОВОЕ: Обработка пустого результата фильтрации ---
+        viewModel.filterEmptyEvent.observe(getViewLifecycleOwner(), isEmpty -> {
+            if (isEmpty != null && isEmpty) {
+                Toast.makeText(getContext(), "С такими фильтрами ничего не найдено", Toast.LENGTH_SHORT).show();
+                btnList.performClick();
+            }
         });
 
 
@@ -140,19 +175,18 @@ public class HomeFragment extends Fragment {
             if (isListExpanded) toggleListState();
         });
 
+        // Открытие фильтров
         btnList.setOnClickListener(v -> {
-            FiltersBottomSheetFragment filtersFragment = new FiltersBottomSheetFragment();
+            // Используем наш newInstance, чтобы передать текущие галочки
+            FiltersBottomSheetFragment filtersFragment = FiltersBottomSheetFragment.newInstance(currentFilterState);
             filtersFragment.show(getParentFragmentManager(), "FiltersTag");
         });
 
-        // --- НОВОЕ: Кнопка "Создать подборку"
         btnCreate.setOnClickListener(v -> {
             if (isGuest) {
                 Toast.makeText(getContext(), "Доступно только зарегистрированным пользователям", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getContext(), "Открываем создание...", Toast.LENGTH_SHORT).show();
-                // Intent intent = new Intent(getContext(), CreateCollectionActivity.class);
-                // startActivity(intent);
             }
         });
 
@@ -168,8 +202,42 @@ public class HomeFragment extends Fragment {
         } else {
             isListExpanded = true;
             adapter.setExpanded(true);
-            rvCollections.setBackgroundResource(R.drawable.bg_dropdown_list); // Убедись, что этот drawable существует
+            rvCollections.setBackgroundResource(R.drawable.bg_dropdown_list);
             vOverlay.setVisibility(View.VISIBLE);
         }
+    }
+
+    // === ЛОГИКА ТАЙМЕРА 30 МИНУТ ===
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Запоминаем время, когда юзер свернул приложение или ушел с фрагмента
+        lastPauseTime = System.currentTimeMillis();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Проверяем: если приложение было свернуто, и прошло > 30 минут
+        if (lastPauseTime > 0) {
+            long diff = System.currentTimeMillis() - lastPauseTime;
+            if (diff > SESSION_TIMEOUT) {
+                // Время вышло -> Сбрасываем фильтры
+                resetFiltersByTimeout();
+            }
+        }
+    }
+
+    private void resetFiltersByTimeout() {
+        // 1. Очищаем локальное состояние
+        currentFilterState = new FilterState(new HashSet<>(), new HashSet<>(), new HashSet<>());
+        // 2. Очищаем ViewModel
+        viewModel.applyFilters(currentFilterState);
+        // 3. Можно показать уведомление (необязательно)
+        // Toast.makeText(getContext(), "Сессия истекла, фильтры сброшены", Toast.LENGTH_SHORT).show();
+
+        lastPauseTime = 0; // Сбрасываем таймер
     }
 }

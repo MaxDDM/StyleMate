@@ -35,7 +35,7 @@ public class CollectionDetailViewModel extends ViewModel {
         String oldName = _title.getValue();
 
         // 1. Сообщаем репозиторию
-        repository.renameCollection(oldName, newName);
+        //     repository.renameCollection(oldName, newName);
 
         // 2. Обновляем LiveData (Activity увидит это и поменяет текст)
         _title.setValue(newName);
@@ -49,7 +49,7 @@ public class CollectionDetailViewModel extends ViewModel {
         String currentName = _title.getValue();
 
         // 1. Удаляем в базе
-        repository.deleteCollection(currentName);
+        //   repository.deleteCollection(currentName);
 
         // 2. Показываем тост
         _toastMessage.setValue("Подборка удалена");

@@ -8,27 +8,42 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridLayout; // Используем стандартный GridLayout
+import com.example.stylemate.model.FilterCategory;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.stylemate.model.FiltersViewModel;
+import com.example.stylemate.model.FilterState;
 import com.example.stylemate.R;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.flexbox.FlexboxLayout;
 
 import java.util.List;
 import java.util.Set;
 
 public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
+    public static final String REQUEST_KEY = "request_filter";
+    public static final String RESULT_KEY = "filter_result";
+    // Ключ для входящих аргументов
+    private static final String ARG_CURRENT_STATE = "arg_current_state";
     private FiltersViewModel viewModel;
     // Ссылки на контейнеры, чтобы потом бегать по ним и обновлять цвета
-    private GridLayout gridTypes;
-    private GridLayout gridColors;
-    private GridLayout gridSeasons;
+    private FlexboxLayout gridTypes;
+    private FlexboxLayout gridColors;
+    private FlexboxLayout gridSeasons;
+
+    // Статический метод для удобного создания фрагмента с данными
+    public static FiltersBottomSheetFragment newInstance(FilterState currentState) {
+        FiltersBottomSheetFragment fragment = new FiltersBottomSheetFragment();
+        Bundle args = new Bundle();
+        args.putSerializable(ARG_CURRENT_STATE, currentState);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Nullable
     @Override
@@ -45,53 +60,66 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
         MaterialButton btnReset = view.findViewById(R.id.btnReset);
         MaterialButton btnApply = view.findViewById(R.id.btnApply);
 
-        // --- 1. СТРОИМ UI (Создаем кнопки) ---
-        // Подписываемся на списки данных. Как только они придут - строим сетки.
-        viewModel.typesList.observe(getViewLifecycleOwner(), list -> fillGrid(inflater, gridTypes, list));
-        viewModel.colorsList.observe(getViewLifecycleOwner(), list -> fillGrid(inflater, gridColors, list));
-        viewModel.seasonsList.observe(getViewLifecycleOwner(), list -> fillGrid(inflater, gridSeasons, list));
+        if (getArguments() != null && savedInstanceState == null) {
+            FilterState state = (FilterState) getArguments().getSerializable(ARG_CURRENT_STATE);
+            viewModel.setInitialState(state);
+        }
 
-        // --- 2. СЛЕДИМ ЗА СОСТОЯНИЕМ (Галочки) ---
-        // Как только юзер нажмет кнопку, ViewModel обновит selectedFilters,
-        // и этот код сработает -> кнопки перекрасятся.
-        viewModel.selectedFilters.observe(getViewLifecycleOwner(), this::updateButtonsState);
+        // --- 1. ЗАПОЛНЯЕМ UI ---
+        // Передаем категорию в метод заполнения!
+        viewModel.typesList.observe(getViewLifecycleOwner(), list ->
+                fillGrid(inflater, gridTypes, list, FilterCategory.TYPE));
+
+        viewModel.colorsList.observe(getViewLifecycleOwner(), list ->
+                fillGrid(inflater, gridColors, list, FilterCategory.COLOR));
+
+        viewModel.seasonsList.observe(getViewLifecycleOwner(), list ->
+                fillGrid(inflater, gridSeasons, list, FilterCategory.SEASON));
+
+
+        // --- 2. СЛЕДИМ ЗА ВЫБОРОМ (ТРИ РАЗНЫХ СПИСКА) ---
+        viewModel.selectedTypes.observe(getViewLifecycleOwner(), set -> updateGrid(gridTypes, set));
+        viewModel.selectedColors.observe(getViewLifecycleOwner(), set -> updateGrid(gridColors, set));
+        viewModel.selectedSeasons.observe(getViewLifecycleOwner(), set -> updateGrid(gridSeasons, set));
 
         // --- ЛОГИКА КНОПКИ СБРОСИТЬ ---
         btnReset.setOnClickListener(v -> {
             viewModel.resetAll();
+            viewModel.apply();
             CustomToast.show(getContext(), "Фильтры сброшены");
         });
 
-        // --- ЛОГИКА КНОПКИ ПРИМЕНИТЬ ---
-        btnApply.setOnClickListener(v -> viewModel.apply());
-        viewModel.applyEvent.observe(getViewLifecycleOwner(), shouldClose -> {
-            if (shouldClose) {
-                CustomToast.show(getContext(), "Фильтры применены");
+        btnApply.setOnClickListener(v -> {
+            // Запускаем процесс во ViewModel
+            viewModel.apply();
+        });
+
+        // Когда ViewModel собрала FilterState, отправляем его в HomeFragment
+        viewModel.applyEvent.observe(getViewLifecycleOwner(), filterState -> {
+            if (filterState != null) {
+                android.util.Log.d("FILTER_DEBUG", "Шторка: Отправляю данные! Типов: " + filterState.getSelectedTypes().size());
+                Bundle result = new Bundle();
+                result.putSerializable(RESULT_KEY, filterState);
+
+                // Отправляем результат "наверх"
+                getParentFragmentManager().setFragmentResult(REQUEST_KEY, result);
+
                 dismiss();
             }
         });
 
         return view;
     }
-
-    // Метод, который бегает по всем кнопкам и включает/выключает их
-    private void updateButtonsState(Set<String> selectedFilters) {
-        updateGrid(gridTypes, selectedFilters);
-        updateGrid(gridColors, selectedFilters);
-        updateGrid(gridSeasons, selectedFilters);
-    }
-
-    private void updateGrid(GridLayout grid, Set<String> selectedFilters) {
+    // Обновляет визуальное состояние кнопок (нажата/нет)
+    private void updateGrid(FlexboxLayout grid, Set<String> selectedFilters) {
         if (grid == null) return;
         for (int i = 0; i < grid.getChildCount(); i++) {
             View child = grid.getChildAt(i);
             if (child instanceof MaterialButton) {
                 MaterialButton btn = (MaterialButton) child;
                 String text = btn.getText().toString();
-                // Если текст кнопки есть в списке выбранных - ставим Checked = true
+                // Проверяем, есть ли этот текст в переданном наборе
                 boolean isSelected = selectedFilters.contains(text);
-
-                // Чтобы не вызывать лишнюю перерисовку
                 if (btn.isChecked() != isSelected) {
                     btn.setChecked(isSelected);
                 }
@@ -99,35 +127,33 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
         }
     }
 
-    private void fillGrid(LayoutInflater inflater, GridLayout grid, List<String> items) {
+    private void fillGrid(LayoutInflater inflater, FlexboxLayout grid, List<String> items, FilterCategory category) {
         grid.removeAllViews();
-        // 1. Вычисляем ширину одной кнопки (Ширина экрана / 3)
-        // Вычитаем отступы (padding экрана 20+20 + отступы кнопок)
-        // Грубый, но надежный расчет: Экран / 3 - немного места на отступы
-        int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
-
-        int buttonWidth = (screenWidth / 3) - dpToPx(20); // 16dp запас на отступы
 
         for (String item : items) {
-            // 2. Создаем кнопку из XML
             MaterialButton button = (MaterialButton) inflater.inflate(
                     R.layout.item_filter_button, grid, false
             );
-
             button.setText(item);
 
-            // 3. Задаем ей вычисленную ширину
-            // Теперь кнопка всегда занимает ровно 1/3, независимо от текста
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = buttonWidth;
-            params.height = dpToPx(24);
-            params.setMargins(dpToPx(6), dpToPx(6), dpToPx(6), dpToPx(6)); // Отступы вокруг кнопки
+            // --- МАГИЯ РАСТЯГИВАНИЯ ---
+            // Создаем параметры именно для FlexboxLayout
+            FlexboxLayout.LayoutParams params = new FlexboxLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+
+            // flexGrow = 1.0f означает: "Растягивай меня, чтобы заполнить пустоту"
+            params.setFlexGrow(1.0f);
+
+            // Задаем отступы МЕЖДУ кнопками через params (а не через ChipGroup)
+            int margin = dpToPx(4); // 4dp со всех сторон даст 8dp между кнопками
+            params.setMargins(margin, margin, margin, margin);
+
             button.setLayoutParams(params);
+            // ---------------------------
 
-            // При клике мы не меняем цвет сами! Мы сообщаем ViewModel.
-            button.setOnClickListener(v -> viewModel.toggleFilter(item));
-
-            // 5. Просто добавляем в сетку. Она сама перенесет на новую строку.
+            button.setOnClickListener(v -> viewModel.toggleFilter(item, category));
             grid.addView(button);
         }
     }
@@ -146,7 +172,7 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
         if (dialog != null) {
             View bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
             DisplayMetrics displayMetrics = requireActivity().getResources().getDisplayMetrics();
-            bottomSheet.getLayoutParams().height = (int) (displayMetrics.heightPixels * 0.8);
+            bottomSheet.getLayoutParams().height = (int) (displayMetrics.heightPixels * 0.85);
             BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_EXPANDED);
             BottomSheetBehavior.from(bottomSheet).setSkipCollapsed(true);
         }

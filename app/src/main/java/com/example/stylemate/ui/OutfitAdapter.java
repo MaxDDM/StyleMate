@@ -1,5 +1,6 @@
 package com.example.stylemate.ui;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +10,7 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide; // Импорт Glide
 import com.example.stylemate.R;
 import com.example.stylemate.model.Outfit;
 import java.util.List;
@@ -17,8 +19,8 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
 
     private List<Outfit> items;
     private final OnOutfitClickListener listener;
+    private final Context context; // Нужен контекст для Glide
 
-    // Цвета (подставь свои если нужно)
     private final int COLOR_BLUE = Color.parseColor("#3D7DFF");
     private final int COLOR_GRAY = Color.parseColor("#5C5C5C");
 
@@ -27,7 +29,9 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
         void onImageClick(Outfit outfit);
     }
 
-    public OutfitAdapter(List<Outfit> items, OnOutfitClickListener listener) {
+    // Добавили Context в конструктор
+    public OutfitAdapter(Context context, List<Outfit> items, OnOutfitClickListener listener) {
+        this.context = context;
         this.items = items;
         this.listener = listener;
     }
@@ -49,16 +53,18 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
     public void onBindViewHolder(@NonNull OutfitViewHolder holder, int position) {
         Outfit item = items.get(position);
 
-        // 1. Картинка
-        holder.imageView.setImageResource(item.getImageResId());
+        // 1. ЗАГРУЗКА КАРТИНКИ ЧЕРЕЗ GLIDE
+        Glide.with(context)
+                .load(item.getImageUrl()) // Ссылка из Firebase
+                .placeholder(R.drawable.ic_launcher_background) // Заглушка пока грузится (создай или выбери свою)
+                .into(holder.imageView);
 
-        // 2. Сердце (Красим программно)
-        holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
-
+        // 2. Сердце
+        holder.btnLike.setImageResource(R.drawable.ic_heart_outline); // Убедись, что иконка есть
         if (item.isLiked()) {
-            holder.btnLike.setColorFilter(COLOR_BLUE); // Красим в синий
+            holder.btnLike.setColorFilter(COLOR_BLUE);
         } else {
-            holder.btnLike.setColorFilter(COLOR_GRAY); // Красим в серый
+            holder.btnLike.setColorFilter(COLOR_GRAY);
         }
 
         // 3. Клики

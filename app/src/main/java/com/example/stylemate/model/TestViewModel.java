@@ -7,7 +7,13 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.repository.StyleTestRepository;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestViewModel extends AndroidViewModel {
 
@@ -58,12 +64,64 @@ public class TestViewModel extends AndroidViewModel {
     }
 
     // Activity просто говорит "Посчитай!", но не требует ответа мгновенно
+    // --- ФИНАЛИЗАЦИЯ ТЕСТА ---
     public void calculateResult() {
-        int winner = repository.calculateWinner();
-        repository.clearState(getApplication());
+        int winnerIndex = repository.calculateWinner();
+        String styleName = repository.getStyleName(winnerIndex); // "casual"
 
-        // Мы кладем результат в LiveData.
-        // Activity, которая "подписана" на это, увидит изменение и среагирует.
-        winnerStyle.setValue(winner);
+        // Проверяем, авторизован ли пользователь через твой ActiveUserInfo
+        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", getApplication());
+
+        // Если там не пусто и не "0" - значит это Юзер
+        boolean isLogged = rawEmail != null && !rawEmail.equals("0");
+
+        if (isLogged) {
+            saveToFirebase(rawEmail, styleName, winnerIndex);
+        } else {
+            saveToLocal(styleName, winnerIndex);
+        }
+    }
+
+    private void saveToFirebase(String rawEmail, String styleName, int winnerIndex) {
+        DatabaseReference dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
+
+        // ВАЖНО: В Firebase ключи не могут содержать ".", заменяем на "|" как в твоем примере
+        String safeEmailKey = rawEmail.replace(".", "|");
+
+        // user_collections -> ivan@mail|ru -> PUSH_ID
+        DatabaseReference newCollectionRef = dbRef
+                .child("user_collections")
+                .child(safeEmailKey)
+                .push();
+
+        // СТРОГО ПО ТВОЕЙ СТРУКТУРЕ
+        Map<String, Object> collectionData = new HashMap<>();
+        collectionData.put("name", "Основная");
+        collectionData.put("style", styleName);
+        // Поля "season", "situation" и "favorites" не добавляем, они необязательные/пустые
+
+        newCollectionRef.setValue(collectionData)
+                .addOnSuccessListener(aVoid -> {
+                    // Успех
+                    repository.clearState(getApplication());
+                    // Ставим флаг, что это не гость (на всякий случай для UI)
+                    ActiveUserInfo.setDefaults("is_guest", "false", getApplication());
+                    // Переходим
+                    winnerStyle.setValue(winnerIndex);
+                })
+                .addOnFailureListener(e -> {
+                    // Ошибка сети - все равно пускаем, но данные в облако не ушли
+                    repository.clearState(getApplication());
+                    winnerStyle.setValue(winnerIndex);
+                });
+    }
+
+    private void saveToLocal(String styleName, int winnerIndex) {
+        // Для гостя сохраняем локально, чтобы HomeFragment знал, что показывать
+        ActiveUserInfo.setDefaults("is_guest", "true", getApplication());
+        ActiveUserInfo.setDefaults("guest_style_name", styleName, getApplication());
+
+        repository.clearState(getApplication());
+        winnerStyle.setValue(winnerIndex);
     }
 }
