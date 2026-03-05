@@ -6,6 +6,8 @@ import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.stylemate.R;
+import com.example.stylemate.model.Resource;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.example.stylemate.model.ChangePasswordViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -90,7 +93,6 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         // 1. Подключаем ViewModel
         viewModel = new ViewModelProvider(this).get(ChangePasswordViewModel.class);
 
@@ -118,17 +120,39 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
         // === СЛУШАТЕЛИ ВВОДА ===
         // Нажатие Enter на клавиатуре
         etOldPassword.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_ACTION_DONE) {
-                // Передаем ввод во ViewModel
-                viewModel.verifyOldPassword(etOldPassword.getText().toString(), requireContext());
+            boolean isEnterPressed =
+                    actionId == EditorInfo.IME_ACTION_NEXT ||
+                            actionId == EditorInfo.IME_ACTION_DONE ||
+                            (actionId == EditorInfo.IME_NULL &&
+                                    event != null &&
+                                    event.getAction() == KeyEvent.ACTION_DOWN &&
+                                    event.getKeyCode() == KeyEvent.KEYCODE_ENTER);
+
+            if (isEnterPressed) {
+                String oldPassword = etOldPassword.getText().toString().trim();
+                if (oldPassword.isEmpty()) {
+                    showError(etOldPassword, "Введите старый пароль");
+                    return true;
+                }
+
+                // ТОЛЬКО запускаем проверку
+                viewModel.verifyOldPassword(oldPassword, requireContext());
+
                 return true;
             }
             return false;
         });
 
         etNewPassword.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_ACTION_DONE) {
-                // Передаем ввод во ViewModel
+            boolean isEnterPressed =
+                    actionId == EditorInfo.IME_ACTION_NEXT ||
+                            actionId == EditorInfo.IME_ACTION_DONE ||
+                            (actionId == EditorInfo.IME_NULL &&
+                                    event != null &&
+                                    event.getAction() == KeyEvent.ACTION_DOWN &&
+                                    event.getKeyCode() == KeyEvent.KEYCODE_ENTER);
+
+            if (isEnterPressed) {
                 viewModel.submitNewPassword(etNewPassword.getText().toString(), requireContext());
                 return true;
             }
@@ -138,13 +162,33 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
 
     private void observeViewModel() {
         // 1. Успех проверки старого пароля
-        viewModel.oldPasswordCorrect.observe(getViewLifecycleOwner(), success -> {
-            if (success) {
-                isSecondStep = true;
-                viewFlipper.showNext(); // Листаем экран
+        viewModel.oldPasswordCorrect.observe(getViewLifecycleOwner(), resource -> {
+            if (resource.status == Resource.Status.LOADING) {
+                // Можно показать прогресс, если хотите
+                return;
+            }
 
-                etNewPassword.requestFocus();
-                showKeyboardForCurrentStep();
+            if (resource.status == Resource.Status.ERROR) {
+                showError(etOldPassword, resource.message != null
+                        ? resource.message
+                        : "Ошибка проверки пароля");
+                return;
+            }
+
+            if (resource.status == Resource.Status.SUCCESS) {
+                Boolean isCorrect = resource.data;
+                if (Boolean.TRUE.equals(isCorrect)) {
+                    // Пароль верный — переходим на новый шаг
+                    isSecondStep = true;
+                    if (viewFlipper.getDisplayedChild() == 0) {
+                        viewFlipper.showNext();
+                    }
+                    etNewPassword.requestFocus();
+                    showKeyboardForCurrentStep();
+                } else {
+                    // Пароль неверный — показываем ошибку
+                    showError(etOldPassword, "Неверный пароль");
+                }
             }
         });
 

@@ -10,8 +10,10 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.example.stylemate.R;
+import com.example.stylemate.model.Resource;
 import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.repository.UserRepository;
 
@@ -28,6 +30,7 @@ public class AuthActivity extends AppCompatActivity {
 
         String isAuthorized = ActiveUserInfo.getDefaults("isRegistered", this);
         if (isAuthorized != null && !isAuthorized.isEmpty()) {
+            ActiveUserInfo.setDefaults("isRegistered", "", AuthActivity.this);
             Intent intent = new Intent(AuthActivity.this, MainActivity.class);
             startActivity(intent);
         }
@@ -42,23 +45,39 @@ public class AuthActivity extends AppCompatActivity {
 
             if (!validator.isValid(email.getText().toString())) {
                 Toast.makeText(AuthActivity.this, "Указан некорретный адрес", Toast.LENGTH_LONG).show();
-            }
-
-            if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
+            } else if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
                 Toast.makeText(AuthActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
-            }
-
-            if (repo.exists(email.getText().toString().replace(".", "|"), AuthActivity.this)) {
-                if (repo.checkCurrentPassword(password.getText().toString(), AuthActivity.this)) {
-                    ActiveUserInfo.setDefaults("isRegistered", email.getText().toString().replace(".", "|"), AuthActivity.this);
-
-                    Intent intent = new Intent(AuthActivity.this, MainActivity.class);
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(AuthActivity.this, "Введён неверный пароль", Toast.LENGTH_LONG).show();
-                }
             } else {
-                Toast.makeText(AuthActivity.this, "Пользователь с такой почтой не зарегистрирован", Toast.LENGTH_LONG).show();
+                repo.exists(email.getText().toString().replace(".", "|"), AuthActivity.this).observe(this, resource -> {
+                    if (resource != null) {
+                        switch (resource.status) {
+                            case LOADING:
+                                break;
+                            case SUCCESS:
+                                ActiveUserInfo.setDefaults("isRegistered", email.getText().toString().replace(".", "|"), AuthActivity.this);
+
+                                if (resource.data) {
+                                    repo.checkCurrentPassword(password.getText().toString(), this).observe(this, resource1 -> {
+                                        if (resource1.status == Resource.Status.SUCCESS) {
+                                            if (resource1.data) {
+                                                Intent intent = new Intent(AuthActivity.this, MainActivity.class);
+                                                startActivity(intent);
+                                            } else {
+                                                Toast.makeText(AuthActivity.this, "Введён неверный пароль", Toast.LENGTH_LONG).show();
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    ActiveUserInfo.setDefaults("isRegistered", "", AuthActivity.this);
+                                    Toast.makeText(AuthActivity.this, "Пользователь с такой почтой не зарегистрирован", Toast.LENGTH_LONG).show();
+                                }
+                                break;
+                            case ERROR:
+                                break;
+                        }
+
+                    }
+                });
             }
         });
 

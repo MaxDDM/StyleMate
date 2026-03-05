@@ -4,11 +4,13 @@ import static androidx.core.content.ContextCompat.startActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import com.example.stylemate.R;
 // Убедись, что FavouriteOutfits импортирован правильно.
@@ -49,13 +51,17 @@ public class UserRepository {
         return data;
     }
 
-    public boolean exists(String email, Context context) {
-        final boolean[] res = {false};
-        table.addValueEventListener(new ValueEventListener() {
+    public LiveData<Resource<Boolean>> exists(String email, Context context) {
+        MutableLiveData<Resource<Boolean>> liveData = new MutableLiveData<>();
+        liveData.setValue(Resource.loading());
+
+        table.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.child(email).exists()) {
-                    res[0] = true;
+                    liveData.setValue(Resource.success(true));
+                } else {
+                    liveData.setValue(Resource.success(false));
                 }
             }
 
@@ -65,7 +71,7 @@ public class UserRepository {
             }
         });
 
-        return res[0];
+        return liveData;
     }
 
     public LiveData<Resource<UserProfile>> getUserProfile(Context context) {
@@ -91,54 +97,44 @@ public class UserRepository {
     }
 
     public void logout(Context context) {
-        ActiveUserInfo.setDefaults("isRegistered", "0", context);
+        ActiveUserInfo.setDefaults("isRegistered", "", context);
     }
 
-    public boolean login(String name, String phone, String email, String birthDate, int avatarResId, String password, Context context) {
+    public LiveData<Resource<Boolean>> login(String name, String phone, String email, String birthDate, int avatarResId, String password, Context context) {
         UserProfile user = new UserProfile(name, phone, email, birthDate, password, avatarResId);
 
-        if (exists(user.email, context)) {
-            Toast.makeText(context, "Это имя занято", Toast.LENGTH_LONG).show();
-            return false;
-        }
-
-        final boolean[] res = {true};
+        MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
+        result.setValue(Resource.loading());
         table.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 table.child(user.email).setValue(user);
+                result.setValue(Resource.success(true));
                 Toast.makeText(context, "Успешная регистрация", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Toast.makeText(context, "Возникла проблема, скорее всего нет соединения с интернетом", Toast.LENGTH_LONG).show();
-                res[0] = false;
+                result.setValue(Resource.success(false));
             }
         });
 
-        return res[0];
+        return result;
     }
 
-    public boolean checkCurrentPassword(String input, Context context) {
-        UserProfile user = Objects.requireNonNull(getUserProfile(context).getValue()).data;
+    public LiveData<Resource<Boolean>> checkCurrentPassword(String input, Context context) {
+        MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
+        result.setValue(Resource.loading());
 
-        if (Objects.equals(user.password, input)) {
-            return true;
-        }
+        String email = ActiveUserInfo.getDefaults("isRegistered", context);
 
-        return false;
-    }
-
-    public void changePassword(String newPassword, Context context) {
-        UserProfile user = Objects.requireNonNull(getUserProfile(context).getValue()).data;
-        user.password = newPassword;
-
-        table.addValueEventListener(new ValueEventListener() {
+        table.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                table.child(user.email).setValue(user);
-                Toast.makeText(context, "Установлен новый пароль", Toast.LENGTH_LONG).show();
+                UserProfile user = snapshot.child(email).getValue(UserProfile.class);
+                assert user != null;
+                result.setValue(Resource.success(Objects.equals(user.password, input)));
             }
 
             @Override
@@ -146,5 +142,13 @@ public class UserRepository {
                 Toast.makeText(context, "Возникла проблема, скорее всего нет соединения с интернетом", Toast.LENGTH_LONG).show();
             }
         });
+
+        return result;
+    }
+
+    public void changePassword(String newPassword, Context context) {
+        String email = ActiveUserInfo.getDefaults("isRegistered", context);
+
+        table.child(email).child("password").setValue(newPassword);
     }
 }
