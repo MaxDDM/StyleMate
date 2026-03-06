@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.stylemate.R;
 import com.example.stylemate.repository.ActiveUserInfo;
+import com.example.stylemate.ui.test.TestQ1Activity;
 
 public class NewSelectQ1Activity extends AppCompatActivity {
     int ans = -1;
@@ -42,7 +43,13 @@ public class NewSelectQ1Activity extends AppCompatActivity {
 
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
-                ActiveUserInfo.setDefaults("testSel" + ans, String.valueOf(ans), NewSelectQ1Activity.this);
+                if (ans == 1) {
+                    Intent intent = new Intent(NewSelectQ1Activity.this, NewSelectQ2Activity.class);
+                    startActivity(intent);
+                } else {
+                    Intent intent = new Intent(NewSelectQ1Activity.this, TestQ1Activity.class);
+                    startActivity(intent);
+                }
             } else {
                 Toast.makeText(NewSelectQ1Activity.this, "Вы не выбрали ни один из вариантов", Toast.LENGTH_LONG).show();
                 return;

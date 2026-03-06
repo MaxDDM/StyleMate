@@ -30,7 +30,6 @@ public class AuthActivity extends AppCompatActivity {
 
         String isAuthorized = ActiveUserInfo.getDefaults("isRegistered", this);
         if (isAuthorized != null && !isAuthorized.isEmpty()) {
-            ActiveUserInfo.setDefaults("isRegistered", "", AuthActivity.this);
             Intent intent = new Intent(AuthActivity.this, MainActivity.class);
             startActivity(intent);
         }
