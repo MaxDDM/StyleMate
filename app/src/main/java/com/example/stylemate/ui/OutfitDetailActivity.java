@@ -31,6 +31,16 @@ public class OutfitDetailActivity extends AppCompatActivity {
     private TextView tvTitle;      // "Образ на лето..."
     private TextView tvTotalPrice; // "15 000 Р" (сумма)
     private RecyclerView rvProducts;
+    private ImageButton btnLike; // Вынесли кнопку в поле класса
+
+    // Поля для логики лайков
+    private String currentCollectionId;
+    private String currentOutfitId;
+    private boolean isLiked = false;
+    // Цвета
+    private final int COLOR_BLUE = android.graphics.Color.parseColor("#3D7DFF");
+    private final int COLOR_GRAY = android.graphics.Color.parseColor("#5C5C5C");
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +53,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
         // 2. Находим View
         ivMain = findViewById(R.id.ivDetailImage);
         ImageButton btnBack = findViewById(R.id.btnBack);
-        ImageButton btnLike = findViewById(R.id.btnDetailLike);
+        btnLike = findViewById(R.id.btnDetailLike);
 
         // ВАЖНО: Убедись, что в XML есть эти ID, или добавь их!
         tvTitle = findViewById(R.id.tvOutfitTitle);
@@ -52,6 +62,12 @@ public class OutfitDetailActivity extends AppCompatActivity {
 
         // 3. Настраиваем RecyclerView
         setupRecyclerView();
+
+        // Сначала грузим данные, там же инициализируем переменные лайков
+        loadDataFromIntent();
+
+        // После загрузки данных обновляем вид кнопки
+        updateLikeButtonUI();
 
         // 4. Получаем данные из Intent и запускаем загрузку
         loadDataFromIntent();
@@ -62,11 +78,40 @@ public class OutfitDetailActivity extends AppCompatActivity {
         // 6. Кнопки
         btnBack.setOnClickListener(v -> finish());
 
+        // --- ЛОГИКА ЛАЙКА ---
         btnLike.setOnClickListener(v -> {
-            // Тут логика лайка (пока визуальная)
-            btnLike.setColorFilter(android.graphics.Color.parseColor("#3D7DFF"));
-            Toast.makeText(this, "Добавлено в избранное", Toast.LENGTH_SHORT).show();
+            // 1. Проверка на гостя (у гостя collectionId == null)
+            if (currentCollectionId == null) {
+                Toast.makeText(this, "Войдите или зарегистрируйтесь, чтобы сохранять образы", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 2. Инвертируем (было лайкнуто -> стало не лайкнуто, и наоборот)
+            isLiked = !isLiked;
+
+            // 3. Обновляем вид кнопки
+            updateLikeButtonUI();
+
+            // 4. Отправляем в базу
+            viewModel.toggleLike(currentCollectionId, currentOutfitId, isLiked);
+
+            // 5. Обратная связь
+            if (isLiked) {
+                Toast.makeText(this, "Добавлено в избранное", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Удалено из избранного", Toast.LENGTH_SHORT).show();
+            }
         });
+    }
+
+    private void updateLikeButtonUI() {
+        if (isLiked) {
+            btnLike.setColorFilter(COLOR_BLUE);
+            btnLike.setImageResource(R.drawable.ic_heart_outline); // Если есть заполненное сердце, иначе ic_heart_outline
+        } else {
+            btnLike.setColorFilter(COLOR_GRAY);
+            btnLike.setImageResource(R.drawable.ic_heart_outline);
+        }
     }
 
     private void setupRecyclerView() {
@@ -87,9 +132,11 @@ public class OutfitDetailActivity extends AppCompatActivity {
     private void loadDataFromIntent() {
         // Достаем простые типы данных
         String imageUrl = getIntent().getStringExtra("image_url");
-        String outfitId = getIntent().getStringExtra("outfit_id");
+        currentOutfitId = getIntent().getStringExtra("outfit_id"); // Сохраняем ID образа
         String style = getIntent().getStringExtra("style");
         String season = getIntent().getStringExtra("season");
+        currentCollectionId = getIntent().getStringExtra("collection_id");
+        isLiked = getIntent().getBooleanExtra("is_liked", false);
 
         // Достаем список ID вещей (переданный как ArrayList<String>)
         ArrayList<String> itemIds = getIntent().getStringArrayListExtra("item_ids");
@@ -103,7 +150,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
         // ViewModel ожидает объект Outfit, но передавать его целиком через Intent сложно (надо Parcelable).
         // Мы соберем "временный" объект Outfit из того, что пришло в Intent.
         Outfit tempOutfit = new Outfit();
-        tempOutfit.setId(outfitId);
+        tempOutfit.setId(currentOutfitId);
         tempOutfit.setStyle(style);
         tempOutfit.setFilter_season(season);
 
@@ -135,5 +182,18 @@ public class OutfitDetailActivity extends AppCompatActivity {
         viewModel.totalPrice.observe(this, price -> {
             if (tvTotalPrice != null) tvTotalPrice.setText(price);
         });
+    }
+
+    @Override
+    public void finish() {
+        // Подготавливаем данные для возврата
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("outfit_id", currentOutfitId);
+        resultIntent.putExtra("is_liked", isLiked); // Возвращаем финальное состояние
+
+        // Ставим штамп "Все ок" и прикладываем данные
+        setResult(RESULT_OK, resultIntent);
+
+        super.finish(); // Закрываем экран
     }
 }

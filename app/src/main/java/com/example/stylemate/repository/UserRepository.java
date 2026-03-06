@@ -36,21 +36,6 @@ public class UserRepository {
     FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/");
     DatabaseReference table = database.getReference("User");
 
-    // Метод: Получить избранные луки
-    public List<FavouriteOutfits> getFavoriteOutfits() {
-        List<FavouriteOutfits> data = new ArrayList<>();
-
-        // Имитация данных (потом заменим на БД или API)
-        data.add(new FavouriteOutfits(R.drawable.image1, R.drawable.image2, R.drawable.image3, R.drawable.image4, "На спорте \uD83D\uDCAA"));
-        data.add(new FavouriteOutfits(R.drawable.image5, R.drawable.image6, R.drawable.image7, R.drawable.image8, "На свидание \uD83D\uDC80"));
-        data.add(new FavouriteOutfits(R.drawable.image1, R.drawable.image3, R.drawable.image2, R.drawable.image4, "Для офиса"));
-        data.add(new FavouriteOutfits(R.drawable.image8, R.drawable.image7, R.drawable.image6, R.drawable.image5, "Прогулка"));
-        data.add(new FavouriteOutfits(R.drawable.image8, R.drawable.image7, R.drawable.image6, R.drawable.image5, "Прогулка"));
-        data.add(new FavouriteOutfits(R.drawable.image8, R.drawable.image7, R.drawable.image6, R.drawable.image5, "Прогулка"));
-
-        return data;
-    }
-
     public LiveData<Resource<Boolean>> exists(String email, Context context) {
         MutableLiveData<Resource<Boolean>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());

@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.stylemate.repository.ItemsRepository;
+import com.example.stylemate.repository.UserCollectionsRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class OutfitDetailViewModel extends AndroidViewModel {
 
     private final ItemsRepository repository;
+    private final UserCollectionsRepository collectionsRepository;
 
     // Данные для UI
     private final MutableLiveData<List<Item>> _items = new MutableLiveData<>();
@@ -29,6 +31,7 @@ public class OutfitDetailViewModel extends AndroidViewModel {
     public OutfitDetailViewModel(@NonNull Application application) {
         super(application);
         repository = new ItemsRepository();
+        collectionsRepository = new UserCollectionsRepository();
     }
 
     // Этот метод мы вызовем из Activity сразу после получения Intent
@@ -40,6 +43,11 @@ public class OutfitDetailViewModel extends AndroidViewModel {
 
         // 2. Загружаем вещи
         loadItems(outfit.getItems());
+    }
+
+    // --- НОВЫЙ МЕТОД: ЛАЙК ---
+    public void toggleLike(String collectionId, String outfitId, boolean isLiked) {
+        collectionsRepository.toggleLikeInFirebase(getApplication(), collectionId, outfitId, isLiked);
     }
 
     private void generateTitle(String season, String style) {

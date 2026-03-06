@@ -19,6 +19,9 @@ import com.example.stylemate.model.HomeViewModel;
 import com.example.stylemate.model.FilterState; // Импортируем наш новый класс
 import com.example.stylemate.model.Outfit;
 import com.example.stylemate.repository.ActiveUserInfo;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import android.app.Activity;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,6 +32,8 @@ public class HomeFragment extends Fragment {
     private RecyclerView rvGrid; // --- НОВОЕ: Ссылка на сетку товаров
     private View vOverlay;
     private View btnCreate;      // --- НОВОЕ: Кнопка создать
+    // Лаунчер для получения результата из Карточки
+    private ActivityResultLauncher<Intent> outfitDetailLauncher;
 
     private CollectionsNameAdapter adapter;
     private OutfitAdapter gridAdapter; // --- НОВОЕ: Адаптер для сетки
@@ -51,6 +56,21 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+
+        // РЕГИСТРИРУЕМ ЛАУНЧЕР (До настройки адаптера!)
+        outfitDetailLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        // Получили ответ!
+                        String id = result.getData().getStringExtra("outfit_id");
+                        boolean liked = result.getData().getBooleanExtra("is_liked", false);
+
+                        // Просим ViewModel обновить конкретный элемент
+                        viewModel.updateLikeStatusLocally(id, liked);
+                    }
+                }
+        );
 
         // Инициализация View
         View btnList = view.findViewById(R.id.btnList);
@@ -114,6 +134,11 @@ public class HomeFragment extends Fragment {
                 intent.putExtra("image_url", outfit.getImageUrl());
                 intent.putExtra("style", outfit.getStyle());
                 intent.putExtra("season", outfit.getFilter_season()); // Важно: нужен этот геттер!
+                // 1. Передаем статус лайка (чтобы сердечко было синим)
+                intent.putExtra("is_liked", outfit.isLiked());
+                if (viewModel.getCurrentCollectionId() != null) {
+                    intent.putExtra("collection_id", viewModel.getCurrentCollectionId());
+                }
 
                 // Передаем список ID вещей
                 // Преобразуем Map<String, Boolean> в ArrayList<String>
@@ -122,7 +147,7 @@ public class HomeFragment extends Fragment {
                     intent.putStringArrayListExtra("item_ids", ids);
                 }
 
-                startActivity(intent);
+                outfitDetailLauncher.launch(intent);
             }
         });
         rvGrid.setAdapter(gridAdapter);

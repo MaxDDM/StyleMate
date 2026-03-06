@@ -18,7 +18,7 @@ import java.util.Set;
 public class HomeViewModel extends AndroidViewModel {
 
     private final UserCollectionsRepository repository;
-
+    private String currentCollectionId = null; // Храним ID текущей коллекции
     // Списки данных
     private final MutableLiveData<List<String>> _collections = new MutableLiveData<>();
     public LiveData<List<String>> collections = _collections;
@@ -45,6 +45,8 @@ public class HomeViewModel extends AndroidViewModel {
         loadCollectionsList();
     }
 
+    public String getCurrentCollectionId() { return currentCollectionId; }
+
     private void loadCollectionsList() {
         repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
@@ -67,17 +69,18 @@ public class HomeViewModel extends AndroidViewModel {
     }
 
     private void loadOutfits(String collectionName) {
-        repository.getOutfitsForCollection(collectionName, getApplication(), new UserCollectionsRepository.DataCallback<List<Outfit>>() {
+        // Используем новый callback, который возвращает и список, и ID коллекции
+        repository.getOutfitsForCollection(collectionName, getApplication(), new UserCollectionsRepository.CollectionDataCallback() {
             @Override
-            public void onDataLoaded(List<Outfit> data) {
-                // --- ВАЖНО: Сохраняем в ОБА списка ---
+            public void onDataLoaded(List<Outfit> data, String collectionId) {
+                currentCollectionId = collectionId; // Сохраняем ID!
                 allOutfits = data != null ? data : new ArrayList<>();
-                _outfits.setValue(allOutfits); // Сначала показываем всё
+                _outfits.setValue(allOutfits);
             }
 
             @Override
             public void onError(String error) {
-                Toast.makeText(getApplication(), "Ошибка загрузки: " + error, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplication(), "Ошибка: " + error, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -147,25 +150,63 @@ public class HomeViewModel extends AndroidViewModel {
         return false;
     }
 
+    // --- ЛАЙКИ (ОБНОВЛЕНО) ---
+
+    public void updateLikeStatusLocally(String outfitId, boolean isLiked) {
+        List<Outfit> currentList = _outfits.getValue();
+        if (currentList != null) {
+            boolean changed = false;
+            for (Outfit o : currentList) {
+                if (o.getId().equals(outfitId)) {
+                    // Если статус реально отличается, меняем
+                    if (o.isLiked() != isLiked) {
+                        o.setLiked(isLiked);
+                        changed = true;
+                    }
+                    break;
+                }
+            }
+            // Если что-то изменилось, оповещаем адаптер
+            if (changed) {
+                _outfits.setValue(currentList);
+
+                // Также обновляем и в полном списке allOutfits, чтобы при фильтрации не сбросилось
+                for (Outfit o : allOutfits) {
+                    if (o.getId().equals(outfitId)) {
+                        o.setLiked(isLiked);
+                        break;
+                    }
+                }
+            }
+        }
+    }
     public void toggleLike(String outfitId) {
-        // Меняем лайк в отображаемом списке
+        if (currentCollectionId == null) return; // Некуда сохранять
+
+        boolean newState = false;
+
+        // 1. Обновляем UI мгновенно
         List<Outfit> currentList = _outfits.getValue();
         if (currentList != null) {
             for (Outfit o : currentList) {
                 if (o.getId().equals(outfitId)) {
-                    o.setLiked(!o.isLiked());
+                    newState = !o.isLiked(); // Переключаем
+                    o.setLiked(newState);
                     break;
                 }
             }
-            _outfits.setValue(currentList);
+            _outfits.setValue(currentList); // Триггерим обновление адаптера
 
-            // Надо бы обновить и в allOutfits, чтобы при сбросе фильтра лайк не пропал
+            // Обновляем в кеше тоже
             for (Outfit o : allOutfits) {
                 if (o.getId().equals(outfitId)) {
-                    o.setLiked(o.isLiked()); // Синхронизируем
+                    o.setLiked(newState);
                     break;
                 }
             }
         }
+
+        // 2. Отправляем в базу
+        repository.toggleLikeInFirebase(getApplication(), currentCollectionId, outfitId, newState);
     }
 }

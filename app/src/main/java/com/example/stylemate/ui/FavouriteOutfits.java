@@ -1,25 +1,29 @@
 package com.example.stylemate.ui;
 
-// Этот класс - просто контейнер для данных.
-// Он описывает, из чего состоит один "Образ" в твоем списке.
-
 public class FavouriteOutfits {
+    String id;      // ID коллекции в Firebase (обязательно!)
+    String title;   // Название (например "На работу")
 
-    // Мы используем int (целое число), потому что картинки из папки drawable
-    // (например R.drawable.shoes) для Андроида являются числами-ID.
-    int photo1;
-    int photo2;
-    int photo3;
-    int photo4;
+    // Ссылки на картинки (URL). Если картинок меньше 4, поле будет null.
+    String photo1;
+    String photo2;
+    String photo3;
+    String photo4;
 
-    String title;
-
-    // Конструктор - это метод, который помогает быстро создавать новый объект
-    public FavouriteOutfits(int photo1, int photo2, int photo3, int photo4, String title) {
+    public FavouriteOutfits(String id, String title, String photo1, String photo2, String photo3, String photo4) {
+        this.id = id;
+        this.title = title;
         this.photo1 = photo1;
         this.photo2 = photo2;
         this.photo3 = photo3;
         this.photo4 = photo4;
-        this.title = title;
+    }
+
+    public String getId() { return id; }
+    public String getTitle() { return title; }
+
+    public boolean hasLikes() {
+        // Если первая картинка есть (не null), значит лайки есть
+        return photo1 != null;
     }
 }

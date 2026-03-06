@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -62,6 +63,25 @@ public class ProfileFragment extends Fragment {
         observeViewModel();
     }
 
+    // Этот метод срабатывает, когда переключаем вкладки (hide/show)
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        // Если фрагмент стал ВИДИМЫМ (hidden = false)
+        if (!hidden && viewModel != null) {
+            viewModel.refreshData();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Как только экран становится видимым — обновляем данные
+        if (viewModel != null) {
+            viewModel.refreshData();
+        }
+    }
+
     private void initViews(View view) {
         tvEmptyState = view.findViewById(R.id.tvEmptyState);
         tvFavoritesTitle = view.findViewById(R.id.tvFavoritesTitle);
@@ -71,13 +91,20 @@ public class ProfileFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
+        // Если хочешь 2 колонки:
         GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 2);
         rvFavorites.setLayoutManager(layoutManager);
 
-        // Создаем адаптер с пустым списком
-        adapter = new FavoriteOutfitsAdapter(new ArrayList<>(), item -> {
+        // ВАЖНО: Передаем getContext() первым параметром
+        adapter = new FavoriteOutfitsAdapter(getContext(), new ArrayList<>(), item -> {
+            // ОБРАБОТКА КЛИКА ПО ПАПКЕ
+
+            // ТУТ БУДЕТ ПЕРЕХОД:
+            // Либо открывай CollectionDetailActivity (если она есть)
+            // Либо передавай данные на главный экран
             Intent intent = new Intent(requireContext(), CollectionDetailActivity.class);
-            intent.putExtra("COLLECTION_TITLE", item.title);
+            intent.putExtra("COLLECTION_TITLE", item.getTitle());
+            intent.putExtra("COLLECTION_ID", item.getId()); // Передаем ID!
             startActivity(intent);
         });
 
@@ -95,25 +122,25 @@ public class ProfileFragment extends Fragment {
     }
 
     private void observeViewModel() {
-        // А. Следим за списком избранного
+        // 1. Обновляем список, когда приходят данные
         viewModel.favorites.observe(getViewLifecycleOwner(), list -> {
-            adapter.updateList(list); // Обновляем адаптер
+            if (list != null) {
+                adapter.updateList(list);
+            }
         });
 
-        // Б. Следим за состоянием "Пусто/Не пусто"
+        // 2. Управляем видимостью элементов (То, что ты просил)
         viewModel.isEmptyState.observe(getViewLifecycleOwner(), isEmpty -> {
-            if (isEmpty) {
-                // Если пусто - показываем заглушку
-                tvEmptyState.setVisibility(View.VISIBLE);
-                tvFavoritesTitle.setVisibility(View.GONE);
-                rvFavorites.setVisibility(View.GONE);
-                imgAvatar.setImageResource(R.drawable.ic_placeholder_avatar);
+            if (isEmpty != null && isEmpty) {
+                // ЕСЛИ ПУСТО:
+                tvEmptyState.setVisibility(View.VISIBLE);      // Показываем "Нет образов"
+                tvFavoritesTitle.setVisibility(View.GONE);     // Скрываем заголовок "Избранное"
+                rvFavorites.setVisibility(View.GONE);          // Скрываем список
             } else {
-                // Если есть данные - показываем список и аватарку
-                tvEmptyState.setVisibility(View.GONE);
-                tvFavoritesTitle.setVisibility(View.VISIBLE);
-                rvFavorites.setVisibility(View.VISIBLE);
-                imgAvatar.setImageResource(R.drawable.avatar);
+                // ЕСЛИ ЕСТЬ ДАННЫЕ:
+                tvEmptyState.setVisibility(View.GONE);         // Скрываем "Нет образов"
+                tvFavoritesTitle.setVisibility(View.VISIBLE);  // Показываем заголовок "Избранное"
+                rvFavorites.setVisibility(View.VISIBLE);       // Показываем список
             }
         });
     }
