@@ -80,7 +80,7 @@ public class UserCollectionsRepository {
             String targetStyle = (guestStyle != null) ? guestStyle : "casual";
 
             // Гостю грузим стиль, ситуация = null (значит любая)
-            loadOutfitsFromDbFiltered(targetStyle, null, callback);
+            loadOutfitsFromDbFiltered(collectionName, targetStyle, null, callback, context);
 
         } else {
             // --- ЮЗЕР ---
@@ -100,12 +100,12 @@ public class UserCollectionsRepository {
                                     // Сезон игнорируем (он только для фильтров UI)
 
                                     // 2. Грузим
-                                    loadOutfitsFromDbFiltered(style != null ? style : "casual", situation, callback);
+                                    loadOutfitsFromDbFiltered(collectionName, style != null ? style : "casual", situation, callback, context);
                                     return;
                                 }
                             } else {
                                 // Если коллекции нет (баг?), грузим casual
-                                loadOutfitsFromDbFiltered("casual", null, callback);
+                                loadOutfitsFromDbFiltered(collectionName, "casual", null, callback, context);
                             }
                         }
 
@@ -120,7 +120,7 @@ public class UserCollectionsRepository {
     // =========================================================================
     // ВНУТРЕННИЙ МЕТОД ЗАГРУЗКИ (ИЗ ПАПКИ OUTFITS)
     // =========================================================================
-    private void loadOutfitsFromDbFiltered(String style, String collectionSituation, DataCallback<List<Outfit>> callback) {
+    private void loadOutfitsFromDbFiltered(String collectionName, String style, String collectionSituation, DataCallback<List<Outfit>> callback, Context context) {
 
         // !!! ИСПРАВЛЕНО: Теперь ищем в папке "outfits" !!!
         dbRef.child("outfits")
@@ -130,38 +130,54 @@ public class UserCollectionsRepository {
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         List<Outfit> filteredList = new ArrayList<>();
 
-                        for (DataSnapshot item : snapshot.getChildren()) {
-                            Outfit outfit = item.getValue(Outfit.class);
-                            if (outfit == null) continue;
+                        dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
 
-                            // !!! ВАЖНО: Присваиваем ID из ключа Firebase, чтобы работали лайки !!!
-                            outfit.setId(item.getKey());
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot1) {
+                                String email = ActiveUserInfo.getDefaults("isRegistered", context);
+                                if (snapshot1.child("user_collections").child(email).child("situation").exists()) {
+                                    String[] situations = snapshot1.child("user_collections").child(email).child("situation").getValue(String.class).split(",");
 
-                            // --- ФИЛЬТРАЦИЯ ПО СИТУАЦИИ ---
-                            boolean isSituationMatch = true;
+                                    for (DataSnapshot item : snapshot.getChildren()) {
+                                        Outfit outfit = item.getValue(Outfit.class);
+                                        if (outfit == null) continue;
 
-                            // Проверяем, есть ли требование к ситуации в КОЛЛЕКЦИИ
-                            if (collectionSituation != null && !collectionSituation.isEmpty() && !collectionSituation.equals("any")) {
+                                        // !!! ВАЖНО: Присваиваем ID из ключа Firebase, чтобы работали лайки !!!
+                                        outfit.setId(item.getKey());
 
-                                // Получаем ситуацию ОДЕЖДЫ
-                                String outfitSit = outfit.getFilter_situation();
+                                        // --- ФИЛЬТРАЦИЯ ПО СИТУАЦИИ ---
+                                        for (int i = 0; i < situations.length; ++i) {
+                                            boolean isSituationMatch = true;
+                                            if (situations[i] != null && !situations[i].isEmpty() && !situations[i].equals("any")) {
 
-                                // ЛАЙФХАК: Если поля в базе нет (null), считаем его "any" (универсальным)
-                                if (outfitSit == null) {
-                                    outfitSit = "any";
-                                }
+                                                // Получаем ситуацию ОДЕЖДЫ
+                                                String outfitSit = outfit.getFilter_situation();
 
-                                // Если вещь НЕ универсальна ("any") И не совпадает с требованием -> удаляем
-                                if (!outfitSit.equals("any") && !outfitSit.equals(collectionSituation)) {
-                                    isSituationMatch = false;
+                                                // ЛАЙФХАК: Если поля в базе нет (null), считаем его "any" (универсальным)
+                                                if (outfitSit == null) {
+                                                    outfitSit = "any";
+                                                }
+
+                                                // Если вещь НЕ универсальна ("any") И не совпадает с требованием -> удаляем
+                                                if (!outfitSit.equals("any") && !outfitSit.equals(situations[i])) {
+                                                    isSituationMatch = false;
+                                                }
+                                            }
+
+                                            if (isSituationMatch) {
+                                                filteredList.add(outfit);
+                                            }
+                                        }
+                                    }
+                                    callback.onDataLoaded(filteredList);
                                 }
                             }
 
-                            if (isSituationMatch) {
-                                filteredList.add(outfit);
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error1) {
+
                             }
-                        }
-                        callback.onDataLoaded(filteredList);
+                        });
                     }
 
                     @Override

@@ -12,6 +12,7 @@ import com.example.stylemate.repository.StyleTestRepository;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -116,6 +117,17 @@ public class TestViewModel extends AndroidViewModel {
                 });
     }
 
+    public void saveSituationfilters(String rawEmail, String styleName, ArrayList<String> situations) {
+        DatabaseReference dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
+
+        // ВАЖНО: В Firebase ключи не могут содержать ".", заменяем на "|" как в твоем примере
+        String safeEmailKey = rawEmail.replace(".", "|");
+
+        String situation = situationsToString(situations);
+
+        dbRef.child("user_collections").child(safeEmailKey).child("situation").setValue(situation);
+    }
+
     private void saveToLocal(String styleName, int winnerIndex) {
         // Для гостя сохраняем локально, чтобы HomeFragment знал, что показывать
         ActiveUserInfo.setDefaults("is_guest", "true", getApplication());
@@ -123,5 +135,22 @@ public class TestViewModel extends AndroidViewModel {
 
         repository.clearState(getApplication());
         winnerStyle.setValue(winnerIndex);
+    }
+
+    public void saveSituation(ArrayList<String> situations) {
+        String situation = situationsToString(situations);
+        ActiveUserInfo.setDefaults(situation, situation, getApplication());
+    }
+
+    private String situationsToString(ArrayList<String> situations) {
+        StringBuilder situation = new StringBuilder();
+        for (int i = 0; i < situations.size(); ++i) {
+            if (i != situations.size() - 1) {
+                situation.append(situations.get(i)).append(",");
+            } else {
+                situation.append(situations.get(i));
+            }
+        }
+        return situation.toString();
     }
 }

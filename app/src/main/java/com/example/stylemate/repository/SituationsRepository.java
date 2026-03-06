@@ -25,12 +25,10 @@ public class SituationsRepository {
             case 9:
                 return new ArrayList<>(List.of("вечеринка_неофиц"));
             case 10:
-                return new ArrayList<>(List.of("вечеринка_офиц", "вечеринка_неофиц"));
-            case 11:
                 return new ArrayList<>(List.of("тренировка_зал"));
-            case 12:
+            case 11:
                 return new ArrayList<>(List.of("тренировка_ул"));
-            case 13:
+            case 12:
                 return new ArrayList<>(List.of("тренировка_зал, тренировка_ул"));
             default:
                 return new ArrayList<>();

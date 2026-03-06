@@ -1,5 +1,6 @@
 package com.example.stylemate.ui;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +20,8 @@ import com.example.stylemate.model.HomeViewModel;
 import com.example.stylemate.model.FilterState; // Импортируем наш новый класс
 import com.example.stylemate.model.Outfit;
 import com.example.stylemate.repository.ActiveUserInfo;
+import com.example.stylemate.ui.new_select_test.NewSelectQ1Activity;
+import com.example.stylemate.ui.test.TestQ5Activity;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -190,7 +193,11 @@ public class HomeFragment extends Fragment {
             if (isGuest) {
                 Toast.makeText(getContext(), "Доступно только зарегистрированным пользователям", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(getContext(), "Открываем создание...", Toast.LENGTH_SHORT).show();
+                viewModel.selectedName.observe(getViewLifecycleOwner(), name -> {
+                    Intent intent = new Intent(requireContext(), NewSelectQ1Activity.class);
+                    ActiveUserInfo.setDefaults("collectionName", name, requireContext());
+                    startActivity(intent);
+                });
             }
         });
 
