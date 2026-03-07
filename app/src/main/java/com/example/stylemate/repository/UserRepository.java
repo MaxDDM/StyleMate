@@ -90,7 +90,7 @@ public class UserRepository {
 
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());
-        table.addValueEventListener(new ValueEventListener() {
+        table.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 table.child(user.email).setValue(user);

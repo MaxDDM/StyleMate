@@ -1,18 +1,24 @@
 package com.example.stylemate.ui.new_select_test;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.stylemate.R;
+import com.example.stylemate.model.TestViewModel;
 import com.example.stylemate.repository.ActiveUserInfo;
+import com.example.stylemate.repository.SituationsRepository;
+import com.example.stylemate.ui.MainActivity;
 
 public class NewSelectQ12Activity extends AppCompatActivity {
     int ans = -1;
 
+    TestViewModel viewModel;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,17 +47,26 @@ public class NewSelectQ12Activity extends AppCompatActivity {
 
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
-                ActiveUserInfo.setDefaults("testSel" + ans, String.valueOf(ans), NewSelectQ12Activity.this);
+                int situation_id = ans + 7;
+
+                viewModel = new ViewModelProvider(this).get(TestViewModel.class);
+                String name = ActiveUserInfo.getDefaults("collectionName", NewSelectQ12Activity.this);
+                String email = ActiveUserInfo.getDefaults("isRegistered", NewSelectQ12Activity.this);
+                if (email != null && !email.isEmpty()) {
+                    viewModel.saveSituationfilters(email, name, SituationsRepository.getSituations(situation_id));
+                } else {
+                    viewModel.saveSituation(SituationsRepository.getSituations(situation_id));
+                }
+                Intent intent = new Intent(NewSelectQ12Activity.this, MainActivity.class);
+                startActivity(intent);
             } else {
                 Toast.makeText(NewSelectQ12Activity.this, "Вы не выбрали ни один из вариантов", Toast.LENGTH_LONG).show();
-                return;
             }
-
-            // тут будет переход на главную
         });
 
         skipButton.setOnClickListener(v -> {
-            // тут будет переход на главную
+            Intent intent = new Intent(NewSelectQ12Activity.this, MainActivity.class);
+            startActivity(intent);
         });
     }
 }

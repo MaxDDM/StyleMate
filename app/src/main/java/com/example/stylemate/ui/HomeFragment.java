@@ -226,7 +226,11 @@ public class HomeFragment extends Fragment {
             if (isGuest) {
                 Toast.makeText(getContext(), "Доступно только зарегистрированным пользователям", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(getContext(), "Открываем создание...", Toast.LENGTH_SHORT).show();
+                viewModel.selectedName.observe(getViewLifecycleOwner(), name -> {
+                    Intent intent = new Intent(requireContext(), NewSelectQ1Activity.class);
+                    ActiveUserInfo.setDefaults("collectionName", name, requireContext());
+                    startActivity(intent);
+                });
             }
         });
 

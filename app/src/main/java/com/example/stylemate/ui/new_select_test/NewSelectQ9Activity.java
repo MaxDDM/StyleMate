@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.stylemate.R;
 import com.example.stylemate.repository.ActiveUserInfo;
+import com.example.stylemate.ui.MainActivity;
 
 public class NewSelectQ9Activity extends AppCompatActivity {
     int ans = -1;
@@ -66,36 +67,34 @@ public class NewSelectQ9Activity extends AppCompatActivity {
 
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
-                ActiveUserInfo.setDefaults("testSel" + ans, String.valueOf(ans), NewSelectQ9Activity.this);
+                Intent intent;
+
+                switch(ans) {
+                    case 1:
+                        intent = new Intent(NewSelectQ9Activity.this, NewSelectQ10Activity.class);
+                        startActivity(intent);
+                        break;
+                    case 2:
+                        intent = new Intent(NewSelectQ9Activity.this, NewSelectQ13Activity.class);
+                        startActivity(intent);
+                        break;
+                    case 3:
+                        intent = new Intent(NewSelectQ9Activity.this, NewSelectQ12Activity.class);
+                        startActivity(intent);
+                        break;
+                    case 4:
+                        intent = new Intent(NewSelectQ9Activity.this, NewSelectQ11Activity.class);
+                        startActivity(intent);
+                        break;
+                }
             } else {
                 Toast.makeText(NewSelectQ9Activity.this, "Вы не выбрали ни один из вариантов", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            Intent intent;
-
-            switch(ans) {
-                case 1:
-                    intent = new Intent(NewSelectQ9Activity.this, NewSelectQ10Activity.class);
-                    startActivity(intent);
-                    break;
-                case 2:
-                    intent = new Intent(NewSelectQ9Activity.this, NewSelectQ13Activity.class);
-                    startActivity(intent);
-                    break;
-                case 3:
-                    intent = new Intent(NewSelectQ9Activity.this, NewSelectQ12Activity.class);
-                    startActivity(intent);
-                    break;
-                case 4:
-                    intent = new Intent(NewSelectQ9Activity.this, NewSelectQ11Activity.class);
-                    startActivity(intent);
-                    break;
             }
         });
 
         skipButton.setOnClickListener(v -> {
-            // тут будет переход на главную
+            Intent intent = new Intent(NewSelectQ9Activity.this, MainActivity.class);
+            startActivity(intent);
         });
     }
 }

@@ -66,14 +66,11 @@ public class NewSelectQ4Activity extends AppCompatActivity {
 
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
-                ActiveUserInfo.setDefaults("testSel" + ans, String.valueOf(ans), NewSelectQ4Activity.this);
+                Intent intent = new Intent(NewSelectQ4Activity.this, NewSelectQ5Activity.class);
+                startActivity(intent);
             } else {
                 Toast.makeText(NewSelectQ4Activity.this, "Вы не выбрали ни один из вариантов", Toast.LENGTH_LONG).show();
-                return;
             }
-
-            Intent intent = new Intent(NewSelectQ4Activity.this, NewSelectQ5Activity.class);
-            startActivity(intent);
         });
 
         skipButton.setOnClickListener(v -> {
