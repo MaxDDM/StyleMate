@@ -29,9 +29,10 @@ public class AuthActivity extends AppCompatActivity {
         setContentView(R.layout.auth);
 
         String isAuthorized = ActiveUserInfo.getDefaults("isRegistered", this);
-        if (isAuthorized != null && !isAuthorized.isEmpty()) {
+        if (isAuthorized != null && !isAuthorized.isEmpty() && !isAuthorized.equals("0")) {
             Intent intent = new Intent(AuthActivity.this, MainActivity.class);
             startActivity(intent);
+            finish(); // Желательно добавить finish(), чтобы нельзя было вернуться назад
         }
 
         EditText email = findViewById(R.id.emailAuth);

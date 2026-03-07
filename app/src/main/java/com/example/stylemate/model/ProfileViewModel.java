@@ -22,6 +22,9 @@ public class ProfileViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> _isEmptyState = new MutableLiveData<>();
     public LiveData<Boolean> isEmptyState = _isEmptyState;
 
+    private final MutableLiveData<Boolean> _navigateToHomeEvent = new MutableLiveData<>();
+    public LiveData<Boolean> navigateToHomeEvent = _navigateToHomeEvent;
+
     public ProfileViewModel(@NonNull Application application) {
         super(application);
         repository = new UserCollectionsRepository();
@@ -40,6 +43,16 @@ public class ProfileViewModel extends AndroidViewModel {
             public void onDataLoaded(List<FavouriteOutfits> data) {
                 // 1. Сохраняем список (даже если он с пустыми папками, пусть адаптер их получит)
                 _favorites.setValue(data);
+
+                // ЛОГИКА 1: Проверка на полное отсутствие подборок
+                if (data == null || data.isEmpty()) {
+                    // Подборок нет вообще -> Валим на HomeFragment
+                    _navigateToHomeEvent.setValue(true);
+                    _isEmptyState.setValue(false); // Сбрасываем этот флаг, чтобы не мешал
+                    return;
+                } else {
+                    _navigateToHomeEvent.setValue(false);
+                }
 
                 // 2. ПРОВЕРЯЕМ: А есть ли вообще хоть один лайк во всех папках?
                 boolean hasAnyLikes = false;

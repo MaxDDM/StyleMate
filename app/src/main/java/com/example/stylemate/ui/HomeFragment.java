@@ -5,7 +5,9 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.Toast;
+import android.widget.Button; // Импорт кнопки
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -19,6 +21,8 @@ import com.example.stylemate.model.HomeViewModel;
 import com.example.stylemate.model.FilterState; // Импортируем наш новый класс
 import com.example.stylemate.model.Outfit;
 import com.example.stylemate.repository.ActiveUserInfo;
+import com.example.stylemate.ui.new_select_test.NewSelectQ1Activity;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import android.app.Activity;
@@ -32,6 +36,9 @@ public class HomeFragment extends Fragment {
     private RecyclerView rvGrid; // --- НОВОЕ: Ссылка на сетку товаров
     private View vOverlay;
     private View btnCreate;      // --- НОВОЕ: Кнопка создать
+    private View clEmptyState; // --- НОВОЕ: Наша заглушка (ConstraintLayout)
+    private ImageButton btnContinueTest;
+    private ImageButton btnLogout; // --- НОВОЕ: Кнопки
     // Лаунчер для получения результата из Карточки
     private ActivityResultLauncher<Intent> outfitDetailLauncher;
 
@@ -80,6 +87,10 @@ public class HomeFragment extends Fragment {
         // --- НОВОЕ: Ищем новые элементы
         rvGrid = view.findViewById(R.id.rvOutfitsGrid);
         btnCreate = view.findViewById(R.id.btnCreate);
+
+        clEmptyState = view.findViewById(R.id.clEmptyState);
+        btnContinueTest = view.findViewById(R.id.btnContinueTest);
+        btnLogout = view.findViewById(R.id.btnLogout);
 
         // --- НОВОЕ: 1. Получаем данные о пользователе (Гость / Стиль)
         String guestFlag = ActiveUserInfo.getDefaults("is_guest", getContext());
@@ -219,6 +230,63 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        // --- НОВОЕ: Подписка на состояние "Пусто" ---
+        viewModel.isEmptyState.observe(getViewLifecycleOwner(), isEmpty -> {
+            View bottomNav = requireActivity().findViewById(R.id.bottomNavBar);
+            if (isEmpty != null && isEmpty) {
+                // ПОКАЗЫВАЕМ ЗАГЛУШКУ
+                clEmptyState.setVisibility(View.VISIBLE);
+
+                // Скрываем основной контент (чтобы не просвечивал/не кликался)
+                rvGrid.setVisibility(View.GONE);
+                view.findViewById(R.id.btnList).setVisibility(View.GONE);
+                view.findViewById(R.id.btnCreate).setVisibility(View.GONE);
+                if (bottomNav != null) bottomNav.setVisibility(View.GONE);
+            } else {
+                // СКРЫВАЕМ ЗАГЛУШКУ
+                clEmptyState.setVisibility(View.GONE);
+
+                // Показываем контент
+                rvGrid.setVisibility(View.VISIBLE);
+                view.findViewById(R.id.btnList).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.btnCreate).setVisibility(View.VISIBLE);
+                // --- ВОЗВРАЩАЕМ НИЖНЮЮ НАВИГАЦИЮ ---
+                if (bottomNav != null) bottomNav.setVisibility(View.VISIBLE);
+            }
+        });
+
+
+        // --- НОВОЕ: Обработка кнопок заглушки ---
+
+        // 1. Пройти тест заново
+        btnContinueTest.setOnClickListener(v -> {
+            // Переход на экран Теста (замени TestActivity.class на свой класс теста)
+            Intent intent = new Intent(requireContext(), NewSelectQ1Activity.class);
+            startActivity(intent);
+            // Можно добавить finish(), если хочешь закрыть главную, но обычно тест идет поверх
+        });
+
+        // 2. Выйти из аккаунта
+        btnLogout.setOnClickListener(v -> {
+            // 1. Сбрасываем главный флаг авторизации (email)
+            ActiveUserInfo.setDefaults("isRegistered", "0", requireContext());
+
+            // 2. Сбрасываем стиль (чтобы новый юзер прошел тест заново)
+            ActiveUserInfo.setDefaults("user_style_id", null, requireContext());
+
+            // 3. Сбрасываем флаг гостя
+            ActiveUserInfo.setDefaults("is_guest", "false", requireContext());
+
+            // 4. Переход на экран Авторизации/Входа (AuthActivity)
+            // Замени AuthActivity.class на твой класс экрана входа!
+            Intent intent = new Intent(requireContext(), AuthActivity.class);
+
+            // Очищаем историю переходов, чтобы кнопкой "Назад" нельзя было вернуться в профиль
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+            startActivity(intent);
+        });
+
         return view;
     }
 
@@ -256,6 +324,11 @@ public class HomeFragment extends Fragment {
                 // Время вышло -> Сбрасываем фильтры
                 resetFiltersByTimeout();
             }
+        }
+
+        // Чтобы лайки синхронизировались с тем, что мы наделали в папке Избранное
+        if (viewModel != null) {
+            viewModel.refreshData();
         }
     }
 

@@ -23,6 +23,8 @@ public class HomeViewModel extends AndroidViewModel {
     private final MutableLiveData<List<String>> _collections = new MutableLiveData<>();
     public LiveData<List<String>> collections = _collections;
 
+    private final MutableLiveData<Boolean> _isEmptyState = new MutableLiveData<>();
+    public LiveData<Boolean> isEmptyState = _isEmptyState;
     private final MutableLiveData<String> _selectedName = new MutableLiveData<>();
     public LiveData<String> selectedName = _selectedName;
 
@@ -51,11 +53,26 @@ public class HomeViewModel extends AndroidViewModel {
         repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> data) {
-                _collections.setValue(data);
-                if (data != null && !data.isEmpty() && _selectedName.getValue() == null) {
-                    onCollectionSelected(data.get(0));
+                // 1. Проверяем на пустоту
+                if (data == null || data.isEmpty()) {
+                    // СПИСОК ПУСТ -> Включаем режим заглушки
+                    _isEmptyState.setValue(true);
+                    _collections.setValue(new ArrayList<>()); // Пустой список в адаптер
+                    _outfits.setValue(new ArrayList<>());     // Пустая сетка
+                    _selectedName.setValue(null);             // Нет выбранного имени
+                } else {
+                    // СПИСОК ЕСТЬ -> Обычный режим
+                    _isEmptyState.setValue(false);
+                    _collections.setValue(data);
+                    String currentSelected = _selectedName.getValue();
+
+                    // Если имя не выбрано, берем первое
+                    if (currentSelected == null || !data.contains(currentSelected)) {
+                        onCollectionSelected(data.get(0));
+                    }
                 }
             }
+
             @Override
             public void onError(String error) {
                 Toast.makeText(getApplication(), "Ошибка: " + error, Toast.LENGTH_SHORT).show();
@@ -208,5 +225,11 @@ public class HomeViewModel extends AndroidViewModel {
 
         // 2. Отправляем в базу
         repository.toggleLikeInFirebase(getApplication(), currentCollectionId, outfitId, newState);
+    }
+
+    // Метод для принудительного обновления данных
+    public void refreshData() {
+        // Переиспользуем логику загрузки, она теперь умная
+        loadCollectionsList();
     }
 }

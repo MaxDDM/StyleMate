@@ -43,30 +43,27 @@ public class UserCollectionsRepository {
         String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
         boolean isLogged = rawEmail != null && !rawEmail.equals("0");
 
-        if (!isLogged) {
-            List<String> guestList = new ArrayList<>();
-            guestList.add("Основная");
-            callback.onDataLoaded(guestList);
-        } else {
-            String safeEmail = rawEmail.replace(".", "|");
-            dbRef.child("user_collections").child(safeEmail)
-                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            List<String> names = new ArrayList<>();
-                            for (DataSnapshot collection : snapshot.getChildren()) {
-                                String name = collection.child("name").getValue(String.class);
-                                if (name != null) names.add(name);
-                            }
-                            if (names.isEmpty()) names.add("Основная");
-                            callback.onDataLoaded(names);
+        String safeEmail = rawEmail.replace(".", "|");
+        dbRef.child("user_collections").child(safeEmail)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        List<String> names = new ArrayList<>();
+                        for (DataSnapshot collection : snapshot.getChildren()) {
+                            String name = collection.child("name").getValue(String.class);
+                            if (name != null) names.add(name);
                         }
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-                            callback.onError(error.getMessage());
-                        }
-                    });
-        }
+
+                        // УБРАЛИ ПРОВЕРКУ НА ПУСТОТУ!
+                        // Теперь если список пуст, мы вернем ПУСТОЙ СПИСОК (size=0)
+                        callback.onDataLoaded(names);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        callback.onError(error.getMessage());
+                    }
+                });
     }
 
     // 2. Получить одежду + Лайки + ID коллекции
@@ -275,5 +272,109 @@ public class UserCollectionsRepository {
         } else {
             favRef.removeValue(); // Удаляем лайк
         }
+    }
+
+    // =========================================================================
+    // НОВЫЙ МЕТОД: Загрузка лайков конкретной коллекции (Игнорируя фильтры)
+    // =========================================================================
+    public void getCollectionFavorites(String collectionId, Context context, DataCallback<List<Outfit>> callback) {
+        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
+        // Гости не имеют БД, возвращаем пустоту
+        if (rawEmail == null || rawEmail.equals("0")) {
+            callback.onDataLoaded(new ArrayList<>());
+            return;
+        }
+
+        String safeEmail = rawEmail.replace(".", "|");
+
+        // 1. Идем в папку: user_collections -> email -> collectionId -> favorites
+        dbRef.child("user_collections").child(safeEmail).child(collectionId).child("favorites")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        // Если папки favorites нет или она пустая
+                        if (!snapshot.exists()) {
+                            callback.onDataLoaded(new ArrayList<>());
+                            return;
+                        }
+
+                        // 2. Собираем список ID (ключи)
+                        List<String> favoriteIds = new ArrayList<>();
+                        for (DataSnapshot item : snapshot.getChildren()) {
+                            favoriteIds.add(item.getKey());
+                        }
+
+                        // 3. Грузим сами данные по этим ID
+                        loadOutfitsByIds(favoriteIds, callback);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        callback.onError(error.getMessage());
+                    }
+                });
+    }
+
+    // Вспомогательный метод: загружает одежду по списку ID
+    private void loadOutfitsByIds(List<String> ids, DataCallback<List<Outfit>> callback) {
+        // ОПТИМИЗАЦИЯ: Чтобы не делать 50 запросов, загрузим ветку outfits один раз.
+        // Для курсовой/MVP это нормально. Для продакшена с 1млн товаров тут нужен другой подход (Query).
+        dbRef.child("outfits").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Outfit> resultList = new ArrayList<>();
+
+                // Бежим по списку наших ID из избранного
+                for (String id : ids) {
+                    // Ищем этот ID в общем списке одежды
+                    DataSnapshot itemSnapshot = snapshot.child(id);
+
+                    if (itemSnapshot.exists()) {
+                        Outfit outfit = itemSnapshot.getValue(Outfit.class);
+                        if (outfit != null) {
+                            outfit.setId(id);
+                            // ВАЖНО: Раз мы в папке избранного, значит лайк точно стоит
+                            outfit.setLiked(true);
+                            resultList.add(outfit);
+                        }
+                    }
+                }
+                callback.onDataLoaded(resultList);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onError(error.getMessage());
+            }
+        });
+    }
+
+    // 1. Переименование коллекции
+    public void renameCollection(Context context, String collectionId, String newName) {
+        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
+        if (rawEmail == null || rawEmail.equals("0")) return;
+
+        String safeEmail = rawEmail.replace(".", "|");
+
+        // Заходим в user_collections -> email -> id -> name и ставим новое значение
+        dbRef.child("user_collections")
+                .child(safeEmail)
+                .child(collectionId)
+                .child("name")
+                .setValue(newName);
+    }
+
+    // 2. Полное удаление коллекции
+    public void deleteCollection(Context context, String collectionId) {
+        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
+        if (rawEmail == null || rawEmail.equals("0")) return;
+
+        String safeEmail = rawEmail.replace(".", "|");
+
+        // Заходим в user_collections -> email -> id и удаляем ВСЮ ветку (вместе с лайками внутри)
+        dbRef.child("user_collections")
+                .child(safeEmail)
+                .child(collectionId)
+                .removeValue();
     }
 }

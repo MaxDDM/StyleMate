@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.stylemate.R;
 import com.example.stylemate.model.ProfileViewModel;
+import com.google.android.material.bottomnavigation.BottomNavigationView; // !!! ВАЖНО: Добавь этот импорт
 
 import java.util.ArrayList;
 
@@ -129,6 +130,13 @@ public class ProfileFragment extends Fragment {
             }
         });
 
+        // 2. Логика НАВИГАЦИИ (Если удалили последнюю подборку)
+        viewModel.navigateToHomeEvent.observe(getViewLifecycleOwner(), shouldNavigate -> {
+            if (shouldNavigate != null && shouldNavigate) {
+                navigateToHome(); // Переходим на Home
+            }
+        });
+
         // 2. Управляем видимостью элементов (То, что ты просил)
         viewModel.isEmptyState.observe(getViewLifecycleOwner(), isEmpty -> {
             if (isEmpty != null && isEmpty) {
@@ -143,5 +151,17 @@ public class ProfileFragment extends Fragment {
                 rvFavorites.setVisibility(View.VISIBLE);       // Показываем список
             }
         });
+    }
+
+    private void navigateToHome() {
+        if (getActivity() != null) {
+            // Мы ищем FrameLayout кнопки (потому что у вас кастомная панель)
+            View btnHome = getActivity().findViewById(R.id.btnHome);
+
+            if (btnHome != null) {
+                // Программно нажимаем на кнопку, чтобы сработал ваш код в MainActivity
+                btnHome.performClick();
+            }
+        }
     }
 }

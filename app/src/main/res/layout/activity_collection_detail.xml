@@ -65,14 +65,17 @@
     <!-- Примечание: нужна иконка ic_edit_pencil (карандаш) -->
 
     <!-- Плейсхолдер для будущей сетки (StaggeredGrid) -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Тут будет сетка образов..."
-        android:textColor="#999999"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvOutfitsGrid"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="20dp"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@+id/btnBack"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnBack" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
