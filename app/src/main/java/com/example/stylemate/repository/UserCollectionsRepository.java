@@ -80,7 +80,7 @@ public class UserCollectionsRepository {
             String targetStyle = (guestStyle != null) ? guestStyle : "casual";
 
             // Гостю грузим стиль, ситуация = null (значит любая)
-            loadOutfitsFromDbFiltered(collectionName, targetStyle, null, callback, context);
+            loadOutfitsFromDbFiltered(collectionName, targetStyle, callback, context);
 
         } else {
             // --- ЮЗЕР ---
@@ -95,17 +95,16 @@ public class UserCollectionsRepository {
                                 for (DataSnapshot match : snapshot.getChildren()) {
                                     // 1. Достаем параметры коллекции
                                     String style = match.child("style").getValue(String.class);
-                                    String situation = match.child("situation").getValue(String.class);
 
                                     // Сезон игнорируем (он только для фильтров UI)
 
                                     // 2. Грузим
-                                    loadOutfitsFromDbFiltered(collectionName, style != null ? style : "casual", situation, callback, context);
+                                    loadOutfitsFromDbFiltered(collectionName, style != null ? style : "casual", callback, context);
                                     return;
                                 }
                             } else {
                                 // Если коллекции нет (баг?), грузим casual
-                                loadOutfitsFromDbFiltered(collectionName, "casual", null, callback, context);
+                                loadOutfitsFromDbFiltered(collectionName, "casual", callback, context);
                             }
                         }
 
@@ -120,7 +119,7 @@ public class UserCollectionsRepository {
     // =========================================================================
     // ВНУТРЕННИЙ МЕТОД ЗАГРУЗКИ (ИЗ ПАПКИ OUTFITS)
     // =========================================================================
-    private void loadOutfitsFromDbFiltered(String collectionName, String style, String collectionSituation, DataCallback<List<Outfit>> callback, Context context) {
+    private void loadOutfitsFromDbFiltered(String collectionName, String style, DataCallback<List<Outfit>> callback, Context context) {
 
         // !!! ИСПРАВЛЕНО: Теперь ищем в папке "outfits" !!!
         dbRef.child("outfits")
@@ -135,8 +134,8 @@ public class UserCollectionsRepository {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot1) {
                                 String email = ActiveUserInfo.getDefaults("isRegistered", context);
-                                if (snapshot1.child("user_collections").child(email).child("situation").exists()) {
-                                    String[] situations = snapshot1.child("user_collections").child(email).child("situation").getValue(String.class).split(",");
+                                if (snapshot1.child("user_collections").child(email).child(collectionName).child("situation").exists()) {
+                                    String[] situations = snapshot1.child("user_collections").child(email).child(collectionName).child("situation").getValue(String.class).split(",");
 
                                     for (DataSnapshot item : snapshot.getChildren()) {
                                         Outfit outfit = item.getValue(Outfit.class);

@@ -125,7 +125,7 @@ public class TestViewModel extends AndroidViewModel {
 
         String situation = situationsToString(situations);
 
-        dbRef.child("user_collections").child(safeEmailKey).child("situation").setValue(situation);
+        dbRef.child("user_collections").child(safeEmailKey).child(styleName).child("situation").setValue(situation);
     }
 
     private void saveToLocal(String styleName, int winnerIndex) {
