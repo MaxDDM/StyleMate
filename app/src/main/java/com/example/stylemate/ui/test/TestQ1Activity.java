@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.stylemate.R;
+import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.ui.AuthActivity;
 import com.example.stylemate.model.TestViewModel;
 
@@ -20,6 +21,8 @@ public class TestQ1Activity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ActiveUserInfo.setDefaults("isTest1", "yes", TestQ1Activity.this);
+
         viewModel = new ViewModelProvider(this).get(TestViewModel.class);
         super.onCreate(savedInstanceState);
 

@@ -80,6 +80,7 @@ public class SettingsActivity extends AppCompatActivity {
             if (user != null) {
                 switch (user.status) {
                     case LOADING:
+                        Toast.makeText(SettingsActivity.this, "Идёт загрузка данных", Toast.LENGTH_LONG).show();
                         break;
                     case SUCCESS:
                         etName.setText(user.data.name);
@@ -89,6 +90,7 @@ public class SettingsActivity extends AppCompatActivity {
                         if (imgAvatar != null && user.data.avatarResId != -1) imgAvatar.setImageResource(user.data.avatarResId != 0 ? user.data.avatarResId : R.drawable.ic_edit_avatar);
                         break;
                     case ERROR:
+                        Toast.makeText(SettingsActivity.this, user.message, Toast.LENGTH_LONG).show();
                         break;
                 }
 

@@ -45,6 +45,7 @@ public class RegisterActivity extends AppCompatActivity {
                     if (resource != null) {
                         switch(resource.status) {
                             case LOADING:
+                                Toast.makeText(RegisterActivity.this, "Идёт процесс регистрации", Toast.LENGTH_LONG).show();
                                 break;
                             case SUCCESS:
                                 if (resource.data) {
@@ -54,6 +55,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 }
                                 break;
                             case ERROR:
+                                Toast.makeText(RegisterActivity.this, resource.message, Toast.LENGTH_LONG).show();
                                 break;
                         }
                     }
@@ -78,6 +80,7 @@ public class RegisterActivity extends AppCompatActivity {
                         break;
                     case SUCCESS:
                         if (resource.data) {
+                            Toast.makeText(RegisterActivity.this, "Успешная регистрация", Toast.LENGTH_LONG).show();
                             ActiveUserInfo.setDefaults("isRegistered", email.replace(".", "|"), RegisterActivity.this);
 
                             Intent intent = new Intent(RegisterActivity.this, TestQ1Activity.class);
@@ -85,6 +88,7 @@ public class RegisterActivity extends AppCompatActivity {
                         }
                         break;
                     case ERROR:
+                        Toast.makeText(RegisterActivity.this, resource.message, Toast.LENGTH_LONG).show();
                         break;
                 }
             }

@@ -52,11 +52,7 @@ public class NewSelectQ1Activity extends AppCompatActivity {
                 }
             } else {
                 Toast.makeText(NewSelectQ1Activity.this, "Вы не выбрали ни один из вариантов", Toast.LENGTH_LONG).show();
-                return;
             }
-
-            Intent intent = new Intent(NewSelectQ1Activity.this, NewSelectQ2Activity.class);
-            startActivity(intent);
         });
 
         skipButton.setOnClickListener(v -> {

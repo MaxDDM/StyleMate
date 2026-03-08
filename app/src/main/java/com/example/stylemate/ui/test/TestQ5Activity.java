@@ -9,6 +9,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.ui.MainActivity; // <-- Убедись, что это твоя главная активность
 import com.example.stylemate.R;
 import com.example.stylemate.model.TestViewModel;
@@ -94,6 +95,8 @@ public class TestQ5Activity extends AppCompatActivity {
 
         // 2. ФИНАЛ: КНОПКА ДАЛЕЕ
         nextButton.setOnClickListener(v -> {
+            ActiveUserInfo.setDefaults("isTest1", "", TestQ5Activity.this);
+
             if (ans != -1) {
                 // Шаг 1: Записываем ответ
                 viewModel.processAnswer(5, ans);
@@ -108,6 +111,8 @@ public class TestQ5Activity extends AppCompatActivity {
 
         // 3. ФИНАЛ: КНОПКА ПРОПУСТИТЬ
         skipButton.setOnClickListener(v -> {
+            ActiveUserInfo.setDefaults("isTest1", "", TestQ5Activity.this);
+
             // Просто просим результат (без записи ответа)
             viewModel.calculateResult();
         });

@@ -16,6 +16,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 import androidx.annotation.NonNull;
@@ -38,6 +39,9 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
 
     // Флаг, чтобы понимать, на каком мы шаге (для восстановления клавиатуры)
     private boolean isSecondStep = false;
+
+    private static final long ENTER_DEBOUNCE_MS = 500;
+    private long lastEnterTime = 0;
 
     @Nullable
     @Override
@@ -129,6 +133,13 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
                                     event.getKeyCode() == KeyEvent.KEYCODE_ENTER);
 
             if (isEnterPressed) {
+                long now = System.currentTimeMillis();
+                if (now - lastEnterTime < ENTER_DEBOUNCE_MS) {
+                    // Игнорируем повторное нажатие
+                    return true; // уже обработали ранее
+                }
+                lastEnterTime = now;
+
                 String oldPassword = etOldPassword.getText().toString().trim();
                 if (oldPassword.isEmpty()) {
                     showError(etOldPassword, "Введите старый пароль");
@@ -153,6 +164,13 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
                                     event.getKeyCode() == KeyEvent.KEYCODE_ENTER);
 
             if (isEnterPressed) {
+                long now = System.currentTimeMillis();
+                if (now - lastEnterTime < ENTER_DEBOUNCE_MS) {
+                    // Игнорируем повторное нажатие
+                    return true; // уже обработали ранее
+                }
+                lastEnterTime = now;
+
                 viewModel.submitNewPassword(etNewPassword.getText().toString(), requireContext());
                 return true;
             }
@@ -163,32 +181,28 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
     private void observeViewModel() {
         // 1. Успех проверки старого пароля
         viewModel.oldPasswordCorrect.observe(getViewLifecycleOwner(), resource -> {
-            if (resource.status == Resource.Status.LOADING) {
-                // Можно показать прогресс, если хотите
-                return;
-            }
-
-            if (resource.status == Resource.Status.ERROR) {
-                showError(etOldPassword, resource.message != null
-                        ? resource.message
-                        : "Ошибка проверки пароля");
-                return;
-            }
-
-            if (resource.status == Resource.Status.SUCCESS) {
-                Boolean isCorrect = resource.data;
-                if (Boolean.TRUE.equals(isCorrect)) {
-                    // Пароль верный — переходим на новый шаг
-                    isSecondStep = true;
-                    if (viewFlipper.getDisplayedChild() == 0) {
-                        viewFlipper.showNext();
+            switch (resource.status) {
+                case LOADING:
+                    Toast.makeText(requireContext(), "Идёт процесс проверки пароля", Toast.LENGTH_LONG).show();
+                    break;
+                case SUCCESS:
+                    Boolean isCorrect = resource.data;
+                    if (Boolean.TRUE.equals(isCorrect)) {
+                        // Пароль верный — переходим на новый шаг
+                        isSecondStep = true;
+                        if (viewFlipper.getDisplayedChild() == 0) {
+                            viewFlipper.showNext();
+                        }
+                        etNewPassword.requestFocus();
+                        showKeyboardForCurrentStep();
+                    } else {
+                        // Пароль неверный — показываем ошибку
+                        Toast.makeText(requireContext(), "Неверный пароль", Toast.LENGTH_LONG).show();
                     }
-                    etNewPassword.requestFocus();
-                    showKeyboardForCurrentStep();
-                } else {
-                    // Пароль неверный — показываем ошибку
-                    showError(etOldPassword, "Неверный пароль");
-                }
+                    break;
+                case ERROR:
+                    Toast.makeText(requireContext(), resource.message, Toast.LENGTH_LONG).show();
+                    break;
             }
         });
 
