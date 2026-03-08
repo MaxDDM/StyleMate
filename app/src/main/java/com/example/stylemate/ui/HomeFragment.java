@@ -1,13 +1,13 @@
 package com.example.stylemate.ui;
 
 import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.Toast;
-import android.widget.Button; // Импорт кнопки
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -22,10 +22,7 @@ import com.example.stylemate.model.FilterState; // Импортируем наш
 import com.example.stylemate.model.Outfit;
 import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.ui.new_select_test.NewSelectQ1Activity;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import android.app.Activity;
+import com.example.stylemate.ui.dialogs.UniversalInfoDialog;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,7 +37,6 @@ public class HomeFragment extends Fragment {
     private ImageButton btnContinueTest;
     private ImageButton btnLogout; // --- НОВОЕ: Кнопки
     // Лаунчер для получения результата из Карточки
-    private ActivityResultLauncher<Intent> outfitDetailLauncher;
 
     private CollectionsNameAdapter adapter;
     private OutfitAdapter gridAdapter; // --- НОВОЕ: Адаптер для сетки
@@ -63,21 +59,6 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-
-        // РЕГИСТРИРУЕМ ЛАУНЧЕР (До настройки адаптера!)
-        outfitDetailLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        // Получили ответ!
-                        String id = result.getData().getStringExtra("outfit_id");
-                        boolean liked = result.getData().getBooleanExtra("is_liked", false);
-
-                        // Просим ViewModel обновить конкретный элемент
-                        viewModel.updateLikeStatusLocally(id, liked);
-                    }
-                }
-        );
 
         // Инициализация View
         View btnList = view.findViewById(R.id.btnList);
@@ -133,6 +114,21 @@ public class HomeFragment extends Fragment {
                 } else {
                     // outfit.getId() теперь возвращает String (ID из базы), это правильно
                     viewModel.toggleLike(outfit.getId());
+                    // 2. --- НОВАЯ ЛОГИКА: ОБУЧЕНИЕ ЛАЙКАМ ---
+                    Context context = getContext();
+                    String isShown = ActiveUserInfo.getDefaults("IS_FIRST_LIKE_SHOWN", context);
+
+                    // Если flag != "true" (значит null или "false"), показываем
+                    if (!"true".equals(isShown)) {
+                        String text = "Вы поставили лайк образу\nТеперь он сохранен в папке в\nличном кабинете.";
+
+                        // Создаем диалог (false = СТРЕЛКА НЕ НУЖНА)
+                        UniversalInfoDialog dialog = UniversalInfoDialog.newInstance(text, false);
+                        dialog.show(getParentFragmentManager(), "FirstLikeTag");
+
+                        // Записываем, что показали
+                        ActiveUserInfo.setDefaults("IS_FIRST_LIKE_SHOWN", "true", context);
+                    }
                 }
             }
 
@@ -158,13 +154,41 @@ public class HomeFragment extends Fragment {
                     intent.putStringArrayListExtra("item_ids", ids);
                 }
 
-                outfitDetailLauncher.launch(intent);
+                startActivity(intent);
             }
         });
         rvGrid.setAdapter(gridAdapter);
 
+        // =========================================================================
+        // --- НОВОЕ: ЛОГИКА 2 - ОБУЧЕНИЕ "КОНЕЦ СПИСКА" ---
+        // =========================================================================
+        rvGrid.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
 
+                // dy > 0 означает, что пользователь скроллит вниз.
+                // !canScrollVertically(1) означает, что список больше не может крутиться вниз (мы на дне).
+                if (dy > 0 && !recyclerView.canScrollVertically(1)) {
 
+                    Context context = getContext();
+                    // Проверяем, показывали ли уже это сообщение
+                    String isShown = ActiveUserInfo.getDefaults("IS_END_SCROLL_SHOWN", context);
+
+                    if (!"true".equals(isShown)) {
+                        String text = "Вы долистали до конца.\nСоздайте новую подборку,\nчтобы увидеть больше образов.";
+
+                        // Показываем диалог (false = стрелка не нужна, текст по центру)
+                        UniversalInfoDialog dialog = UniversalInfoDialog.newInstance(text, false);
+                        // Используем уникальный тег, чтобы не путать с другими диалогами
+                        dialog.show(getParentFragmentManager(), "EndListTag");
+
+                        // Запоминаем, что показали
+                        ActiveUserInfo.setDefaults("IS_END_SCROLL_SHOWN", "true", context);
+                    }
+                }
+            }
+        });
 
         // =========================================================================
         // --- ЭТАП 5: СВЯЗКА ФИЛЬТРОВ (Fragment Result Listener) ---
@@ -192,7 +216,32 @@ public class HomeFragment extends Fragment {
         // --- ПОДПИСКА НА ДАННЫЕ (OBSERVERS) ---
 
         // 1. Список коллекций
-        viewModel.collections.observe(getViewLifecycleOwner(), list -> adapter.updateList(list));
+        viewModel.collections.observe(getViewLifecycleOwner(), list -> {
+            adapter.updateList(list);
+
+            // ЛОГИКА 3: ОБУЧЕНИЕ "ВЫБОР КОЛЛЕКЦИИ"
+            // Если коллекций стало 2 или больше
+            if (list != null && list.size() >= 2) {
+                Context context = getContext();
+                if (context != null) {
+                    // Проверяем память
+                    String isShown = ActiveUserInfo.getDefaults("IS_COLLECTION_SWITCH_SHOWN", context);
+
+                    if (!"true".equals(isShown)) {
+                        String text = "Все ваши подборки будут\nпоявляться в меню сверху";
+
+                        UniversalInfoDialog dialog = UniversalInfoDialog.newInstance(text, true);
+
+                        // Используем уникальный тег
+                        if (isAdded()) {
+                            dialog.show(getParentFragmentManager(), "CollectionGuideTag");
+                            // Запоминаем
+                            ActiveUserInfo.setDefaults("IS_COLLECTION_SWITCH_SHOWN", "true", context);
+                        }
+                    }
+                }
+            }
+        });
 
         // 2. Выбранная коллекция
         viewModel.selectedName.observe(getViewLifecycleOwner(), name -> adapter.setSelectedName(name));

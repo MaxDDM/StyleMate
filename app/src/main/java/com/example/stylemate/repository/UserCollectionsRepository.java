@@ -368,6 +368,44 @@ public class UserCollectionsRepository {
         });
     }
 
+    // =========================================================================
+    // ОПТИМИЗАЦИЯ: Получить ТОЛЬКО список ID лайков (без загрузки самой одежды)
+    // =========================================================================
+    public void getLikedIdsOnly(String collectionId, Context context, DataCallback<List<String>> callback) {
+        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
+
+        // Если гость - возвращаем пустой список
+        if (rawEmail == null || rawEmail.equals("0")) {
+            callback.onDataLoaded(new ArrayList<>());
+            return;
+        }
+
+        String safeEmail = rawEmail.replace(".", "|");
+
+        // Запрашиваем только папку favorites
+        dbRef.child("user_collections")
+                .child(safeEmail)
+                .child(collectionId)
+                .child("favorites")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        List<String> ids = new ArrayList<>();
+                        // Собираем только ключи (ID)
+                        for (DataSnapshot item : snapshot.getChildren()) {
+                            ids.add(item.getKey());
+                        }
+                        // Возвращаем список строк ["id1", "id2"], а не тяжелые объекты
+                        callback.onDataLoaded(ids);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        callback.onError(error.getMessage());
+                    }
+                });
+    }
+
     // 1. Переименование коллекции
     public void renameCollection(Context context, String collectionId, String newName) {
         String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);

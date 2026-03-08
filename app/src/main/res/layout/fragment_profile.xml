@@ -82,7 +82,7 @@
         android:id="@+id/tvUserName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Марат"
+        android:text="Неизвестный"
         android:textSize="28sp"
         android:textColor="#000000"
         android:fontFamily="@font/ttcommons_regular"

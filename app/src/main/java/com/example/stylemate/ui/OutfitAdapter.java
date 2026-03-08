@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide; // Импорт Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.example.stylemate.R;
 import com.example.stylemate.model.Outfit;
 import java.util.List;
@@ -56,7 +57,7 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
         // 1. ЗАГРУЗКА КАРТИНКИ ЧЕРЕЗ GLIDE
         Glide.with(context)
                 .load(item.getImageUrl()) // Ссылка из Firebase
-                .placeholder(R.drawable.ic_launcher_background) // Заглушка пока грузится (создай или выбери свою)
+                .transition(DrawableTransitionOptions.withCrossFade()) // Плавное появление
                 .into(holder.imageView);
 
         // 2. Сердце

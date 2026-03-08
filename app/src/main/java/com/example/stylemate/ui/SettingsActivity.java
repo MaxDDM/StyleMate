@@ -20,8 +20,6 @@ import com.example.stylemate.R;
 import com.example.stylemate.model.Resource;
 import com.example.stylemate.model.SettingsViewModel;
 
-import java.util.Objects;
-
 public class SettingsActivity extends AppCompatActivity {
 
     private SettingsViewModel viewModel;
@@ -82,17 +80,15 @@ public class SettingsActivity extends AppCompatActivity {
             if (user != null) {
                 switch (user.status) {
                     case LOADING:
-                        Toast.makeText(SettingsActivity.this, "Идёт загрузка данных", Toast.LENGTH_LONG).show();
                         break;
                     case SUCCESS:
                         etName.setText(user.data.name);
                         etPhone.setText(user.data.phone);
                         etEmail.setText(user.data.email);
                         etDate.setText(user.data.birthDate);
-                        if (imgAvatar != null && !Objects.equals(user.data.avatarUrl, "")) imgAvatar.setImageResource(user.data.avatarResId != 0 ? user.data.avatarResId : R.drawable.ic_edit_avatar);
+                        // if (imgAvatar != null) imgAvatar.setImageResource(user.data.avatarResId != 0 ? user.data.avatarResId : R.drawable.ic_edit_avatar);
                         break;
                     case ERROR:
-                        Toast.makeText(SettingsActivity.this, user.message, Toast.LENGTH_LONG).show();
                         break;
                 }
 

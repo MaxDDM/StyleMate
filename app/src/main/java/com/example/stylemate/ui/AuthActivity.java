@@ -2,6 +2,10 @@ package com.example.stylemate.ui;
 
 import static androidx.core.content.ContextCompat.startActivity;
 
+import static com.example.stylemate.model.Resource.Status.ERROR;
+import static com.example.stylemate.model.Resource.Status.LOADING;
+import static com.example.stylemate.model.Resource.Status.SUCCESS;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.EditText;

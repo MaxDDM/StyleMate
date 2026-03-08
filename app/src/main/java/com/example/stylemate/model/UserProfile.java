@@ -5,7 +5,7 @@ public class UserProfile {
     public String phone;
     public String email;
     public String birthDate;
-    public String avatarUrl; // int, потому что R.drawable.avatar - это число
+    public String avatarUrl;
 
     public String password;
 
