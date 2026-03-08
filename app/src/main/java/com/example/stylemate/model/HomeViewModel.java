@@ -239,15 +239,45 @@ public class HomeViewModel extends AndroidViewModel {
         });
     }
 
-    // Метод для принудительного обновления данных
+    // Метод для обновления данных (вызывается из onResume)
     public void refreshData() {
-        // 1. Если список пуст (первый запуск) -> грузим всё по-старому (тяжелый запрос)
-        if (allOutfits == null || allOutfits.isEmpty()) {
-            loadCollectionsList();
-        }
-        // 2. Если список уже есть -> обновляем ТОЛЬКО галочки (легкий запрос)
-        else {
-            refreshLikesOnly();
-        }
+        // ШАГ 1: Всегда проверяем актуальный список папок (это легкий запрос имен)
+        repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
+            @Override
+            public void onDataLoaded(List<String> data) {
+                // СЛУЧАЙ А: Удалили последнюю коллекцию
+                if (data == null || data.isEmpty()) {
+                    _isEmptyState.setValue(true);
+                    _collections.setValue(new ArrayList<>());
+                    _outfits.setValue(new ArrayList<>());
+                    _selectedName.setValue(null);
+                    currentCollectionId = null;
+                    allOutfits.clear(); // Очищаем кэш
+                    return; // Заглушка покажется сама благодаря observer в фрагменте
+                }
+
+                // СЛУЧАЙ Б: Коллекции есть
+                _isEmptyState.setValue(false);
+                _collections.setValue(data);
+
+                String currentName = _selectedName.getValue();
+
+                // Проверяем: та папка, на которой мы стояли, всё еще существует?
+                if (currentName != null && data.contains(currentName)) {
+                    // Папка на месте -> запускаем ЛЕГКОЕ обновление лайков (без перерисовки картинок)
+                    refreshLikesOnly();
+                }
+                else {
+                    // Папки больше нет (её удалили, но остались другие) ->
+                    // Грузим первую доступную папку полностью (Тяжелый запрос, но это неизбежно)
+                    onCollectionSelected(data.get(0));
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                // Обработка ошибки
+            }
+        });
     }
 }

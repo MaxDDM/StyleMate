@@ -8,14 +8,24 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.stylemate.ui.FavouriteOutfits;
 import com.example.stylemate.repository.UserCollectionsRepository;
+import com.example.stylemate.repository.UserRepository;
 
 import java.util.List;
 
 // Меняем ViewModel на AndroidViewModel, чтобы иметь доступ к Context (Application)
 public class ProfileViewModel extends AndroidViewModel {
 
-    private final UserCollectionsRepository repository;
+    private final UserRepository userRepository;
+    private final UserCollectionsRepository collectionsRepository;
 
+    // Данные профиля
+    private final MutableLiveData<String> _userName = new MutableLiveData<>();
+    public LiveData<String> userName = _userName;
+
+    private final MutableLiveData<String> _userAvatarUrl = new MutableLiveData<>();
+    public LiveData<String> userAvatarUrl = _userAvatarUrl;
+
+    // Данные коллекций
     private final MutableLiveData<List<FavouriteOutfits>> _favorites = new MutableLiveData<>();
     public LiveData<List<FavouriteOutfits>> favorites = _favorites;
 
@@ -27,55 +37,56 @@ public class ProfileViewModel extends AndroidViewModel {
 
     public ProfileViewModel(@NonNull Application application) {
         super(application);
-        repository = new UserCollectionsRepository();
-        loadData();
+        userRepository = new UserRepository();
+        collectionsRepository = new UserCollectionsRepository();
+        refreshData();
     }
 
     // Добавляем публичный метод для обновления, который вызывает приватный loadData
     public void refreshData() {
-        loadData();
+        loadProfileData();
+        loadFavoritesData();
     }
 
-    private void loadData() {
-        // Передаем Application как Context
-        repository.getUserCollectionsWithPreviews(getApplication(), new UserCollectionsRepository.DataCallback<List<FavouriteOutfits>>() {
+    private void loadProfileData() {
+        // Используем НОВЫЙ метод с колбэком
+        userRepository.loadUserProfile(getApplication(), new UserRepository.ProfileCallback() {
             @Override
-            public void onDataLoaded(List<FavouriteOutfits> data) {
-                // 1. Сохраняем список (даже если он с пустыми папками, пусть адаптер их получит)
-                _favorites.setValue(data);
-
-                // ЛОГИКА 1: Проверка на полное отсутствие подборок
-                if (data == null || data.isEmpty()) {
-                    // Подборок нет вообще -> Валим на HomeFragment
-                    _navigateToHomeEvent.setValue(true);
-                    _isEmptyState.setValue(false); // Сбрасываем этот флаг, чтобы не мешал
-                    return;
+            public void onLoaded(UserProfile profile) {
+                if (profile != null) {
+                    _userName.setValue(profile.name != null ? profile.name : "Пользователь");
+                    _userAvatarUrl.setValue(profile.avatarUrl); // Может быть null
                 } else {
-                    _navigateToHomeEvent.setValue(false);
+                    // Гость
+                    _userName.setValue("Гость");
+                    _userAvatarUrl.setValue(null);
                 }
-
-                // 2. ПРОВЕРЯЕМ: А есть ли вообще хоть один лайк во всех папках?
-                boolean hasAnyLikes = false;
-
-                if (data != null) {
-                    for (FavouriteOutfits folder : data) {
-                        if (folder.hasLikes()) {
-                            hasAnyLikes = true;
-                            break; // Нашли хотя бы одну картинку — всё, выходим, не пусто!
-                        }
-                    }
-                }
-
-                // 3. Если лайков нет совсем — показываем экран "Пусто"
-                // (hasAnyLikes == false -> isEmptyState = true)
-                _isEmptyState.setValue(!hasAnyLikes);
             }
 
             @Override
             public void onError(String error) {
-                // Можно добавить LiveData для ошибки, если нужно
-                _isEmptyState.setValue(true);
+                _userName.setValue("Ошибка");
             }
+        });
+    }
+
+    private void loadFavoritesData() {
+        collectionsRepository.getUserCollectionsWithPreviews(getApplication(), new UserCollectionsRepository.DataCallback<List<FavouriteOutfits>>() {
+            @Override
+            public void onDataLoaded(List<FavouriteOutfits> data) {
+                _favorites.setValue(data);
+                if (data == null || data.isEmpty()) {
+                    _navigateToHomeEvent.setValue(true);
+                    _isEmptyState.setValue(false);
+                } else {
+                    _navigateToHomeEvent.setValue(false);
+                    boolean hasLikes = false;
+                    for(FavouriteOutfits f : data) if(f.hasLikes()) { hasLikes = true; break; }
+                    _isEmptyState.setValue(!hasLikes);
+                }
+            }
+            @Override
+            public void onError(String error) { }
         });
     }
 }

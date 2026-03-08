@@ -123,6 +123,24 @@ public class ProfileFragment extends Fragment {
     }
 
     private void observeViewModel() {
+        viewModel.userName.observe(getViewLifecycleOwner(), name -> {
+            if (name != null) {
+                tvUserName.setText(name);
+            }
+        });
+
+        // --- ЭТОГО НЕ ХВАТАЛО: Подписка на АВАТАРКУ ---
+        viewModel.userAvatarUrl.observe(getViewLifecycleOwner(), url -> {
+            // Glide загрузит картинку по ссылке или поставит заглушку, если url == null
+            if (imgAvatar != null) {
+                com.bumptech.glide.Glide.with(this)
+                        .load(url)
+                        .apply(com.bumptech.glide.request.RequestOptions.circleCropTransform())
+                        .placeholder(R.drawable.ic_placeholder_avatar) // Убедись, что этот ресурс существует!
+                        .error(R.drawable.ic_placeholder_avatar)
+                        .into(imgAvatar);
+            }
+        });
         // 1. Обновляем список, когда приходят данные
         viewModel.favorites.observe(getViewLifecycleOwner(), list -> {
             if (list != null) {

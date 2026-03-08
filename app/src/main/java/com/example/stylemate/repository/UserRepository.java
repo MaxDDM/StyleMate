@@ -36,6 +36,43 @@ public class UserRepository {
     FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/");
     DatabaseReference table = database.getReference("User");
 
+    // --- НОВЫЙ ИНТЕРФЕЙС ДЛЯ CALLBACK ---
+    public interface ProfileCallback {
+        void onLoaded(UserProfile profile);
+        void onError(String error);
+    }
+
+    // --- НОВЫЙ МЕТОД ДЛЯ ПРОФИЛЯ (One-shot request) ---
+    public void loadUserProfile(Context context, ProfileCallback callback) {
+        String email = ActiveUserInfo.getDefaults("isRegistered", context);
+
+        if (email == null || email.equals("0")) {
+            // Гость
+            callback.onLoaded(null);
+            return;
+        }
+
+        // Важно: в базе у тебя ключи с заменой точек на |
+        String safeEmail = email.replace(".", "|");
+
+        table.child(safeEmail).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    UserProfile user = snapshot.getValue(UserProfile.class);
+                    callback.onLoaded(user);
+                } else {
+                    callback.onError("User not found");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onError(error.getMessage());
+            }
+        });
+    }
+
     public LiveData<Resource<Boolean>> exists(String email, Context context) {
         MutableLiveData<Resource<Boolean>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
@@ -85,8 +122,8 @@ public class UserRepository {
         ActiveUserInfo.setDefaults("isRegistered", "", context);
     }
 
-    public LiveData<Resource<Boolean>> login(String name, String phone, String email, String birthDate, int avatarResId, String password, Context context) {
-        UserProfile user = new UserProfile(name, phone, email, birthDate, password, avatarResId);
+    public LiveData<Resource<Boolean>> login(String name, String phone, String email, String birthDate, String avatarUrl, String password, Context context) {
+        UserProfile user = new UserProfile(name, phone, email, birthDate, password, avatarUrl);
 
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());

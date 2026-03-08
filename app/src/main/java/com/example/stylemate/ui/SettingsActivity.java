@@ -86,7 +86,7 @@ public class SettingsActivity extends AppCompatActivity {
                         etPhone.setText(user.data.phone);
                         etEmail.setText(user.data.email);
                         etDate.setText(user.data.birthDate);
-                        if (imgAvatar != null && user.data.avatarResId != -1) imgAvatar.setImageResource(user.data.avatarResId != 0 ? user.data.avatarResId : R.drawable.ic_edit_avatar);
+                        // if (imgAvatar != null) imgAvatar.setImageResource(user.data.avatarResId != 0 ? user.data.avatarResId : R.drawable.ic_edit_avatar);
                         break;
                     case ERROR:
                         break;
