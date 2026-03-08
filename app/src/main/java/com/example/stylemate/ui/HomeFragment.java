@@ -40,7 +40,6 @@ public class HomeFragment extends Fragment {
     private ImageButton btnContinueTest;
     private ImageButton btnLogout; // --- НОВОЕ: Кнопки
     // Лаунчер для получения результата из Карточки
-    private ActivityResultLauncher<Intent> outfitDetailLauncher;
 
     private CollectionsNameAdapter adapter;
     private OutfitAdapter gridAdapter; // --- НОВОЕ: Адаптер для сетки
@@ -63,21 +62,6 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-
-        // РЕГИСТРИРУЕМ ЛАУНЧЕР (До настройки адаптера!)
-        outfitDetailLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        // Получили ответ!
-                        String id = result.getData().getStringExtra("outfit_id");
-                        boolean liked = result.getData().getBooleanExtra("is_liked", false);
-
-                        // Просим ViewModel обновить конкретный элемент
-                        viewModel.updateLikeStatusLocally(id, liked);
-                    }
-                }
-        );
 
         // Инициализация View
         View btnList = view.findViewById(R.id.btnList);
@@ -158,7 +142,7 @@ public class HomeFragment extends Fragment {
                     intent.putStringArrayListExtra("item_ids", ids);
                 }
 
-                outfitDetailLauncher.launch(intent);
+                startActivity(intent);
             }
         });
         rvGrid.setAdapter(gridAdapter);

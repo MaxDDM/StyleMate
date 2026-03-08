@@ -66,8 +66,13 @@ public class HomeViewModel extends AndroidViewModel {
                     _collections.setValue(data);
                     String currentSelected = _selectedName.getValue();
 
-                    // Если имя не выбрано, берем первое
-                    if (currentSelected == null || !data.contains(currentSelected)) {
+                    // 1. Если текущая коллекция всё еще существует в списке -> ОБНОВЛЯЕМ ЕЁ ДАННЫЕ
+                    if (currentSelected != null && data.contains(currentSelected)) {
+                        // Мы принудительно грузим одежду заново, чтобы подтянуть актуальные лайки
+                        loadOutfits(currentSelected);
+                    }
+                    // 2. Иначе (если ничего не выбрано или старую коллекцию удалили) -> берем первую
+                    else {
                         onCollectionSelected(data.get(0));
                     }
                 }
@@ -168,35 +173,6 @@ public class HomeViewModel extends AndroidViewModel {
     }
 
     // --- ЛАЙКИ (ОБНОВЛЕНО) ---
-
-    public void updateLikeStatusLocally(String outfitId, boolean isLiked) {
-        List<Outfit> currentList = _outfits.getValue();
-        if (currentList != null) {
-            boolean changed = false;
-            for (Outfit o : currentList) {
-                if (o.getId().equals(outfitId)) {
-                    // Если статус реально отличается, меняем
-                    if (o.isLiked() != isLiked) {
-                        o.setLiked(isLiked);
-                        changed = true;
-                    }
-                    break;
-                }
-            }
-            // Если что-то изменилось, оповещаем адаптер
-            if (changed) {
-                _outfits.setValue(currentList);
-
-                // Также обновляем и в полном списке allOutfits, чтобы при фильтрации не сбросилось
-                for (Outfit o : allOutfits) {
-                    if (o.getId().equals(outfitId)) {
-                        o.setLiked(isLiked);
-                        break;
-                    }
-                }
-            }
-        }
-    }
     public void toggleLike(String outfitId) {
         if (currentCollectionId == null) return; // Некуда сохранять
 
@@ -227,9 +203,51 @@ public class HomeViewModel extends AndroidViewModel {
         repository.toggleLikeInFirebase(getApplication(), currentCollectionId, outfitId, newState);
     }
 
+    private void refreshLikesOnly() {
+        if (currentCollectionId == null) return;
+
+        // Вызываем наш НОВЫЙ легкий метод
+        repository.getLikedIdsOnly(currentCollectionId, getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
+            @Override
+            public void onDataLoaded(List<String> likedIds) {
+                if (allOutfits == null) return;
+
+                boolean changed = false;
+
+                // Пробегаем по уже загруженной одежде в памяти
+                for (Outfit outfit : allOutfits) {
+                    // Проверяем: есть ли ID этой одежды в списке лайков из базы?
+                    boolean isLikedInDb = likedIds.contains(outfit.getId());
+
+                    // Если статус отличается от того, что на экране -> меняем
+                    if (outfit.isLiked() != isLikedInDb) {
+                        outfit.setLiked(isLikedInDb);
+                        changed = true;
+                    }
+                }
+
+                // Если были изменения, обновляем UI
+                if (changed) {
+                    // Если используешь фильтры, то лучше вызвать applyFilters(currentFilterState)
+                    // Если нет, то просто _outfits.setValue(allOutfits);
+                    _outfits.setValue(_outfits.getValue());
+                }
+            }
+
+            @Override
+            public void onError(String error) { /* Игнорируем */ }
+        });
+    }
+
     // Метод для принудительного обновления данных
     public void refreshData() {
-        // Переиспользуем логику загрузки, она теперь умная
-        loadCollectionsList();
+        // 1. Если список пуст (первый запуск) -> грузим всё по-старому (тяжелый запрос)
+        if (allOutfits == null || allOutfits.isEmpty()) {
+            loadCollectionsList();
+        }
+        // 2. Если список уже есть -> обновляем ТОЛЬКО галочки (легкий запрос)
+        else {
+            refreshLikesOnly();
+        }
     }
 }
