@@ -73,7 +73,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void login(String name, String email, String birth, String password) {
-        repo.login(name, "", email, birth, -1, password, RegisterActivity.this).observe(this, resource -> {
+        repo.login(name, "", email, birth, "", password, RegisterActivity.this).observe(this, resource -> {
             if (resource != null) {
                 switch (resource.status) {
                     case LOADING:

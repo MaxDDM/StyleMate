@@ -36,8 +36,13 @@ public class UserRepository {
     FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/");
     DatabaseReference table = database.getReference("User");
 
-    DatabaseReference connectedRef = database.getReference(".info/connected");
+    // --- НОВЫЙ ИНТЕРФЕЙС ДЛЯ CALLBACK ---
+    public interface ProfileCallback {
+        void onLoaded(UserProfile profile);
+        void onError(String error);
+    }
 
+    // --- НОВЫЙ МЕТОД ДЛЯ ПРОФИЛЯ (One-shot request) ---
     public void loadUserProfile(Context context, ProfileCallback callback) {
         String email = ActiveUserInfo.getDefaults("isRegistered", context);
 
@@ -72,36 +77,19 @@ public class UserRepository {
         MutableLiveData<Resource<Boolean>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
-        connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        table.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Boolean connected = snapshot.getValue(Boolean.class);
-
-                if (connected == null || !connected) {
-                    liveData.setValue(Resource.error("Нет соединения с сервером"));
-                    return;
+                if(snapshot.child(email).exists()) {
+                    liveData.setValue(Resource.success(true));
+                } else {
+                    liveData.setValue(Resource.success(false));
                 }
-
-                table.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(snapshot.child(email).exists()) {
-                            liveData.setValue(Resource.success(true));
-                        } else {
-                            liveData.setValue(Resource.success(false));
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        liveData.setValue(Resource.error("Возникла ошибка"));
-                    }
-                });
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                liveData.setValue(Resource.error("Возникла ошибка"));
+                Toast.makeText(context, "Возникла проблема, скорее всего нет соединения с интернетом", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -114,33 +102,16 @@ public class UserRepository {
 
         String email = ActiveUserInfo.getDefaults("isRegistered", context);
 
-        connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        table.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Boolean connected = snapshot.getValue(Boolean.class);
-
-                if (connected == null || !connected) {
-                    liveData.setValue(Resource.error("Нет соединения с сервером"));
-                    return;
-                }
-
-                table.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        UserProfile user = snapshot.child(email).getValue(UserProfile.class);
-                        liveData.setValue(Resource.success(user));
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        liveData.setValue(Resource.error("Возникла ошибка"));
-                    }
-                });
+                UserProfile user = snapshot.child(email).getValue(UserProfile.class);
+                liveData.setValue(Resource.success(user));
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                liveData.setValue(Resource.error("Возникла ошибка"));
+                Toast.makeText(context, "Возникла проблема, скорее всего нет соединения с интернетом", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -151,39 +122,23 @@ public class UserRepository {
         ActiveUserInfo.setDefaults("isRegistered", "", context);
     }
 
-    public LiveData<Resource<Boolean>> login(String name, String phone, String email, String birthDate, int avatarResId, String password, Context context) {
-        UserProfile user = new UserProfile(name, phone, email, birthDate, password, avatarResId);
+    public LiveData<Resource<Boolean>> login(String name, String phone, String email, String birthDate, String avatarUrl, String password, Context context) {
+        UserProfile user = new UserProfile(name, phone, email, birthDate, password, avatarUrl);
 
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());
-
-        connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        table.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Boolean connected = snapshot.getValue(Boolean.class);
-
-                if (connected == null || !connected) {
-                    result.setValue(Resource.error("Нет соединения с сервером"));
-                    return;
-                }
-
-                table.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        table.child(user.email).setValue(user);
-                        result.setValue(Resource.success(true));
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        result.setValue(Resource.error("Возникла ошибка"));
-                    }
-                });
+                table.child(user.email).setValue(user);
+                result.setValue(Resource.success(true));
+                Toast.makeText(context, "Успешная регистрация", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                result.setValue(Resource.error("Возникла ошибка"));
+                Toast.makeText(context, "Возникла проблема, скорее всего нет соединения с интернетом", Toast.LENGTH_LONG).show();
+                result.setValue(Resource.success(false));
             }
         });
 
@@ -196,34 +151,17 @@ public class UserRepository {
 
         String email = ActiveUserInfo.getDefaults("isRegistered", context);
 
-        connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        table.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Boolean connected = snapshot.getValue(Boolean.class);
-
-                if (connected == null || !connected) {
-                    result.setValue(Resource.error("Нет соединения с сервером"));
-                    return;
-                }
-
-                table.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        UserProfile user = snapshot.child(email).getValue(UserProfile.class);
-                        assert user != null;
-                        result.setValue(Resource.success(Objects.equals(user.password, input)));
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        result.setValue(Resource.error("Возникла ошибка"));
-                    }
-                });
+                UserProfile user = snapshot.child(email).getValue(UserProfile.class);
+                assert user != null;
+                result.setValue(Resource.success(Objects.equals(user.password, input)));
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                result.setValue(Resource.error("Возникла ошибка"));
+                Toast.makeText(context, "Возникла проблема, скорее всего нет соединения с интернетом", Toast.LENGTH_LONG).show();
             }
         });
 
