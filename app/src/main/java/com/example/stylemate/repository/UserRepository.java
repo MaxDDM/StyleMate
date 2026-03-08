@@ -38,6 +38,36 @@ public class UserRepository {
 
     DatabaseReference connectedRef = database.getReference(".info/connected");
 
+    public void loadUserProfile(Context context, ProfileCallback callback) {
+        String email = ActiveUserInfo.getDefaults("isRegistered", context);
+
+        if (email == null || email.equals("0")) {
+            // Гость
+            callback.onLoaded(null);
+            return;
+        }
+
+        // Важно: в базе у тебя ключи с заменой точек на |
+        String safeEmail = email.replace(".", "|");
+
+        table.child(safeEmail).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    UserProfile user = snapshot.getValue(UserProfile.class);
+                    callback.onLoaded(user);
+                } else {
+                    callback.onError("User not found");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onError(error.getMessage());
+            }
+        });
+    }
+
     public LiveData<Resource<Boolean>> exists(String email, Context context) {
         MutableLiveData<Resource<Boolean>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
