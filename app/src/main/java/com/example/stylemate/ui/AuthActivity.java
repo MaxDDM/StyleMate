@@ -60,27 +60,22 @@ public class AuthActivity extends AppCompatActivity {
             } else if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
                 Toast.makeText(AuthActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
             } else {
-                repo.exists(email.getText().toString().replace(".", "|"), AuthActivity.this).observe(this, resource -> {
-                    if (resource != null) {
-                        switch (resource.status) {
-                            case LOADING:
-                                Toast.makeText(AuthActivity.this, "Идёт процесс авторизации", Toast.LENGTH_LONG).show();
-                                break;
-                            case SUCCESS:
-                                ActiveUserInfo.setDefaults("isRegistered", email.getText().toString().replace(".", "|"), AuthActivity.this);
+                repo.loginUser(email.getText().toString(), password.getText().toString()).observe(this, resource -> {
+                    switch(resource.status) {
+                        case LOADING:
+                            Toast.makeText(AuthActivity.this, "Идёт процесс авторизации", Toast.LENGTH_LONG).show();
+                            break;
+                        case SUCCESS:
+                            if (resource.data) {
+                                ActiveUserInfo.setDefaults("isRegistered", repo.getUID(), AuthActivity.this);
 
-                                if (resource.data) {
-                                    checkPassword(password.getText().toString());
-                                } else {
-                                    ActiveUserInfo.setDefaults("isRegistered", "", AuthActivity.this);
-                                    Toast.makeText(AuthActivity.this, "Пользователь с такой почтой не зарегистрирован", Toast.LENGTH_LONG).show();
-                                }
-                                break;
-                            case ERROR:
-                                Toast.makeText(AuthActivity.this, resource.message, Toast.LENGTH_LONG).show();
-                                break;
-                        }
-
+                                Intent intent = new Intent(AuthActivity.this, MainActivity.class);
+                                startActivity(intent);
+                            }
+                            break;
+                        case ERROR:
+                            Toast.makeText(AuthActivity.this, resource.message, Toast.LENGTH_LONG).show();
+                            break;
                     }
                 });
             }
@@ -91,25 +86,5 @@ public class AuthActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-    }
-
-    private void checkPassword(String password) {
-        repo.checkCurrentPassword(password, this).observe(this, resource1 -> {
-            switch (resource1.status) {
-                case LOADING:
-                    break;
-                case SUCCESS:
-                    if (resource1.data) {
-                        Intent intent = new Intent(AuthActivity.this, MainActivity.class);
-                        startActivity(intent);
-                    } else {
-                        Toast.makeText(AuthActivity.this, "Введён неверный пароль", Toast.LENGTH_LONG).show();
-                    }
-                    break;
-                case ERROR:
-                    Toast.makeText(AuthActivity.this, resource1.message, Toast.LENGTH_LONG).show();
-                    break;
-            }
-        });
     }
 }

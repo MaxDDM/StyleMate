@@ -47,7 +47,7 @@ public class OutfitDetailViewModel extends AndroidViewModel {
 
     // --- НОВЫЙ МЕТОД: ЛАЙК ---
     public void toggleLike(String collectionId, String outfitId, boolean isLiked) {
-        collectionsRepository.toggleLikeInFirebase(getApplication(), collectionId, outfitId, isLiked);
+        collectionsRepository.toggleLikeInFirebase(collectionId, outfitId, isLiked);
     }
 
     private void generateTitle(String season, String style) {

@@ -30,10 +30,11 @@ public class RegisterActivity extends AppCompatActivity {
         EditText password = findViewById(R.id.passwordReg);
         EditText name = findViewById(R.id.nameReg);
         EditText birth = findViewById(R.id.birthDateReg);
+        ImageButton verifyButton = findViewById(R.id.verifyEmail);
         ImageButton continueButton = findViewById(R.id.continueRegButton);
         ImageButton skipRegButton = findViewById(R.id.skipRegButton);
 
-        continueButton.setOnClickListener(v -> {
+        verifyButton.setOnClickListener(v -> {
             EmailValidator validator = EmailValidator.getInstance();
 
             if (!validator.isValid(email.getText().toString())) {
@@ -41,26 +42,46 @@ public class RegisterActivity extends AppCompatActivity {
             } else if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
                 Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
             } else {
-                repo.exists(email.getText().toString().replace(".", "|"), RegisterActivity.this).observe(this, resource -> {
-                    if (resource != null) {
-                        switch(resource.status) {
-                            case LOADING:
-                                Toast.makeText(RegisterActivity.this, "Идёт процесс регистрации", Toast.LENGTH_LONG).show();
-                                break;
-                            case SUCCESS:
-                                if (resource.data) {
-                                    Toast.makeText(RegisterActivity.this, "Пользователь с этим email уже зарегистрирован", Toast.LENGTH_LONG).show();
-                                } else {
-                                    login(name.getText().toString(), email.getText().toString(), birth.getText().toString(), password.getText().toString());
-                                }
-                                break;
-                            case ERROR:
-                                Toast.makeText(RegisterActivity.this, resource.message, Toast.LENGTH_LONG).show();
-                                break;
-                        }
+                repo.sendEmail(email.getText().toString(), password.getText().toString()).observe(this, resource -> {
+                    switch(resource.status) {
+                        case LOADING:
+                            break;
+                        case SUCCESS:
+                            if (resource.data) {
+                                Toast.makeText(RegisterActivity.this, "На указанный адрес отправлено письмо для его верификации", Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(RegisterActivity.this, "Пользователь с указанным email уже зарегистрирован", Toast.LENGTH_LONG).show();
+                            }
+                            break;
+                        case ERROR:
+                            Toast.makeText(RegisterActivity.this, resource.message, Toast.LENGTH_LONG).show();
+                            break;
                     }
                 });
             }
+        });
+
+        continueButton.setOnClickListener(v -> {
+            repo.checkEmailVerifiedAndRegister(name.getText().toString(), "", email.getText().toString(), birth.getText().toString(), "", password.getText().toString()).observe(this, resource -> {
+                switch(resource.status) {
+                    case LOADING:
+                        Toast.makeText(RegisterActivity.this, "Идёт процесс регистрации", Toast.LENGTH_LONG).show();
+                        break;
+                    case SUCCESS:
+                        if (resource.data) {
+                            ActiveUserInfo.setDefaults("isRegistered", repo.getUID(), RegisterActivity.this);
+
+                            Intent intent = new Intent(RegisterActivity.this, TestQ1Activity.class);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(RegisterActivity.this, "Вы не подтвердили email. Для повторной отправки письма можно нажать ещё раз.", Toast.LENGTH_LONG).show();
+                        }
+                        break;
+                    case ERROR:
+                        Toast.makeText(RegisterActivity.this, resource.message, Toast.LENGTH_LONG).show();
+                        break;
+                }
+            });
         });
 
         skipRegButton.setOnClickListener(v -> {
@@ -69,29 +90,6 @@ public class RegisterActivity extends AppCompatActivity {
             dialog.setListener(this::finish);
 
             dialog.show(getSupportFragmentManager(), "DeleteDialog");
-        });
-    }
-
-    private void login(String name, String email, String birth, String password) {
-        repo.login(name, "", email, birth, "", password, RegisterActivity.this).observe(this, resource -> {
-            if (resource != null) {
-                switch (resource.status) {
-                    case LOADING:
-                        break;
-                    case SUCCESS:
-                        if (resource.data) {
-                            Toast.makeText(RegisterActivity.this, "Успешная регистрация", Toast.LENGTH_LONG).show();
-                            ActiveUserInfo.setDefaults("isRegistered", email.replace(".", "|"), RegisterActivity.this);
-
-                            Intent intent = new Intent(RegisterActivity.this, TestQ1Activity.class);
-                            startActivity(intent);
-                        }
-                        break;
-                    case ERROR:
-                        Toast.makeText(RegisterActivity.this, resource.message, Toast.LENGTH_LONG).show();
-                        break;
-                }
-            }
         });
     }
 }

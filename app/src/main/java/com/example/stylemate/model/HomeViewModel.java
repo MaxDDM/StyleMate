@@ -50,7 +50,7 @@ public class HomeViewModel extends AndroidViewModel {
     public String getCurrentCollectionId() { return currentCollectionId; }
 
     private void loadCollectionsList() {
-        repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
+        repository.getCollectionNames(new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> data) {
                 // 1. Проверяем на пустоту
@@ -200,14 +200,14 @@ public class HomeViewModel extends AndroidViewModel {
         }
 
         // 2. Отправляем в базу
-        repository.toggleLikeInFirebase(getApplication(), currentCollectionId, outfitId, newState);
+        repository.toggleLikeInFirebase(currentCollectionId, outfitId, newState);
     }
 
     private void refreshLikesOnly() {
         if (currentCollectionId == null) return;
 
         // Вызываем наш НОВЫЙ легкий метод
-        repository.getLikedIdsOnly(currentCollectionId, getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
+        repository.getLikedIdsOnly(currentCollectionId,new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> likedIds) {
                 if (allOutfits == null) return;
@@ -242,7 +242,7 @@ public class HomeViewModel extends AndroidViewModel {
     // Метод для обновления данных (вызывается из onResume)
     public void refreshData() {
         // ШАГ 1: Всегда проверяем актуальный список папок (это легкий запрос имен)
-        repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
+        repository.getCollectionNames(new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> data) {
                 // СЛУЧАЙ А: Удалили последнюю коллекцию

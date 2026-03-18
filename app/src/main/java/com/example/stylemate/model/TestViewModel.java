@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.repository.StyleTestRepository;
+import com.example.stylemate.repository.UserRepository;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -19,6 +20,8 @@ import java.util.Map;
 public class TestViewModel extends AndroidViewModel {
 
     private final StyleTestRepository repository;
+
+    private final UserRepository repo = new UserRepository();
 
     // 1. STATE (Состояние идет СНИЗУ ВВЕРХ)
     // LiveData для статуса сессии
@@ -70,14 +73,8 @@ public class TestViewModel extends AndroidViewModel {
         int winnerIndex = repository.calculateWinner();
         String styleName = repository.getStyleName(winnerIndex); // "casual"
 
-        // Проверяем, авторизован ли пользователь через твой ActiveUserInfo
-        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", getApplication());
-
-        // Если там не пусто и не "0" - значит это Юзер
-        boolean isLogged = rawEmail != null && !rawEmail.equals("0");
-
-        if (isLogged) {
-            saveToFirebase(rawEmail, styleName, winnerIndex);
+        if (repo.isLogged()) {
+            saveToFirebase(repo.getUID(), styleName, winnerIndex);
         } else {
             saveToLocal(styleName, winnerIndex);
         }
@@ -86,13 +83,10 @@ public class TestViewModel extends AndroidViewModel {
     private void saveToFirebase(String rawEmail, String styleName, int winnerIndex) {
         DatabaseReference dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
 
-        // ВАЖНО: В Firebase ключи не могут содержать ".", заменяем на "|" как в твоем примере
-        String safeEmailKey = rawEmail.replace(".", "|");
-
         // user_collections -> ivan@mail|ru -> PUSH_ID
         DatabaseReference newCollectionRef = dbRef
                 .child("user_collections")
-                .child(safeEmailKey)
+                .child(repo.getUID())
                 .push();
 
         // СТРОГО ПО ТВОЕЙ СТРУКТУРЕ
@@ -117,15 +111,12 @@ public class TestViewModel extends AndroidViewModel {
                 });
     }
 
-    public void saveSituationfilters(String rawEmail, String styleName, ArrayList<String> situations) {
+    public void saveSituationfilters(String uid, String styleName, ArrayList<String> situations) {
         DatabaseReference dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
-
-        // ВАЖНО: В Firebase ключи не могут содержать ".", заменяем на "|" как в твоем примере
-        String safeEmailKey = rawEmail.replace(".", "|");
 
         String situation = situationsToString(situations);
 
-        dbRef.child("user_collections").child(safeEmailKey).child(styleName).child("situation").setValue(situation);
+        dbRef.child("user_collections").child(uid).child(styleName).child("situation").setValue(situation);
     }
 
     private void saveToLocal(String styleName, int winnerIndex) {

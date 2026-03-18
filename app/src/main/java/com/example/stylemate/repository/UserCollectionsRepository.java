@@ -22,6 +22,8 @@ public class UserCollectionsRepository {
 
     private final DatabaseReference dbRef;
 
+    private final UserRepository repo = new UserRepository();
+
     public UserCollectionsRepository() {
         dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
     }
@@ -39,12 +41,14 @@ public class UserCollectionsRepository {
     }
 
     // 1. Получить названия (без изменений)
-    public void getCollectionNames(Context context, DataCallback<List<String>> callback) {
-        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
-        boolean isLogged = rawEmail != null && !rawEmail.equals("0");
+    public void getCollectionNames(DataCallback<List<String>> callback) {
+        String uid = "";
 
-        String safeEmail = rawEmail.replace(".", "|");
-        dbRef.child("user_collections").child(safeEmail)
+        if (repo.isLogged()) {
+            uid = repo.getUID();
+        }
+
+        dbRef.child("user_collections").child(uid)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -68,10 +72,7 @@ public class UserCollectionsRepository {
 
     // 2. Получить одежду + Лайки + ID коллекции
     public void getOutfitsForCollection(String collectionName, Context context, CollectionDataCallback callback) {
-        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
-        boolean isLogged = rawEmail != null && !rawEmail.equals("0");
-
-        if (!isLogged) {
+        if (!repo.isLogged()) {
             // ГОСТЬ: Лайков нет
             String guestStyle = ActiveUserInfo.getDefaults("guest_style_name", context);
             String targetStyle = (guestStyle != null) ? guestStyle : "casual";
@@ -81,9 +82,7 @@ public class UserCollectionsRepository {
 
         } else {
             // ЮЗЕР
-            String safeEmail = rawEmail.replace(".", "|");
-
-            dbRef.child("user_collections").child(safeEmail)
+            dbRef.child("user_collections").child(repo.getUID())
                     .orderByChild("name").equalTo(collectionName)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -191,15 +190,11 @@ public class UserCollectionsRepository {
     // НОВЫЙ МЕТОД: Получить коллекции с превью (для Профиля)
     // =========================================================================
     public void getUserCollectionsWithPreviews(Context context, DataCallback<List<FavouriteOutfits>> callback) {
-        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
-
         // Если не залогинен - возвращаем пустой список
-        if (rawEmail == null || rawEmail.equals("0")) {
+        if (!repo.isLogged()) {
             callback.onDataLoaded(new ArrayList<>());
             return;
         }
-
-        String safeEmail = rawEmail.replace(".", "|");
 
         // ШАГ 1: Загружаем ВСЮ одежду, чтобы знать картинки по ID
         // (В реальном большом проекте так не делают, но для курсовой/стартапа это ОК)
@@ -214,7 +209,7 @@ public class UserCollectionsRepository {
                 }
 
                 // ШАГ 2: Теперь грузим коллекции пользователя
-                loadUserCollectionsStructure(safeEmail, imagesMap, callback);
+                loadUserCollectionsStructure(imagesMap, callback);
             }
 
             @Override
@@ -224,8 +219,8 @@ public class UserCollectionsRepository {
         });
     }
 
-    private void loadUserCollectionsStructure(String email, Map<String, String> imagesMap, DataCallback<List<FavouriteOutfits>> callback) {
-        dbRef.child("user_collections").child(email)
+    private void loadUserCollectionsStructure(Map<String, String> imagesMap, DataCallback<List<FavouriteOutfits>> callback) {
+        dbRef.child("user_collections").child(repo.getUID())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -274,14 +269,11 @@ public class UserCollectionsRepository {
     }
 
     // 3. Метод записи лайка в Firebase
-    public void toggleLikeInFirebase(Context context, String collectionId, String outfitId, boolean isLiked) {
-        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
-        if (rawEmail == null || rawEmail.equals("0")) return; // Гости не пишут в базу
-
-        String safeEmail = rawEmail.replace(".", "|");
+    public void toggleLikeInFirebase(String collectionId, String outfitId, boolean isLiked) {
+        if (!repo.isLogged()) return; // Гости не пишут в базу
 
         DatabaseReference favRef = dbRef.child("user_collections")
-                .child(safeEmail)
+                .child(repo.getUID())
                 .child(collectionId)
                 .child("favorites")
                 .child(outfitId);
@@ -296,18 +288,15 @@ public class UserCollectionsRepository {
     // =========================================================================
     // НОВЫЙ МЕТОД: Загрузка лайков конкретной коллекции (Игнорируя фильтры)
     // =========================================================================
-    public void getCollectionFavorites(String collectionId, Context context, DataCallback<List<Outfit>> callback) {
-        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
+    public void getCollectionFavorites(String collectionId, DataCallback<List<Outfit>> callback) {
         // Гости не имеют БД, возвращаем пустоту
-        if (rawEmail == null || rawEmail.equals("0")) {
+        if (!repo.isLogged()) {
             callback.onDataLoaded(new ArrayList<>());
             return;
         }
 
-        String safeEmail = rawEmail.replace(".", "|");
-
         // 1. Идем в папку: user_collections -> email -> collectionId -> favorites
-        dbRef.child("user_collections").child(safeEmail).child(collectionId).child("favorites")
+        dbRef.child("user_collections").child(repo.getUID()).child(collectionId).child("favorites")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -371,20 +360,16 @@ public class UserCollectionsRepository {
     // =========================================================================
     // ОПТИМИЗАЦИЯ: Получить ТОЛЬКО список ID лайков (без загрузки самой одежды)
     // =========================================================================
-    public void getLikedIdsOnly(String collectionId, Context context, DataCallback<List<String>> callback) {
-        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
-
+    public void getLikedIdsOnly(String collectionId, DataCallback<List<String>> callback) {
         // Если гость - возвращаем пустой список
-        if (rawEmail == null || rawEmail.equals("0")) {
+        if (!repo.isLogged()) {
             callback.onDataLoaded(new ArrayList<>());
             return;
         }
 
-        String safeEmail = rawEmail.replace(".", "|");
-
         // Запрашиваем только папку favorites
         dbRef.child("user_collections")
-                .child(safeEmail)
+                .child(repo.getUID())
                 .child(collectionId)
                 .child("favorites")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -407,30 +392,24 @@ public class UserCollectionsRepository {
     }
 
     // 1. Переименование коллекции
-    public void renameCollection(Context context, String collectionId, String newName) {
-        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
-        if (rawEmail == null || rawEmail.equals("0")) return;
-
-        String safeEmail = rawEmail.replace(".", "|");
+    public void renameCollection(String collectionId, String newName) {
+        if (!repo.isLogged()) return;
 
         // Заходим в user_collections -> email -> id -> name и ставим новое значение
         dbRef.child("user_collections")
-                .child(safeEmail)
+                .child(repo.getUID())
                 .child(collectionId)
                 .child("name")
                 .setValue(newName);
     }
 
     // 2. Полное удаление коллекции
-    public void deleteCollection(Context context, String collectionId) {
-        String rawEmail = ActiveUserInfo.getDefaults("isRegistered", context);
-        if (rawEmail == null || rawEmail.equals("0")) return;
-
-        String safeEmail = rawEmail.replace(".", "|");
+    public void deleteCollection(String collectionId) {
+        if (!repo.isLogged()) return;
 
         // Заходим в user_collections -> email -> id и удаляем ВСЮ ветку (вместе с лайками внутри)
         dbRef.child("user_collections")
-                .child(safeEmail)
+                .child(repo.getUID())
                 .child(collectionId)
                 .removeValue();
     }

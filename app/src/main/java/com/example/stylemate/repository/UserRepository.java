@@ -21,6 +21,13 @@ import com.example.stylemate.ui.AuthActivity;
 import com.example.stylemate.ui.FavouriteOutfits;
 import com.example.stylemate.model.UserProfile;
 import com.example.stylemate.ui.RegisterActivity;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -33,9 +40,10 @@ import java.util.Objects;
 
 public class UserRepository {
 
-    FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/");
+    FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
     DatabaseReference table = database.getReference("User");
     DatabaseReference connectedRef = database.getReference(".info/connected");
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
     // --- НОВЫЙ ИНТЕРФЕЙС ДЛЯ CALLBACK ---
     public interface ProfileCallback {
@@ -45,18 +53,14 @@ public class UserRepository {
 
     // --- НОВЫЙ МЕТОД ДЛЯ ПРОФИЛЯ (One-shot request) ---
     public void loadUserProfile(Context context, ProfileCallback callback) {
-        String email = ActiveUserInfo.getDefaults("isRegistered", context);
 
-        if (email == null || email.equals("0")) {
+        if (mAuth.getCurrentUser() == null) {
             // Гость
             callback.onLoaded(null);
             return;
         }
 
-        // Важно: в базе у тебя ключи с заменой точек на |
-        String safeEmail = email.replace(".", "|");
-
-        table.child(safeEmail).addListenerForSingleValueEvent(new ValueEventListener() {
+        table.child(getUID()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
@@ -74,52 +78,10 @@ public class UserRepository {
         });
     }
 
-    public LiveData<Resource<Boolean>> exists(String email, Context context) {
-        MutableLiveData<Resource<Boolean>> liveData = new MutableLiveData<>();
-        liveData.setValue(Resource.loading());
-
-        connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Boolean connected = snapshot.getValue(Boolean.class);
-
-                if (connected == null || !connected) {
-                    liveData.setValue(Resource.error("Нет соединения с сервером"));
-                    return;
-                }
-
-                table.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(snapshot.child(email).exists()) {
-                            liveData.setValue(Resource.success(true));
-                        } else {
-                            liveData.setValue(Resource.success(false));
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        liveData.setValue(Resource.error("Возникла ошибка"));
-                    }
-                });
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                liveData.setValue(Resource.error("Возникла ошибка"));
-            }
-        });
-
-        return liveData;
-    }
-
-    public LiveData<Resource<UserProfile>> getUserProfile(Context context) {
+    public LiveData<Resource<UserProfile>> getUserProfile() {
         MutableLiveData<Resource<UserProfile>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
-        String email = ActiveUserInfo.getDefaults("isRegistered", context);
-
         connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -133,7 +95,7 @@ public class UserRepository {
                 table.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        UserProfile user = snapshot.child(email).getValue(UserProfile.class);
+                        UserProfile user = snapshot.child(getUID()).getValue(UserProfile.class);
                         liveData.setValue(Resource.success(user));
                     }
 
@@ -157,50 +119,113 @@ public class UserRepository {
         ActiveUserInfo.setDefaults("isRegistered", "", context);
     }
 
-    public LiveData<Resource<Boolean>> login(String name, String phone, String email, String birthDate, String avatarUrl, String password, Context context) {
-        UserProfile user = new UserProfile(name, phone, email, birthDate, password, avatarUrl);
-
+    public LiveData<Resource<Boolean>> sendEmail(String email, String password) {
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());
 
-        connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Boolean connected = snapshot.getValue(Boolean.class);
-
-                if (connected == null || !connected) {
-                    result.setValue(Resource.error("Нет соединения с сервером"));
-                    return;
-                }
-
-                table.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        table.child(user.email).setValue(user);
-                        result.setValue(Resource.success(true));
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        result.setValue(Resource.error("Возникла ошибка"));
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            // отправляем письмо для подтверждения
+                            user.sendEmailVerification()
+                                    .addOnCompleteListener(verifyTask -> {
+                                        if (verifyTask.isSuccessful()) {
+                                            result.setValue(Resource.success(true));
+                                        } else {
+                                            result.setValue(Resource.error("Нет связи с сервером"));
+                                        }
+                                    });
+                        }
+                    } else {
+                        Exception e = task.getException();
+                        if (e instanceof FirebaseAuthUserCollisionException) {
+                            if ("ERROR_EMAIL_ALREADY_IN_USE".equals(((FirebaseAuthUserCollisionException) e).getErrorCode())) {
+                                FirebaseUser user = mAuth.getCurrentUser();
+                                if (user != null) {
+                                    user.sendEmailVerification()
+                                            .addOnCompleteListener(verifyTask -> {
+                                                if (verifyTask.isSuccessful()) {
+                                                    result.setValue(Resource.success(true));
+                                                } else {
+                                                    result.setValue(Resource.error("Возникла ошибка"));
+                                                }
+                                            });
+                                } else {
+                                    result.setValue(Resource.success(false));
+                                }
+                            }
+                        } else {
+                            result.setValue(Resource.error("Нет связи с сервером"));
+                        }
                     }
                 });
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                result.setValue(Resource.error("Возникла ошибка"));
-            }
-        });
 
         return result;
     }
 
-    public LiveData<Resource<Boolean>> checkCurrentPassword(String input, Context context) {
+    public LiveData<Resource<Boolean>> checkEmailVerifiedAndRegister(String name, String phone, String email, String birthDate, String avatarUrl, String password) {
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());
 
-        String email = ActiveUserInfo.getDefaults("isRegistered", context);
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            user.reload().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    if (user.isEmailVerified()) {
+                        table.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                UserProfile userPr = new UserProfile(name, phone, email, birthDate, password, avatarUrl);
+                                String uid = mAuth.getCurrentUser().getUid();
+                                table.child(uid).setValue(userPr);
+                                result.setValue(Resource.success(true));
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+                                result.setValue(Resource.error("Возникла ошибка"));
+                            }
+                        });
+                    } else {
+                        result.setValue(Resource.success(false));
+                    }
+                } else {
+                    result.setValue(Resource.error("Нет связи с сервером"));
+                }
+            });
+        }
+
+        return result;
+    }
+
+    public LiveData<Resource<Boolean>> loginUser(String email, String password) {
+        MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
+        result.setValue(Resource.loading());
+
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        result.setValue(Resource.success(true));
+                    } else {
+                        Exception e = task.getException();
+
+                        if (e instanceof FirebaseAuthInvalidCredentialsException || e instanceof FirebaseAuthUserCollisionException
+                        || e instanceof FirebaseAuthInvalidUserException) {
+                            result.setValue(Resource.error("Неверный email или пароль"));
+                        } else {
+                            result.setValue(Resource.error("Нет связи с сервером"));
+                        }
+                    }
+                });
+
+        return result;
+    }
+
+    public LiveData<Resource<Boolean>> checkCurrentPassword(String input) {
+        MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
+        result.setValue(Resource.loading());
 
         connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -215,7 +240,7 @@ public class UserRepository {
                 table.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        UserProfile user = snapshot.child(email).getValue(UserProfile.class);
+                        UserProfile user = snapshot.child(getUID()).getValue(UserProfile.class);
                         assert user != null;
                         result.setValue(Resource.success(Objects.equals(user.password, input)));
                     }
@@ -236,9 +261,18 @@ public class UserRepository {
         return result;
     }
 
-    public void changePassword(String newPassword, Context context) {
-        String email = ActiveUserInfo.getDefaults("isRegistered", context);
+    public void changePassword(String newPassword) {
+        table.child(getUID()).child("password").setValue(newPassword);
 
-        table.child(email).child("password").setValue(newPassword);
+        Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).updatePassword(newPassword);
+    }
+
+    public String getUID() {
+        assert mAuth.getCurrentUser() != null;
+        return mAuth.getCurrentUser().getUid();
+    }
+
+    public boolean isLogged() {
+        return mAuth.getCurrentUser() != null;
     }
 }

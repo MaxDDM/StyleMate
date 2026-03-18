@@ -87,9 +87,9 @@ public class NewSelectQ14Activity extends AppCompatActivity {
 
                 viewModel = new ViewModelProvider(this).get(TestViewModel.class);
                 String name = ActiveUserInfo.getDefaults("collectionName", NewSelectQ14Activity.this);
-                String email = ActiveUserInfo.getDefaults("isRegistered", NewSelectQ14Activity.this);
-                if (email != null && !email.isEmpty()) {
-                    viewModel.saveSituationfilters(email, name, SituationsRepository.getSituations(situation_id));
+                String uid = ActiveUserInfo.getDefaults("isRegistered", NewSelectQ14Activity.this);
+                if (uid != null && !uid.isEmpty()) {
+                    viewModel.saveSituationfilters(uid, name, SituationsRepository.getSituations(situation_id));
                 } else {
                     viewModel.saveSituation(SituationsRepository.getSituations(situation_id));
                 }
