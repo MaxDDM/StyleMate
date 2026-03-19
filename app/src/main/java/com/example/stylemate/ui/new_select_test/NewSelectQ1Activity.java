@@ -44,7 +44,7 @@ public class NewSelectQ1Activity extends AppCompatActivity {
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
                 if (ans == 1) {
-                    Intent intent = new Intent(NewSelectQ1Activity.this, NewSelectQ2Activity.class);
+                    Intent intent = new Intent(NewSelectQ1Activity.this, NewSelectQ9Activity.class);
                     startActivity(intent);
                 } else {
                     Intent intent = new Intent(NewSelectQ1Activity.this, TestQ1Activity.class);
@@ -56,7 +56,7 @@ public class NewSelectQ1Activity extends AppCompatActivity {
         });
 
         skipButton.setOnClickListener(v -> {
-            Intent intent = new Intent(NewSelectQ1Activity.this, NewSelectQ2Activity.class);
+            Intent intent = new Intent(NewSelectQ1Activity.this, NewSelectQ9Activity.class);
             startActivity(intent);
         });
     }

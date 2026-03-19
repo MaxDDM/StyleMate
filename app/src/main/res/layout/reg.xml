@@ -86,7 +86,7 @@
         android:layout_marginTop="0dp"
         android:background="@drawable/ic_pic27"
         android:hint="Введите ваше имя"
-        android:inputType="textPassword"
+        android:inputType="textPersonName"
         android:textColorHint="#5C5C5C"
         android:fontFamily="@font/ttcommons_regular"
         android:textSize="16sp"

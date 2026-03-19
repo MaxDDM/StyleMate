@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -15,10 +17,14 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import android.util.Patterns;
 
 import com.example.stylemate.R;
 import com.example.stylemate.model.Resource;
 import com.example.stylemate.model.SettingsViewModel;
+import com.example.stylemate.repository.UserRepository;
+
+import java.util.regex.Pattern;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -28,6 +34,8 @@ public class SettingsActivity extends AppCompatActivity {
     private EditText etEmail;
     private EditText etDate;
     private ImageView imgAvatar;
+
+    private final UserRepository repo = new UserRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +80,50 @@ public class SettingsActivity extends AppCompatActivity {
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> showLogoutDialog());
         }
+
+        etName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                repo.changeParameter("name", s.toString());
+            }
+        });
+
+        etPhone.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                repo.changeParameter("phone", s.toString());
+            }
+        });
+
+        etDate.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String regex = "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/([0-9]{2}|[0-9]{4})$";
+                if(Pattern.matches(regex, s.toString())) {
+                    repo.changeParameter("birthDate", s.toString());
+                } else {
+                    Toast.makeText(SettingsActivity.this, "Дата должна быть в формате ДД/ММ/ГГ", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void observeViewModel() {
@@ -161,5 +213,17 @@ public class SettingsActivity extends AppCompatActivity {
         });
 
         dialog.show();
+    }
+
+    boolean isPhoneLoose(String s) {
+        if (s == null) return false;
+        s = s.trim();
+
+        // допускаем +, цифры и разделители
+        if (!s.matches("^\\+?[0-9()\\s-]{5,}$")) return false;
+
+        // считаем цифры (обычно 10–15 по E.164)
+        String digits = s.replaceAll("\\D", "");
+        return digits.length() >= 10 && digits.length() <= 15;
     }
 }

@@ -17,6 +17,8 @@ import com.example.stylemate.ui.test.TestQ1Activity;
 
 import org.apache.commons.validator.routines.EmailValidator;
 
+import java.util.regex.Pattern;
+
 public class RegisterActivity extends AppCompatActivity {
     UserRepository repo = new UserRepository();
 
@@ -41,6 +43,8 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(RegisterActivity.this, "Указан некорретный адрес", Toast.LENGTH_LONG).show();
             } else if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
                 Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
+            } else if (!isValidDateRegex(birth.getText().toString())) {
+                Toast.makeText(RegisterActivity.this, "Дата должна быть в формате ДД/ММ/ГГ", Toast.LENGTH_LONG).show();
             } else {
                 repo.sendEmail(email.getText().toString(), password.getText().toString()).observe(this, resource -> {
                     switch(resource.status) {
@@ -91,5 +95,10 @@ public class RegisterActivity extends AppCompatActivity {
 
             dialog.show(getSupportFragmentManager(), "DeleteDialog");
         });
+    }
+
+    public boolean isValidDateRegex(String dateStr) {
+        String regex = "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/([0-9]{2}|[0-9]{4})$";
+        return Pattern.matches(regex, dateStr);
     }
 }

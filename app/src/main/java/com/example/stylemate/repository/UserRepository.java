@@ -179,8 +179,12 @@ public class UserRepository {
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 UserProfile userPr = new UserProfile(name, phone, email, birthDate, password, avatarUrl);
                                 String uid = mAuth.getCurrentUser().getUid();
-                                table.child(uid).setValue(userPr);
-                                result.setValue(Resource.success(true));
+                                if (snapshot.child(uid).exists()){
+                                    result.setValue(Resource.error("Пользователь уже зарегистрирован"));
+                                } else {
+                                    table.child(uid).setValue(userPr);
+                                    result.setValue(Resource.success(true));
+                                }
                             }
 
                             @Override
@@ -274,5 +278,9 @@ public class UserRepository {
 
     public boolean isLogged() {
         return mAuth.getCurrentUser() != null;
+    }
+
+    public void changeParameter(String parameter, String value) {
+        table.child(getUID()).child(parameter).setValue(value);
     }
 }
