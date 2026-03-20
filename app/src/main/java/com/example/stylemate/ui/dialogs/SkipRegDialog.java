@@ -57,7 +57,7 @@ public class SkipRegDialog extends DialogFragment {
 
 
         btnSkip.setOnClickListener(v -> {
-            ActiveUserInfo.setDefaults("isRegistered", "No", requireContext());
+            ActiveUserInfo.setDefaults("isRegistered", "", requireContext());
 
             Intent intent = new Intent(requireContext(), TestQ1Activity.class);
             startActivity(intent);

@@ -111,12 +111,21 @@ public class TestViewModel extends AndroidViewModel {
                 });
     }
 
-    public void saveSituationfilters(String uid, String styleName, ArrayList<String> situations) {
+    public void createSituationCollection(String name, ArrayList<String> situations) {
+        String uid = repo.getUID();
+        if (uid == null) return;
+
         DatabaseReference dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
 
-        String situation = situationsToString(situations);
+        // 1. Создаем уникальный ID
+        DatabaseReference newCollectionRef = dbRef.child("user_collections").child(uid).push();
 
-        dbRef.child("user_collections").child(uid).child(styleName).child("situation").setValue(situation);
+        Map<String, Object> collectionData = new HashMap<>();
+        collectionData.put("name", name);
+        collectionData.put("situation", situationsToString(situations));
+        // Стиль намеренно не пишем (он будет null), чтобы сработал поиск по ситуации
+
+        newCollectionRef.setValue(collectionData);
     }
 
     private void saveToLocal(String styleName, int winnerIndex) {

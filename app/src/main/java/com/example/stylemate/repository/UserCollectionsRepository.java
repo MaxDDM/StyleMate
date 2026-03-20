@@ -11,6 +11,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.Query;
 
 
 import java.util.ArrayList;
@@ -105,7 +106,7 @@ public class UserCollectionsRepository {
                                     }
 
                                     // 4. Грузим одежду и передаем список лайков для проверки
-                                    loadOutfitsFromDbFiltered(style != null ? style : "casual", situation, favorites, (outfits) -> {
+                                    loadOutfitsFromDbFiltered(style, situation, favorites, (outfits) -> {
                                         callback.onDataLoaded(outfits, collectionId);
                                     });
                                     return;
@@ -127,63 +128,74 @@ public class UserCollectionsRepository {
     private interface InternalLoadCallback { void onLoad(List<Outfit> list); }
 
     private void loadOutfitsFromDbFiltered(String style, String collectionSituation, Map<String, Boolean> userFavorites, InternalLoadCallback callback) {
-        dbRef.child("outfits")
-                .orderByChild("style").equalTo(style)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        List<Outfit> filteredList = new ArrayList<>();
+        Query query;
 
-                        // --- ЛОГИКА НАПАРНИКА (Адаптированная под твою структуру) ---
-                        // 1. Разбиваем строку ситуаций из коллекции на массив (например: "work,party")
-                        String[] targetSituations;
-                        if (collectionSituation != null && !collectionSituation.isEmpty()) {
-                            targetSituations = collectionSituation.split(",");
-                        } else {
-                            targetSituations = new String[]{"any"};
-                        }
+        // 2. Выбираем, как искать в базе
+        if (style != null && !style.isEmpty()) {
+            // Если стиль задан -> Ищем по стилю (Твой старый вариант)
+            query = dbRef.child("outfits").orderByChild("style").equalTo(style);
+        } else {
+            // Если стиля нет -> Ищем по ситуации
+            // Firebase ищет только по точному совпадению, берем первую ситуацию из списка
+            query = dbRef.child("outfits").orderByChild("situation").equalTo(collectionSituation);
+        }
 
-                        for (DataSnapshot item : snapshot.getChildren()) {
-                            Outfit outfit = item.getValue(Outfit.class);
-                            if (outfit == null) continue;
+        // 3. Дальше твой код (только замени dbRef... на query)
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Outfit> filteredList = new ArrayList<>();
 
-                            String outfitId = item.getKey();
-                            outfit.setId(outfitId);
+                // --- ЛОГИКА НАПАРНИКА (Адаптированная под твою структуру) ---
+                // 1. Разбиваем строку ситуаций из коллекции на массив (например: "work,party")
+                String[] targetSituations;
+                if (collectionSituation != null && !collectionSituation.isEmpty()) {
+                    targetSituations = collectionSituation.split(",");
+                } else {
+                    targetSituations = new String[]{"any"};
+                }
 
-                            // --- ТВОЯ ЛОГИКА (Проверка лайков) ---
-                            if (userFavorites != null && userFavorites.containsKey(outfitId)) {
-                                outfit.setLiked(true);
-                            } else {
-                                outfit.setLiked(false);
-                            }
+                for (DataSnapshot item : snapshot.getChildren()) {
+                    Outfit outfit = item.getValue(Outfit.class);
+                    if (outfit == null) continue;
 
-                            // --- ЛОГИКА НАПАРНИКА (Фильтрация по списку ситуаций) ---
-                            String outfitSit = outfit.getFilter_situation();
-                            if (outfitSit == null) outfitSit = "any"; // Если у одежды нет ситуации, она универсальна
+                    String outfitId = item.getKey();
+                    outfit.setId(outfitId);
 
-                            boolean isSituationMatch = false;
-
-                            // Проверяем, совпадает ли ситуация одежды хотя бы с одной из ситуаций коллекции
-                            for (String target : targetSituations) {
-                                String cleanTarget = target.trim(); // Убираем лишние пробелы
-
-                                // Если одежда подходит ко всему ("any")
-                                // ИЛИ если одежда совпадает с одной из требуемых ситуаций
-                                if (outfitSit.equals("any") || cleanTarget.equals("any") || outfitSit.equals(cleanTarget)) {
-                                    isSituationMatch = true;
-                                    break; // Нашли совпадение, дальше перебирать не нужно
-                                }
-                            }
-
-                            if (isSituationMatch) {
-                                filteredList.add(outfit);
-                            }
-                        }
-                        callback.onLoad(filteredList);
+                    // --- ТВОЯ ЛОГИКА (Проверка лайков) ---
+                    if (userFavorites != null && userFavorites.containsKey(outfitId)) {
+                        outfit.setLiked(true);
+                    } else {
+                        outfit.setLiked(false);
                     }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) { }
-                });
+
+                    // --- ЛОГИКА НАПАРНИКА (Фильтрация по списку ситуаций) ---
+                    String outfitSit = outfit.getFilter_situation();
+                    if (outfitSit == null) outfitSit = "any"; // Если у одежды нет ситуации, она универсальна
+
+                    boolean isSituationMatch = false;
+
+                    // Проверяем, совпадает ли ситуация одежды хотя бы с одной из ситуаций коллекции
+                    for (String target : targetSituations) {
+                        String cleanTarget = target.trim(); // Убираем лишние пробелы
+
+                        // Если одежда подходит ко всему ("any")
+                        // ИЛИ если одежда совпадает с одной из требуемых ситуаций
+                        if (outfitSit.equals("any") || cleanTarget.equals("any") || outfitSit.equals(cleanTarget)) {
+                            isSituationMatch = true;
+                            break; // Нашли совпадение, дальше перебирать не нужно
+                        }
+                    }
+
+                    if (isSituationMatch) {
+                        filteredList.add(outfit);
+                    }
+                }
+                callback.onLoad(filteredList);
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+        });
     }
 
     // =========================================================================

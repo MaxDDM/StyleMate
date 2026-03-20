@@ -44,7 +44,6 @@ public class HomeFragment extends Fragment {
 
     private boolean isListExpanded = false;
     private boolean isGuest;     // --- НОВОЕ: Флаг гостя
-    private int userStyleId;     // --- НОВОЕ: Стиль юзера
 
     // Храним текущие фильтры (по умолчанию пустые)
     private FilterState currentFilterState = new FilterState(new HashSet<>(), new HashSet<>(), new HashSet<>());
@@ -76,11 +75,6 @@ public class HomeFragment extends Fragment {
         // --- НОВОЕ: 1. Получаем данные о пользователе (Гость / Стиль)
         String guestFlag = ActiveUserInfo.getDefaults("is_guest", getContext());
         isGuest = "true".equals(guestFlag);
-
-        String styleStr = ActiveUserInfo.getDefaults("user_style_id", getContext());
-        // Если стиль не найден (например, ошибка), ставим 1
-        userStyleId = (styleStr != null && !styleStr.isEmpty()) ? Integer.parseInt(styleStr) : 1;
-
 
         // --- ЛОГИКА ВЫПАДАЮЩЕГО СПИСКА (ТВОЙ СТАРЫЙ КОД) ---
         rvCollections.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -322,7 +316,7 @@ public class HomeFragment extends Fragment {
         // 2. Выйти из аккаунта
         btnLogout.setOnClickListener(v -> {
             // 1. Сбрасываем главный флаг авторизации (email)
-            ActiveUserInfo.setDefaults("isRegistered", "0", requireContext());
+            ActiveUserInfo.setDefaults("isRegistered", "", requireContext());
 
             // 2. Сбрасываем стиль (чтобы новый юзер прошел тест заново)
             ActiveUserInfo.setDefaults("user_style_id", null, requireContext());

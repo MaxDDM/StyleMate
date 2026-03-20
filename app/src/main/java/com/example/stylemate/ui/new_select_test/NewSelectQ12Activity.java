@@ -50,15 +50,21 @@ public class NewSelectQ12Activity extends AppCompatActivity {
                 int situation_id = ans + 7;
 
                 viewModel = new ViewModelProvider(this).get(TestViewModel.class);
-                String name = ActiveUserInfo.getDefaults("collectionName", NewSelectQ12Activity.this);
-                String uid = ActiveUserInfo.getDefaults("isRegistered", NewSelectQ12Activity.this);
-                if (uid != null && !uid.isEmpty()) {
-                    viewModel.saveSituationfilters(uid, name, SituationsRepository.getSituations(situation_id));
+                // String name = ActiveUserInfo.getDefaults("collectionName", NewSelectQ12Activity.this);
+                String fixedName = "Подборка";
+                String isReg = ActiveUserInfo.getDefaults("isRegistered", NewSelectQ12Activity.this);
+                if (isReg != null && !isReg.isEmpty()) {
+                    // ЮЗЕР: Вызываем НОВЫЙ правильный метод
+                    // Он сам возьмет правильный UID внутри себя
+                    viewModel.createSituationCollection(fixedName, SituationsRepository.getSituations(situation_id));
                 } else {
+                    // ГОСТЬ: Сохраняем локально
                     viewModel.saveSituation(SituationsRepository.getSituations(situation_id));
                 }
                 Intent intent = new Intent(NewSelectQ12Activity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
+                finish();
             } else {
                 Toast.makeText(NewSelectQ12Activity.this, "Вы не выбрали ни один из вариантов", Toast.LENGTH_LONG).show();
             }
