@@ -161,9 +161,6 @@ public class UserCollectionsRepository {
                     Outfit outfit = item.getValue(Outfit.class);
                     if (outfit == null) continue;
 
-                    if (Objects.equals(outfit.getId(), "29")) {
-                        int a = 5;
-                    }
                     String outfitId = item.getKey();
                     outfit.setId(outfitId);
 
