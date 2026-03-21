@@ -23,7 +23,7 @@ public class SituationsRepository {
             case 8:
                 return new ArrayList<>(List.of("вечеринка_офиц"));
             case 9:
-                return new ArrayList<>(List.of("вечеринка_неофиц"));
+                return new ArrayList<>(List.of("вечеринка_неоф"));
             case 10:
                 return new ArrayList<>(List.of("тренировка_зал"));
             case 11:

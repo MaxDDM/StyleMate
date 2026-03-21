@@ -69,18 +69,18 @@ public class TestViewModel extends AndroidViewModel {
 
     // Activity просто говорит "Посчитай!", но не требует ответа мгновенно
     // --- ФИНАЛИЗАЦИЯ ТЕСТА ---
-    public void calculateResult() {
+    public void calculateResult(String selectionName) {
         int winnerIndex = repository.calculateWinner();
         String styleName = repository.getStyleName(winnerIndex); // "casual"
 
         if (repo.isLogged()) {
-            saveToFirebase(repo.getUID(), styleName, winnerIndex);
+            saveToFirebase(selectionName, styleName, winnerIndex);
         } else {
-            saveToLocal(styleName, winnerIndex);
+            saveToLocal(styleName, selectionName, winnerIndex);
         }
     }
 
-    private void saveToFirebase(String rawEmail, String styleName, int winnerIndex) {
+    private void saveToFirebase(String selectionName, String styleName, int winnerIndex) {
         DatabaseReference dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
 
         // user_collections -> ivan@mail|ru -> PUSH_ID
@@ -91,7 +91,7 @@ public class TestViewModel extends AndroidViewModel {
 
         // СТРОГО ПО ТВОЕЙ СТРУКТУРЕ
         Map<String, Object> collectionData = new HashMap<>();
-        collectionData.put("name", "Основная");
+        collectionData.put("name", selectionName);
         collectionData.put("style", styleName);
         // Поля "season", "situation" и "favorites" не добавляем, они необязательные/пустые
 
@@ -128,9 +128,10 @@ public class TestViewModel extends AndroidViewModel {
         newCollectionRef.setValue(collectionData);
     }
 
-    private void saveToLocal(String styleName, int winnerIndex) {
+    private void saveToLocal(String selectionName, String styleName, int winnerIndex) {
         // Для гостя сохраняем локально, чтобы HomeFragment знал, что показывать
         ActiveUserInfo.setDefaults("is_guest", "true", getApplication());
+        ActiveUserInfo.setDefaults("guest_selection_name", "true", getApplication());
         ActiveUserInfo.setDefaults("guest_style_name", styleName, getApplication());
 
         repository.clearState(getApplication());

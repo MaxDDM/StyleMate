@@ -15,6 +15,9 @@
         android:theme="@style/Theme.StyleMate"
         tools:targetApi="31">
         <activity
+            android:name=".ui.SetSelectionNameActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.new_select_test.NewSelectQ14Activity"
             android:exported="false" />
         <activity

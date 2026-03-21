@@ -14,40 +14,14 @@ import com.example.stylemate.ui.MainActivity; // <-- Убедись, что эт
 import com.example.stylemate.R;
 import com.example.stylemate.model.TestViewModel;
 import com.example.stylemate.ui.AuthActivity;
+import com.example.stylemate.ui.SetSelectionNameActivity;
 
 public class TestQ5Activity extends AppCompatActivity {
-    private TestViewModel viewModel;
     int ans = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        viewModel = new ViewModelProvider(this).get(TestViewModel.class);
         super.onCreate(savedInstanceState);
-
-        // 2. ПОДПИСКА НА ДАННЫЕ (СНИЗУ ВВЕРХ)
-        // Следим за статусом сессии. Если ViewModel скажет "false", уходим.
-        viewModel.getSessionValidState().observe(this, isValid -> {
-            if (!isValid) {
-                Toast.makeText(this, "Время сессии истекло. Пожалуйста, зарегистрируйтесь.", Toast.LENGTH_LONG).show();
-                Intent intent = new Intent(TestQ5Activity.this, AuthActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
-
-        viewModel.getWinnerStyle().observe(this, winnerStyleIndex -> {
-            // Этот код сработает, когда ViewModel закончит считать
-
-            Toast.makeText(this, "Тест завершен! Победил стиль №: " + winnerStyleIndex, Toast.LENGTH_LONG).show();
-
-            // Переход на главную
-            Intent intent = new Intent(TestQ5Activity.this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
-        });
-
-        viewModel.checkSession(); // Запуск проверки
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.question5);
@@ -98,12 +72,13 @@ public class TestQ5Activity extends AppCompatActivity {
             ActiveUserInfo.setDefaults("isTest1", "", TestQ5Activity.this);
 
             if (ans != -1) {
-                // Шаг 1: Записываем ответ
-                viewModel.processAnswer(5, ans);
-
-                // Шаг 2: Просим посчитать результат
-                // Мы НЕ переходим никуда вручную. Мы ждем, пока сработает observer выше (пункт 2).
-                viewModel.calculateResult();
+                Intent intent = new Intent(TestQ5Activity.this, SetSelectionNameActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra("testNumber", 1);
+                intent.putExtra("ans", ans);
+                intent.putExtra("notSkip", 1);
+                startActivity(intent);
+                finish();
             } else {
                 Toast.makeText(TestQ5Activity.this, "Вы не выбрали ни один из вариантов", Toast.LENGTH_LONG).show();
             }
@@ -113,8 +88,12 @@ public class TestQ5Activity extends AppCompatActivity {
         skipButton.setOnClickListener(v -> {
             ActiveUserInfo.setDefaults("isTest1", "", TestQ5Activity.this);
 
-            // Просто просим результат (без записи ответа)
-            viewModel.calculateResult();
+            Intent intent = new Intent(TestQ5Activity.this, SetSelectionNameActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra("testNumber", 1);
+            intent.putExtra("notSkip", 0);
+            startActivity(intent);
+            finish();
         });
     }
 

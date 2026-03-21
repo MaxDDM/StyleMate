@@ -1,5 +1,7 @@
 package com.example.stylemate.model;
 
+import com.google.firebase.database.PropertyName;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +12,7 @@ public class Outfit {
 
     // Новые поля для фильтров (как в твоем JSON)
     private String filter_season;   // "лето"
-    private String filter_situation;// "any"
+    private String situation;// "any"
 
     // Firebase хранит списки как Map<String, Boolean>: {"Белый": true, "Голубой": true}
     private Map<String, Boolean> filter_colors = new HashMap<>();
@@ -42,10 +44,13 @@ public class Outfit {
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public String getFilter_season() { return filter_season; }
-    public void setFilter_season(String filter_season) { this.filter_season = filter_season; }
 
-    public String getFilter_situation() { return filter_situation; }
-    public void setFilter_situation(String filter_situation) { this.filter_situation = filter_situation; }
+    public void setFilter_season(String filter_season) { this.filter_season = filter_season; }
+    @PropertyName("situation")
+    public String getFilter_situation() { return situation; }
+
+    @PropertyName("situation")
+    public void setFilter_situation(String situation) { this.situation = situation; }
 
     public Map<String, Boolean> getFilter_colors() { return filter_colors; }
     public void setFilter_colors(Map<String, Boolean> filter_colors) { this.filter_colors = filter_colors; }

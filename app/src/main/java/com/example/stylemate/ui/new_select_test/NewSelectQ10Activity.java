@@ -16,11 +16,11 @@ import com.example.stylemate.repository.SituationsRepository;
 import com.example.stylemate.ui.AuthActivity;
 import com.example.stylemate.ui.MainActivity;
 import com.example.stylemate.ui.RegisterActivity;
+import com.example.stylemate.ui.SetSelectionNameActivity;
 
 public class NewSelectQ10Activity extends AppCompatActivity {
     int ans = -1;
 
-    TestViewModel viewModel;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,19 +62,9 @@ public class NewSelectQ10Activity extends AppCompatActivity {
             if (ans != -1) {
                 int situation_id = ans;
 
-                viewModel = new ViewModelProvider(this).get(TestViewModel.class);
-                // String name = ActiveUserInfo.getDefaults("collectionName", NewSelectQ10Activity.this);
-                String fixedName = "Подборка";
-                String isReg = ActiveUserInfo.getDefaults("isRegistered", NewSelectQ10Activity.this);
-                if (isReg != null && !isReg.isEmpty()) {
-                    // ЮЗЕР: Вызываем НОВЫЙ правильный метод
-                    // Он сам возьмет правильный UID внутри себя
-                    viewModel.createSituationCollection(fixedName, SituationsRepository.getSituations(situation_id));
-                } else {
-                    // ГОСТЬ: Сохраняем локально
-                    viewModel.saveSituation(SituationsRepository.getSituations(situation_id));
-                }
-                Intent intent = new Intent(NewSelectQ10Activity.this, MainActivity.class);
+                Intent intent = new Intent(NewSelectQ10Activity.this, SetSelectionNameActivity.class);
+                intent.putExtra("testNumber", 2);
+                intent.putExtra("situation_id", situation_id);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();

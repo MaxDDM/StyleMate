@@ -1,6 +1,8 @@
 package com.example.stylemate.repository;
 
 import android.content.Context;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.example.stylemate.model.Outfit;
@@ -18,9 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class UserCollectionsRepository {
-
     private final DatabaseReference dbRef;
 
     private final UserRepository repo = new UserRepository();
@@ -137,7 +139,7 @@ public class UserCollectionsRepository {
         } else {
             // Если стиля нет -> Ищем по ситуации
             // Firebase ищет только по точному совпадению, берем первую ситуацию из списка
-            query = dbRef.child("outfits").orderByChild("situation").equalTo(collectionSituation);
+            query = dbRef.child("outfits");
         }
 
         // 3. Дальше твой код (только замени dbRef... на query)
@@ -150,7 +152,7 @@ public class UserCollectionsRepository {
                 // 1. Разбиваем строку ситуаций из коллекции на массив (например: "work,party")
                 String[] targetSituations;
                 if (collectionSituation != null && !collectionSituation.isEmpty()) {
-                    targetSituations = collectionSituation.split(",");
+                    targetSituations = collectionSituation.split(", ");
                 } else {
                     targetSituations = new String[]{"any"};
                 }
@@ -159,6 +161,9 @@ public class UserCollectionsRepository {
                     Outfit outfit = item.getValue(Outfit.class);
                     if (outfit == null) continue;
 
+                    if (Objects.equals(outfit.getId(), "29")) {
+                        int a = 5;
+                    }
                     String outfitId = item.getKey();
                     outfit.setId(outfitId);
 
@@ -170,8 +175,14 @@ public class UserCollectionsRepository {
                     }
 
                     // --- ЛОГИКА НАПАРНИКА (Фильтрация по списку ситуаций) ---
-                    String outfitSit = outfit.getFilter_situation();
-                    if (outfitSit == null) outfitSit = "any"; // Если у одежды нет ситуации, она универсальна
+                    String situations = outfit.getFilter_situation();
+
+                    String[] outfitSits;
+                    if (situations == null) {
+                        outfitSits = new String[]{"any"}; // Если у одежды нет ситуации, она универсальна
+                    } else {
+                        outfitSits = situations.split(", ");
+                    }
 
                     boolean isSituationMatch = false;
 
@@ -181,9 +192,14 @@ public class UserCollectionsRepository {
 
                         // Если одежда подходит ко всему ("any")
                         // ИЛИ если одежда совпадает с одной из требуемых ситуаций
-                        if (outfitSit.equals("any") || cleanTarget.equals("any") || outfitSit.equals(cleanTarget)) {
-                            isSituationMatch = true;
-                            break; // Нашли совпадение, дальше перебирать не нужно
+                        for (String outfitSit : outfitSits) {
+                            if (outfitSit.equals("any") || cleanTarget.equals("any") || outfitSit.equals(cleanTarget)) {
+                                isSituationMatch = true;
+                                break; // Нашли совпадение, дальше перебирать не нужно
+                            }
+                        }
+                        if (isSituationMatch) {
+                            break;
                         }
                     }
 

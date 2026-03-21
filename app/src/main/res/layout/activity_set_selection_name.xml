@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/ic_pic4"
+    tools:context=".ui.MainActivity">
+
+    <TextView
+        android:layout_width="344dp"
+        android:layout_height="111dp"
+        android:layout_marginTop="142dp"
+        android:fontFamily="@font/ttcommons_regular"
+        android:text="Почти закончили!\nПридумайте название для новой подборки"
+        android:textSize="32sp"
+        android:textColor="@color/black"
+        android:layout_gravity="center_horizontal"/>
+
+    <EditText
+        android:id="@+id/selectionName"
+        android:layout_width="345dp"
+        android:layout_height="53dp"
+        android:layout_marginTop="53dp"
+        android:background="@drawable/ic_pic27"
+        android:hint="Введите название подборки"
+        android:inputType="textEmailAddress"
+        android:textColorHint="#5C5C5C"
+        android:fontFamily="@font/ttcommons_regular"
+        android:textSize="16sp"
+        android:paddingLeft="12dp"
+        android:layout_gravity="center_horizontal"
+        />
+
+    <ImageButton
+        android:id="@+id/continueSelectionName"
+        android:layout_width="344dp"
+        android:layout_height="90dp"
+        android:layout_marginTop="54dp"
+        android:background="@drawable/ic_pic7"
+        android:layout_gravity="center_horizontal"
+        />
+</LinearLayout>
