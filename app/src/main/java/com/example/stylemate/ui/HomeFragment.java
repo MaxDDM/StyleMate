@@ -21,6 +21,7 @@ import com.example.stylemate.model.HomeViewModel;
 import com.example.stylemate.model.FilterState; // Импортируем наш новый класс
 import com.example.stylemate.model.Outfit;
 import com.example.stylemate.repository.ActiveUserInfo;
+import com.example.stylemate.repository.UserRepository;
 import com.example.stylemate.ui.new_select_test.NewSelectQ1Activity;
 import com.example.stylemate.ui.dialogs.UniversalInfoDialog;
 
@@ -29,6 +30,7 @@ import java.util.HashSet;
 
 public class HomeFragment extends Fragment {
 
+    private final UserRepository repo = new UserRepository();
     private RecyclerView rvCollections;
     private RecyclerView rvGrid; // --- НОВОЕ: Ссылка на сетку товаров
     private View vOverlay;
@@ -73,8 +75,8 @@ public class HomeFragment extends Fragment {
         btnLogout = view.findViewById(R.id.btnLogout);
 
         // --- НОВОЕ: 1. Получаем данные о пользователе (Гость / Стиль)
-        String guestFlag = ActiveUserInfo.getDefaults("is_guest", getContext());
-        isGuest = "true".equals(guestFlag);
+        String guestFlag = ActiveUserInfo.getDefaults("isRegistered", getContext());
+        isGuest = guestFlag == null || guestFlag.isEmpty();
 
         // --- ЛОГИКА ВЫПАДАЮЩЕГО СПИСКА (ТВОЙ СТАРЫЙ КОД) ---
         rvCollections.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -315,14 +317,7 @@ public class HomeFragment extends Fragment {
 
         // 2. Выйти из аккаунта
         btnLogout.setOnClickListener(v -> {
-            // 1. Сбрасываем главный флаг авторизации (email)
-            ActiveUserInfo.setDefaults("isRegistered", "", requireContext());
-
-            // 2. Сбрасываем стиль (чтобы новый юзер прошел тест заново)
-            ActiveUserInfo.setDefaults("user_style_id", null, requireContext());
-
-            // 3. Сбрасываем флаг гостя
-            ActiveUserInfo.setDefaults("is_guest", "false", requireContext());
+            repo.logout(requireContext());
 
             // 4. Переход на экран Авторизации/Входа (AuthActivity)
             // Замени AuthActivity.class на твой класс экрана входа!

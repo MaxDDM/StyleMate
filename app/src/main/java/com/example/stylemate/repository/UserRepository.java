@@ -54,7 +54,7 @@ public class UserRepository {
     // --- НОВЫЙ МЕТОД ДЛЯ ПРОФИЛЯ (One-shot request) ---
     public void loadUserProfile(Context context, ProfileCallback callback) {
 
-        if (mAuth.getCurrentUser() == null) {
+        if (!isLogged(context)) {
             // Гость
             callback.onLoaded(null);
             return;
@@ -78,9 +78,14 @@ public class UserRepository {
         });
     }
 
-    public LiveData<Resource<UserProfile>> getUserProfile() {
+    public LiveData<Resource<UserProfile>> getUserProfile(Context context) {
         MutableLiveData<Resource<UserProfile>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
+
+        if (!isLogged(context)) {
+            liveData.setValue(Resource.success(new UserProfile()));
+            return liveData;
+        }
 
         connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -116,7 +121,12 @@ public class UserRepository {
     }
 
     public void logout(Context context) {
-        ActiveUserInfo.setDefaults("isRegistered", "", context);
+        if (isLogged(context)) {
+            FirebaseAuth mAuth = FirebaseAuth.getInstance();
+            mAuth.signOut();
+        }
+
+        ActiveUserInfo.clearAllDefaults(context);
     }
 
     public LiveData<Resource<Boolean>> sendEmail(String email, String password) {
@@ -227,9 +237,14 @@ public class UserRepository {
         return result;
     }
 
-    public LiveData<Resource<Boolean>> checkCurrentPassword(String input) {
+    public LiveData<Resource<Boolean>> checkCurrentPassword(String input, Context context) {
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());
+
+        if (!isLogged(context)) {
+            result.setValue(Resource.error("Смена пароля недоступна в режиме гостя"));
+            return result;
+        }
 
         connectedRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -265,10 +280,12 @@ public class UserRepository {
         return result;
     }
 
-    public void changePassword(String newPassword) {
-        table.child(getUID()).child("password").setValue(newPassword);
+    public void changePassword(String newPassword, Context context) {
+        if (isLogged(context)) {
+            table.child(getUID()).child("password").setValue(newPassword);
 
-        Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).updatePassword(newPassword);
+            Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).updatePassword(newPassword);
+        }
     }
 
     public String getUID() {
@@ -276,8 +293,9 @@ public class UserRepository {
         return mAuth.getCurrentUser().getUid();
     }
 
-    public boolean isLogged() {
-        return mAuth.getCurrentUser() != null;
+    public boolean isLogged(Context context) {
+        return ActiveUserInfo.getDefaults("isRegistered", context) != null &&
+                !ActiveUserInfo.getDefaults("isRegistered", context).isEmpty();
     }
 
     public void changeParameter(String parameter, String value) {

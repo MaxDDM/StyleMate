@@ -44,38 +44,38 @@ public class UserCollectionsRepository {
     }
 
     // 1. Получить названия (без изменений)
-    public void getCollectionNames(DataCallback<List<String>> callback) {
+    public void getCollectionNames(Context context, DataCallback<List<String>> callback) {
         String uid = "";
 
-        if (repo.isLogged()) {
+        if (repo.isLogged(context)) {
             uid = repo.getUID();
-        }
 
-        dbRef.child("user_collections").child(uid)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        List<String> names = new ArrayList<>();
-                        for (DataSnapshot collection : snapshot.getChildren()) {
-                            String name = collection.child("name").getValue(String.class);
-                            if (name != null) names.add(name);
+            dbRef.child("user_collections").child(uid)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            List<String> names = new ArrayList<>();
+                            for (DataSnapshot collection : snapshot.getChildren()) {
+                                String name = collection.child("name").getValue(String.class);
+                                if (name != null) names.add(name);
+                            }
+
+                            // УБРАЛИ ПРОВЕРКУ НА ПУСТОТУ!
+                            // Теперь если список пуст, мы вернем ПУСТОЙ СПИСОК (size=0)
+                            callback.onDataLoaded(names);
                         }
 
-                        // УБРАЛИ ПРОВЕРКУ НА ПУСТОТУ!
-                        // Теперь если список пуст, мы вернем ПУСТОЙ СПИСОК (size=0)
-                        callback.onDataLoaded(names);
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        callback.onError(error.getMessage());
-                    }
-                });
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            callback.onError(error.getMessage());
+                        }
+                    });
+        }
     }
 
     // 2. Получить одежду + Лайки + ID коллекции
     public void getOutfitsForCollection(String collectionName, Context context, CollectionDataCallback callback) {
-        if (!repo.isLogged()) {
+        if (!repo.isLogged(context)) {
             // ГОСТЬ: Лайков нет
             String guestStyle = ActiveUserInfo.getDefaults("guest_style_name", context);
             String targetStyle = (guestStyle != null) ? guestStyle : "casual";
@@ -216,7 +216,7 @@ public class UserCollectionsRepository {
     // =========================================================================
     public void getUserCollectionsWithPreviews(Context context, DataCallback<List<FavouriteOutfits>> callback) {
         // Если не залогинен - возвращаем пустой список
-        if (!repo.isLogged()) {
+        if (!repo.isLogged(context)) {
             callback.onDataLoaded(new ArrayList<>());
             return;
         }
@@ -294,8 +294,8 @@ public class UserCollectionsRepository {
     }
 
     // 3. Метод записи лайка в Firebase
-    public void toggleLikeInFirebase(String collectionId, String outfitId, boolean isLiked) {
-        if (!repo.isLogged()) return; // Гости не пишут в базу
+    public void toggleLikeInFirebase(Context context, String collectionId, String outfitId, boolean isLiked) {
+        if (!repo.isLogged(context)) return; // Гости не пишут в базу
 
         DatabaseReference favRef = dbRef.child("user_collections")
                 .child(repo.getUID())
@@ -313,9 +313,9 @@ public class UserCollectionsRepository {
     // =========================================================================
     // НОВЫЙ МЕТОД: Загрузка лайков конкретной коллекции (Игнорируя фильтры)
     // =========================================================================
-    public void getCollectionFavorites(String collectionId, DataCallback<List<Outfit>> callback) {
+    public void getCollectionFavorites(Context context, String collectionId, DataCallback<List<Outfit>> callback) {
         // Гости не имеют БД, возвращаем пустоту
-        if (!repo.isLogged()) {
+        if (!repo.isLogged(context)) {
             callback.onDataLoaded(new ArrayList<>());
             return;
         }
@@ -385,9 +385,9 @@ public class UserCollectionsRepository {
     // =========================================================================
     // ОПТИМИЗАЦИЯ: Получить ТОЛЬКО список ID лайков (без загрузки самой одежды)
     // =========================================================================
-    public void getLikedIdsOnly(String collectionId, DataCallback<List<String>> callback) {
+    public void getLikedIdsOnly(Context context, String collectionId, DataCallback<List<String>> callback) {
         // Если гость - возвращаем пустой список
-        if (!repo.isLogged()) {
+        if (!repo.isLogged(context)) {
             callback.onDataLoaded(new ArrayList<>());
             return;
         }
@@ -417,8 +417,8 @@ public class UserCollectionsRepository {
     }
 
     // 1. Переименование коллекции
-    public void renameCollection(String collectionId, String newName) {
-        if (!repo.isLogged()) return;
+    public void renameCollection(Context context, String collectionId, String newName) {
+        if (!repo.isLogged(context)) return;
 
         // Заходим в user_collections -> email -> id -> name и ставим новое значение
         dbRef.child("user_collections")
@@ -429,8 +429,8 @@ public class UserCollectionsRepository {
     }
 
     // 2. Полное удаление коллекции
-    public void deleteCollection(String collectionId) {
-        if (!repo.isLogged()) return;
+    public void deleteCollection(Context context, String collectionId) {
+        if (!repo.isLogged(context)) return;
 
         // Заходим в user_collections -> email -> id и удаляем ВСЮ ветку (вместе с лайками внутри)
         dbRef.child("user_collections")

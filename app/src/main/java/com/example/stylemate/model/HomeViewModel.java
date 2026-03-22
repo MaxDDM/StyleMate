@@ -4,19 +4,28 @@ import android.app.Application;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.repository.UserCollectionsRepository;
+import com.example.stylemate.repository.UserRepository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
 public class HomeViewModel extends AndroidViewModel {
 
+    private final UserRepository repo = new UserRepository();
     private final UserCollectionsRepository repository;
     private String currentCollectionId = null; // Храним ID текущей коллекции
     // Списки данных
@@ -50,39 +59,65 @@ public class HomeViewModel extends AndroidViewModel {
     public String getCurrentCollectionId() { return currentCollectionId; }
 
     private void loadCollectionsList() {
-        repository.getCollectionNames(new UserCollectionsRepository.DataCallback<List<String>>() {
-            @Override
-            public void onDataLoaded(List<String> data) {
-                // 1. Проверяем на пустоту
-                if (data == null || data.isEmpty()) {
-                    // СПИСОК ПУСТ -> Включаем режим заглушки
-                    _isEmptyState.setValue(true);
-                    _collections.setValue(new ArrayList<>()); // Пустой список в адаптер
-                    _outfits.setValue(new ArrayList<>());     // Пустая сетка
-                    _selectedName.setValue(null);             // Нет выбранного имени
-                } else {
-                    // СПИСОК ЕСТЬ -> Обычный режим
-                    _isEmptyState.setValue(false);
-                    _collections.setValue(data);
-                    String currentSelected = _selectedName.getValue();
+        if (repo.isLogged(getApplication())) {
+            repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
+                @Override
+                public void onDataLoaded(List<String> data) {
+                    // 1. Проверяем на пустоту
+                    if (data == null || data.isEmpty()) {
+                        // СПИСОК ПУСТ -> Включаем режим заглушки
+                        _isEmptyState.setValue(true);
+                        _collections.setValue(new ArrayList<>()); // Пустой список в адаптер
+                        _outfits.setValue(new ArrayList<>());     // Пустая сетка
+                        _selectedName.setValue(null);             // Нет выбранного имени
+                    } else {
+                        // СПИСОК ЕСТЬ -> Обычный режим
+                        _isEmptyState.setValue(false);
+                        _collections.setValue(data);
+                        String currentSelected = _selectedName.getValue();
 
-                    // 1. Если текущая коллекция всё еще существует в списке -> ОБНОВЛЯЕМ ЕЁ ДАННЫЕ
-                    if (currentSelected != null && data.contains(currentSelected)) {
-                        // Мы принудительно грузим одежду заново, чтобы подтянуть актуальные лайки
-                        loadOutfits(currentSelected);
-                    }
-                    // 2. Иначе (если ничего не выбрано или старую коллекцию удалили) -> берем первую
-                    else {
-                        onCollectionSelected(data.get(0));
+                        // 1. Если текущая коллекция всё еще существует в списке -> ОБНОВЛЯЕМ ЕЁ ДАННЫЕ
+                        if (currentSelected != null && data.contains(currentSelected)) {
+                            // Мы принудительно грузим одежду заново, чтобы подтянуть актуальные лайки
+                            loadOutfits(currentSelected);
+                        }
+                        // 2. Иначе (если ничего не выбрано или старую коллекцию удалили) -> берем первую
+                        else {
+                            onCollectionSelected(data.get(0));
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onError(String error) {
-                Toast.makeText(getApplication(), "Ошибка: " + error, Toast.LENGTH_SHORT).show();
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(getApplication(), "Ошибка: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            String name = ActiveUserInfo.getDefaults("guest_selection_name", getApplication());
+
+            if (name == null) {
+                _isEmptyState.setValue(true);
+                _collections.setValue(new ArrayList<>());
+                _outfits.setValue(new ArrayList<>());
+                _selectedName.setValue(null);
+            } else {
+                ArrayList<String> data = new ArrayList<>(Arrays.asList(name));
+                _isEmptyState.setValue(false);
+                _collections.setValue(data);
+                String currentSelected = _selectedName.getValue();
+
+                // 1. Если текущая коллекция всё еще существует в списке -> ОБНОВЛЯЕМ ЕЁ ДАННЫЕ
+                if (currentSelected != null && data.contains(currentSelected)) {
+                    // Мы принудительно грузим одежду заново, чтобы подтянуть актуальные лайки
+                    loadOutfits(currentSelected);
+                }
+                // 2. Иначе (если ничего не выбрано или старую коллекцию удалили) -> берем первую
+                else {
+                    onCollectionSelected(data.get(0));
+                }
             }
-        });
+        }
     }
 
     public void onCollectionSelected(String name) {
@@ -200,14 +235,14 @@ public class HomeViewModel extends AndroidViewModel {
         }
 
         // 2. Отправляем в базу
-        repository.toggleLikeInFirebase(currentCollectionId, outfitId, newState);
+        repository.toggleLikeInFirebase(getApplication(), currentCollectionId, outfitId, newState);
     }
 
     private void refreshLikesOnly() {
         if (currentCollectionId == null) return;
 
         // Вызываем наш НОВЫЙ легкий метод
-        repository.getLikedIdsOnly(currentCollectionId,new UserCollectionsRepository.DataCallback<List<String>>() {
+        repository.getLikedIdsOnly(getApplication(), currentCollectionId,new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> likedIds) {
                 if (allOutfits == null) return;
@@ -242,7 +277,7 @@ public class HomeViewModel extends AndroidViewModel {
     // Метод для обновления данных (вызывается из onResume)
     public void refreshData() {
         // ШАГ 1: Всегда проверяем актуальный список папок (это легкий запрос имен)
-        repository.getCollectionNames(new UserCollectionsRepository.DataCallback<List<String>>() {
+        repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> data) {
                 // СЛУЧАЙ А: Удалили последнюю коллекцию

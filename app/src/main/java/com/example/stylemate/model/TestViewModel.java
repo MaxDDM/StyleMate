@@ -73,10 +73,10 @@ public class TestViewModel extends AndroidViewModel {
         int winnerIndex = repository.calculateWinner();
         String styleName = repository.getStyleName(winnerIndex); // "casual"
 
-        if (repo.isLogged()) {
+        if (repo.isLogged(getApplication())) {
             saveToFirebase(selectionName, styleName, winnerIndex);
         } else {
-            saveToLocal(styleName, selectionName, winnerIndex);
+            saveToLocal(selectionName, styleName, winnerIndex);
         }
     }
 
@@ -130,8 +130,7 @@ public class TestViewModel extends AndroidViewModel {
 
     private void saveToLocal(String selectionName, String styleName, int winnerIndex) {
         // Для гостя сохраняем локально, чтобы HomeFragment знал, что показывать
-        ActiveUserInfo.setDefaults("is_guest", "true", getApplication());
-        ActiveUserInfo.setDefaults("guest_selection_name", "true", getApplication());
+        ActiveUserInfo.setDefaults("guest_selection_name", selectionName, getApplication());
         ActiveUserInfo.setDefaults("guest_style_name", styleName, getApplication());
 
         repository.clearState(getApplication());

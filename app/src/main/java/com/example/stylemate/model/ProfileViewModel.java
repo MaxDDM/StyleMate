@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.stylemate.repository.ActiveUserInfo;
 import com.example.stylemate.ui.FavouriteOutfits;
 import com.example.stylemate.repository.UserCollectionsRepository;
 import com.example.stylemate.repository.UserRepository;
@@ -76,8 +77,11 @@ public class ProfileViewModel extends AndroidViewModel {
             public void onDataLoaded(List<FavouriteOutfits> data) {
                 _favorites.setValue(data);
                 if (data == null || data.isEmpty()) {
-                    _navigateToHomeEvent.setValue(true);
-                    _isEmptyState.setValue(false);
+                    if (ActiveUserInfo.getDefaults("guest_selection_name", getApplication()) == null ||
+                    ActiveUserInfo.getDefaults("guest_selection_name", getApplication()).isEmpty()) {
+                        _navigateToHomeEvent.setValue(true);
+                        _isEmptyState.setValue(false);
+                    }
                 } else {
                     _navigateToHomeEvent.setValue(false);
                     boolean hasLikes = false;

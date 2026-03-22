@@ -31,23 +31,23 @@ public class ChangePasswordViewModel extends ViewModel {
 
 
     // Логика проверки старого пароля
-    public void verifyOldPassword(String input) {
+    public void verifyOldPassword(String input, Context context) {
         if (source != null) {
             _oldPasswordCorrect.removeSource(source);
         }
 
-        source = repository.checkCurrentPassword(input);
+        source = repository.checkCurrentPassword(input, context);
         _oldPasswordCorrect.addSource(source, _oldPasswordCorrect::setValue);
     }
 
     // Логика сохранения нового
-    public void submitNewPassword(String input) {
+    public void submitNewPassword(String input, Context context) {
         if (input.length() < 4) {
             _errorEvent.setValue("Слишком короткий пароль");
             return;
         }
 
-        repository.changePassword(input);
+        repository.changePassword(input, context);
         _passwordChanged.setValue(true);
     }
 }

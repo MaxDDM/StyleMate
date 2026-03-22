@@ -147,7 +147,7 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
                 }
 
                 // ТОЛЬКО запускаем проверку
-                viewModel.verifyOldPassword(oldPassword);
+                viewModel.verifyOldPassword(oldPassword, requireContext());
 
                 return true;
             }
@@ -171,7 +171,7 @@ public class ChangePasswordBottomSheet extends BottomSheetDialogFragment {
                 }
                 lastEnterTime = now;
 
-                viewModel.submitNewPassword(etNewPassword.getText().toString());
+                viewModel.submitNewPassword(etNewPassword.getText().toString(), requireContext());
                 return true;
             }
             return false;

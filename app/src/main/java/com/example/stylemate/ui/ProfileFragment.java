@@ -133,12 +133,16 @@ public class ProfileFragment extends Fragment {
         viewModel.userAvatarUrl.observe(getViewLifecycleOwner(), url -> {
             // Glide загрузит картинку по ссылке или поставит заглушку, если url == null
             if (imgAvatar != null) {
-                com.bumptech.glide.Glide.with(this)
-                        .load(url)
-                        .apply(com.bumptech.glide.request.RequestOptions.circleCropTransform())
-                        .placeholder(R.drawable.ic_placeholder_avatar) // Убедись, что этот ресурс существует!
-                        .error(R.drawable.ic_placeholder_avatar)
-                        .into(imgAvatar);
+                if (url != null && !url.isEmpty()) {
+                    com.bumptech.glide.Glide.with(this)
+                            .load(url)
+                            .apply(com.bumptech.glide.request.RequestOptions.circleCropTransform())
+                            .placeholder(R.drawable.ic_placeholder_avatar) // Убедись, что этот ресурс существует!
+                            .error(R.drawable.ic_placeholder_avatar)
+                            .into(imgAvatar);
+                } else {
+                    imgAvatar.setImageResource(R.drawable.ic_placeholder_avatar);
+                }
             }
         });
         // 1. Обновляем список, когда приходят данные

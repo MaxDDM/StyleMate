@@ -90,7 +90,9 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                repo.changeParameter("name", s.toString());
+                if(repo.isLogged(SettingsActivity.this) && !s.toString().isEmpty()) {
+                    repo.changeParameter("name", s.toString());
+                }
             }
         });
 
@@ -103,7 +105,9 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                repo.changeParameter("phone", s.toString());
+                if(repo.isLogged(SettingsActivity.this) && !s.toString().isEmpty()) {
+                    repo.changeParameter("phone", s.toString());
+                }
             }
         });
 
@@ -116,11 +120,13 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                String regex = "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/([0-9]{2}|[0-9]{4})$";
-                if(Pattern.matches(regex, s.toString())) {
-                    repo.changeParameter("birthDate", s.toString());
-                } else {
-                    Toast.makeText(SettingsActivity.this, "Дата должна быть в формате ДД/ММ/ГГ", Toast.LENGTH_SHORT).show();
+                if(repo.isLogged(SettingsActivity.this)) {
+                    String regex = "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/([0-9]{2}|[0-9]{4})$";
+                    if (Pattern.matches(regex, s.toString()) && !s.toString().isEmpty()) {
+                        repo.changeParameter("birthDate", s.toString());
+                    } else {
+                        Toast.makeText(SettingsActivity.this, "Дата должна быть в формате ДД/ММ/ГГ", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         });
@@ -136,7 +142,13 @@ public class SettingsActivity extends AppCompatActivity {
                     case SUCCESS:
                         etName.setText(user.data.name);
                         etPhone.setText(user.data.phone);
-                        etEmail.setText(user.data.email);
+
+                        if (user.data.email == null) {
+                            etEmail.setText(user.data.email);
+                        } else {
+                            etEmail.setText(user.data.email.replace('|', '.'));
+                        }
+
                         etDate.setText(user.data.birthDate);
                         // if (imgAvatar != null) imgAvatar.setImageResource(user.data.avatarResId != 0 ? user.data.avatarResId : R.drawable.ic_edit_avatar);
                         break;

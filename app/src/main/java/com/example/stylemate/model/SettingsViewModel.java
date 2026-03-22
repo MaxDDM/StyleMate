@@ -35,7 +35,7 @@ public class SettingsViewModel extends AndroidViewModel {
             _userProfile.removeSource(source);
         }
 
-        source = repository.getUserProfile();
+        source = repository.getUserProfile(getApplication());
         _userProfile.addSource(source, _userProfile::setValue);
     }
 

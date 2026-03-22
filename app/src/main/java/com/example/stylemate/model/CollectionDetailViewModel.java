@@ -61,7 +61,7 @@ public class CollectionDetailViewModel extends AndroidViewModel {
         if (collectionId == null) return;
 
         // Вызываем наш НОВЫЙ метод репозитория
-        repository.getCollectionFavorites(collectionId, new UserCollectionsRepository.DataCallback<List<Outfit>>() {
+        repository.getCollectionFavorites(getApplication(), collectionId, new UserCollectionsRepository.DataCallback<List<Outfit>>() {
             @Override
             public void onDataLoaded(List<Outfit> data) {
                 _outfits.setValue(data);
@@ -103,7 +103,7 @@ public class CollectionDetailViewModel extends AndroidViewModel {
 
             // 4. В фоне отправляем запрос в БД на удаление лайка
             // false означает "убрать лайк"
-            repository.toggleLikeInFirebase(collectionId, outfitId, false);
+            repository.toggleLikeInFirebase(getApplication(), collectionId, outfitId, false);
             // === ДОБАВЛЕНО: Если удалили последний элемент -> закрываем папку ===
             if (updatedList.isEmpty()) {
                 _closeScreenEvent.setValue(true);
@@ -119,13 +119,13 @@ public class CollectionDetailViewModel extends AndroidViewModel {
         _toastMessage.setValue("Название изменено");
 
         // 2. Отправляем изменения в базу
-        repository.renameCollection(collectionId, newName);
+        repository.renameCollection(getApplication(),collectionId, newName);
     }
 
     // ИЗМЕНЕННЫЙ МЕТОД: Удаление
     public void onCollectionDeleted() {
         // 1. Отправляем команду на удаление в базу
-        repository.deleteCollection(collectionId);
+        repository.deleteCollection(getApplication(), collectionId);
 
         // 2. Показываем сообщение и закрываем экран
         _toastMessage.setValue("Подборка удалена");
