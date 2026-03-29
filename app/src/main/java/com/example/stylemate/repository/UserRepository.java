@@ -33,6 +33,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import android.net.Uri;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,11 +47,18 @@ public class UserRepository {
     DatabaseReference table = database.getReference("User");
     DatabaseReference connectedRef = database.getReference(".info/connected");
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    FirebaseStorage storage = FirebaseStorage.getInstance();
+    StorageReference storageRef = storage.getReference();
 
     // --- НОВЫЙ ИНТЕРФЕЙС ДЛЯ CALLBACK ---
     public interface ProfileCallback {
         void onLoaded(UserProfile profile);
         void onError(String error);
+    }
+
+    public interface AvatarCallback {
+        void onSuccess(String downloadUrl);  // Фото загружено, вот ссылка
+        void onError(String error);          // Что-то пошло не так
     }
 
     // --- НОВЫЙ МЕТОД ДЛЯ ПРОФИЛЯ (One-shot request) ---
@@ -301,4 +311,50 @@ public class UserRepository {
     public void changeParameter(String parameter, String value) {
         table.child(getUID()).child(parameter).setValue(value);
     }
+
+    public void uploadAvatar(Context context, Uri imageUri, AvatarCallback callback) {
+
+        // 1. Проверяем, залогинен ли пользователь
+        if (!isLogged(context)) {
+            callback.onError("Смена аватарки доступна только после регистрации");
+            return;
+        }
+
+        // 2. Формируем путь в Storage: avatars/{uid}.jpg
+        //    Один файл на пользователя — при повторной загрузке просто перезаписывается
+        String uid = getUID();
+        StorageReference avatarRef = storageRef.child("avatars/" + uid + ".jpg");
+
+        // 3. Загружаем файл
+        avatarRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> {
+
+                    // 4. Файл загружен — теперь получаем публичную ссылку на него
+                    avatarRef.getDownloadUrl()
+                            .addOnSuccessListener(downloadUri -> {
+
+                                String url = downloadUri.toString();
+
+                                // 5. Сохраняем ссылку в Realtime Database
+                                //    User/{uid}/avatarUrl = "https://firebasestorage.googleapis.com/..."
+                                table.child(uid).child("avatarUrl").setValue(url)
+                                        .addOnSuccessListener(unused -> {
+                                            // Всё прошло успешно
+                                            callback.onSuccess(url);
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            // Фото загрузилось, но ссылку не удалось сохранить в БД
+                                            callback.onError("Не удалось сохранить ссылку: " + e.getMessage());
+                                        });
+                            })
+                            .addOnFailureListener(e -> {
+                                callback.onError("Не удалось получить ссылку на фото: " + e.getMessage());
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    // Файл не удалось загрузить в Storage
+                    callback.onError("Ошибка загрузки фото: " + e.getMessage());
+                });
+    }
+
 }

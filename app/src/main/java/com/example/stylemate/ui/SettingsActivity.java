@@ -2,6 +2,14 @@ package com.example.stylemate.ui;
 
 import static androidx.core.content.ContextCompat.startActivity;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.FileProvider;
+
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -18,13 +26,15 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import android.util.Patterns;
-
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.stylemate.R;
 import com.example.stylemate.model.Resource;
 import com.example.stylemate.model.SettingsViewModel;
 import com.example.stylemate.repository.UserRepository;
 
 import java.util.regex.Pattern;
+import java.io.File;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -36,6 +46,18 @@ public class SettingsActivity extends AppCompatActivity {
     private ImageView imgAvatar;
 
     private final UserRepository repo = new UserRepository();
+    // Uri временного файла для камеры
+    private Uri cameraImageUri;
+
+    // Текущая ссылка на аватарку (чтобы показывать в диалоге)
+    private String currentAvatarUrl;
+
+    private boolean isLoadingData = false;
+
+    // Три лаунчера: галерея, камера, запрос разрешения на камеру
+    private ActivityResultLauncher<String> galleryLauncher;
+    private ActivityResultLauncher<Uri> cameraLauncher;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,10 +66,45 @@ public class SettingsActivity extends AppCompatActivity {
 
         // 1. Подключаем ViewModel
         viewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
-
+        registerLaunchers();
         initViews();
         setupListeners();
         observeViewModel();
+    }
+
+    private void registerLaunchers() {
+
+        // 1. ГАЛЕРЕЯ — запускается с типом "image/*", возвращает Uri выбранного фото
+        galleryLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        handleImageUri(uri);
+                    }
+                }
+        );
+
+        // 2. КАМЕРА — запускается с Uri куда записать фото, возвращает true/false
+        cameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicture(),
+                success -> {
+                    if (success && cameraImageUri != null) {
+                        handleImageUri(cameraImageUri);
+                    }
+                }
+        );
+
+        // 3. ЗАПРОС РАЗРЕШЕНИЯ НА КАМЕРУ — если пользователь разрешил, запускаем камеру
+        cameraPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                granted -> {
+                    if (granted) {
+                        launchCamera();
+                    } else {
+                        CustomToast.show(this, "Для съёмки фото нужно разрешение на камеру");
+                    }
+                }
+        );
     }
 
     private void initViews() {
@@ -64,7 +121,15 @@ public class SettingsActivity extends AppCompatActivity {
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
         // Смена фото
-        if (imgAvatar != null) imgAvatar.setOnClickListener(v -> showChangePhotoDialog());
+        if (imgAvatar != null) {
+            imgAvatar.setOnClickListener(v -> {
+                if (!repo.isLogged(this)) {
+                    CustomToast.show(this, "Смена аватарки доступна только после регистрации");
+                    return;
+                }
+                showChangePhotoDialog();
+            });
+        }
 
         // Смена пароля
         Button btnChangePassword = findViewById(R.id.btnChangePassword);
@@ -90,6 +155,7 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
+                if (isLoadingData) return;
                 if(repo.isLogged(SettingsActivity.this) && !s.toString().isEmpty()) {
                     repo.changeParameter("name", s.toString());
                 }
@@ -105,6 +171,7 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
+                if (isLoadingData) return;
                 if(repo.isLogged(SettingsActivity.this) && !s.toString().isEmpty()) {
                     repo.changeParameter("phone", s.toString());
                 }
@@ -120,12 +187,13 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
+                if (isLoadingData) return;
                 if(repo.isLogged(SettingsActivity.this)) {
                     String regex = "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/([0-9]{2}|[0-9]{4})$";
                     if (Pattern.matches(regex, s.toString()) && !s.toString().isEmpty()) {
                         repo.changeParameter("birthDate", s.toString());
                     } else {
-                        Toast.makeText(SettingsActivity.this, "Дата должна быть в формате ДД/ММ/ГГ", Toast.LENGTH_SHORT).show();
+                        CustomToast.show(SettingsActivity.this, "Дата должна быть в формате ДД/ММ/ГГ");
                     }
                 }
             }
@@ -140,6 +208,7 @@ public class SettingsActivity extends AppCompatActivity {
                     case LOADING:
                         break;
                     case SUCCESS:
+                        isLoadingData = true;
                         etName.setText(user.data.name);
                         etPhone.setText(user.data.phone);
 
@@ -150,7 +219,17 @@ public class SettingsActivity extends AppCompatActivity {
                         }
 
                         etDate.setText(user.data.birthDate);
-                        // if (imgAvatar != null) imgAvatar.setImageResource(user.data.avatarResId != 0 ? user.data.avatarResId : R.drawable.ic_edit_avatar);
+                        currentAvatarUrl = user.data.avatarUrl;
+                        if (imgAvatar != null && currentAvatarUrl != null && !currentAvatarUrl.isEmpty()) {
+                            Glide.with(SettingsActivity.this)
+                                    .load(currentAvatarUrl)
+                                    .apply(RequestOptions.circleCropTransform())
+                                    .placeholder(R.drawable.ic_edit_avatar)
+                                    .error(R.drawable.ic_edit_avatar)
+                                    .into(imgAvatar);
+                        }
+                        isLoadingData = false;
+
                         break;
                     case ERROR:
                         break;
@@ -181,23 +260,87 @@ public class SettingsActivity extends AppCompatActivity {
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             dialog.getWindow().setGravity(android.view.Gravity.CENTER);
-            // dialog.getWindow().getAttributes().y = -400; // Тут можно убрать смещение, если хочешь по центру
+        }
+
+        ImageView imgDialogAvatar = dialogView.findViewById(R.id.imgDialogAvatar);
+        if (currentAvatarUrl != null && !currentAvatarUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(currentAvatarUrl)
+                    .apply(RequestOptions.circleCropTransform())
+                    .placeholder(R.drawable.ic_edit_avatar)
+                    .error(R.drawable.ic_edit_avatar)
+                    .into(imgDialogAvatar);
         }
 
         Button btnGallery = dialogView.findViewById(R.id.btnGallery);
         Button btnCamera = dialogView.findViewById(R.id.btnCamera);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
+        // --- ГАЛЕРЕЯ ---
         btnGallery.setOnClickListener(v -> {
-            Toast.makeText(this, "Открываем галерею...", Toast.LENGTH_SHORT).show();
             dialog.dismiss();
+            galleryLauncher.launch("image/*");
         });
+
+        // --- КАМЕРА (с проверкой разрешения) ---
         btnCamera.setOnClickListener(v -> {
-            Toast.makeText(this, "Открываем камеру...", Toast.LENGTH_SHORT).show();
             dialog.dismiss();
+            if (checkSelfPermission(Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED) {
+                // Разрешение уже есть — сразу запускаем
+                launchCamera();
+            } else {
+                // Запрашиваем разрешение у пользователя
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+            }
         });
         btnCancel.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
+    }
+
+    private void launchCamera() {
+        // Создаём временный файл в кэше приложения
+        File tempFile = new File(getCacheDir(),
+                "camera_avatar_" + System.currentTimeMillis() + ".jpg");
+
+        // Получаем безопасный content:// Uri через FileProvider
+        cameraImageUri = FileProvider.getUriForFile(
+                this,
+                getApplicationContext().getPackageName() + ".fileprovider",
+                tempFile
+        );
+
+        // Запускаем камеру — фото запишется по этому Uri
+        cameraLauncher.launch(cameraImageUri);
+    }
+
+    private void handleImageUri(Uri uri) {
+        CustomToast.show(this, "Загрузка фото...");
+
+        repo.uploadAvatar(this, uri, new UserRepository.AvatarCallback() {
+            @Override
+            public void onSuccess(String downloadUrl) {
+                // Запоминаем новый URL
+                currentAvatarUrl = downloadUrl;
+
+                // Обновляем аватарку на экране
+                if (imgAvatar != null) {
+                    Glide.with(SettingsActivity.this)
+                            .load(downloadUrl)
+                            .apply(RequestOptions.circleCropTransform())
+                            .placeholder(R.drawable.ic_edit_avatar)
+                            .error(R.drawable.ic_edit_avatar)
+                            .into(imgAvatar);
+                }
+
+                CustomToast.show(SettingsActivity.this,  "Фото обновлено");
+            }
+
+            @Override
+            public void onError(String error) {
+                CustomToast.show(SettingsActivity.this, error);
+            }
+        });
     }
 
     // === НОВЫЙ ДИАЛОГ ВЫХОДА ===

@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -15,6 +17,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StyleMate"
         tools:targetApi="31">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
         <activity
             android:name=".ui.SetSelectionNameActivity"
             android:exported="false" />
@@ -35,27 +46,6 @@
             android:exported="false" />
         <activity
             android:name=".ui.new_select_test.NewSelectQ9Activity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.new_select_test.NewSelectQ8Activity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.new_select_test.NewSelectQ7Activity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.new_select_test.NewSelectQ6Activity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.new_select_test.NewSelectQ5Activity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.new_select_test.NewSelectQ4Activity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.new_select_test.NewSelectQ3Activity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.new_select_test.NewSelectQ2Activity"
             android:exported="false" />
         <activity
             android:name=".ui.new_select_test.NewSelectQ1Activity"
