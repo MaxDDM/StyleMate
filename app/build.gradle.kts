@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.stylemate"
+    namespace = "com.pupkov.stylemate"
     compileSdk = 36
 
     flavorDimensions += "firebase"
@@ -12,12 +12,12 @@ android {
     productFlavors {
         create("styleMateFirebase") {
             dimension = "firebase"
-            applicationId = "com.example.stylemate"
+            applicationId = "com.pupkov.stylemate"
         }
     }
 
     defaultConfig {
-        applicationId = "com.example.stylemate"
+        applicationId = "com.pupkov.stylemate"
         minSdk = 31
         targetSdk = 34
         versionCode = 1
@@ -57,7 +57,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.google.android.flexbox:flexbox:3.0.0")
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-storage")
 }

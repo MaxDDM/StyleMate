@@ -8,9 +8,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1078787574173:android:2444ffedabf03f1915c774",
+        "mobilesdk_app_id": "1:1078787574173:android:af7e02094760597e15c774",
         "android_client_info": {
-          "package_name": "com.example.stylemate"
+          "package_name": "com.pupkov.stylemate"
         }
       },
       "oauth_client": [],
