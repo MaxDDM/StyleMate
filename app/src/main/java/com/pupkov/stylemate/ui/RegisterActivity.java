@@ -14,6 +14,11 @@ import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
 import com.pupkov.stylemate.ui.dialogs.SkipRegDialog;
 import com.pupkov.stylemate.ui.test.TestQ1Activity;
+import com.google.android.material.datepicker.MaterialDatePicker;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import org.apache.commons.validator.routines.EmailValidator;
 
@@ -32,6 +37,28 @@ public class RegisterActivity extends AppCompatActivity {
         EditText password = findViewById(R.id.passwordReg);
         EditText name = findViewById(R.id.nameReg);
         EditText birth = findViewById(R.id.birthDateReg);
+
+        birth.setOnClickListener(v -> {
+            // 1. Создаем календарь
+            MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                    .setTitleText("Выберите дату рождения")
+                    .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                    .build();
+
+            // 2. Слушатель нажатия "OK"
+            datePicker.addOnPositiveButtonClickListener(selection -> {
+                // Форматируем выбранную дату в твой формат ДД/ММ/ГГ
+                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                calendar.setTimeInMillis(selection);
+                SimpleDateFormat format = new SimpleDateFormat("dd/MM/yy", Locale.getDefault());
+                String formattedDate = format.format(calendar.getTime());
+
+                birth.setText(formattedDate);
+            });
+
+            datePicker.show(getSupportFragmentManager(), "DATE_PICKER");
+        });
+
         ImageButton verifyButton = findViewById(R.id.verifyEmail);
         ImageButton continueButton = findViewById(R.id.continueRegButton);
         ImageButton skipRegButton = findViewById(R.id.skipRegButton);
