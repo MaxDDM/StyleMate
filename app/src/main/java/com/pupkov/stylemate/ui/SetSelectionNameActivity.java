@@ -37,6 +37,8 @@ public class SetSelectionNameActivity extends AppCompatActivity {
         continueButton.setOnClickListener(v -> {
             if (selectionName.getText().toString().isEmpty()) {
                 Toast.makeText(SetSelectionNameActivity.this,"Вы не ввели название", Toast.LENGTH_LONG).show();
+            } else if (selectionName.getText().toString().length() > 10) {
+                Toast.makeText(SetSelectionNameActivity.this,"Название не может содержать более 10 символов", Toast.LENGTH_LONG).show();
             } else {
                 int testNumber = getIntent().getIntExtra("testNumber", 1);
 

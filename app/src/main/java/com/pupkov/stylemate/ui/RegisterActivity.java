@@ -68,8 +68,8 @@ public class RegisterActivity extends AppCompatActivity {
 
             if (!validator.isValid(email.getText().toString())) {
                 Toast.makeText(RegisterActivity.this, "Указан некорретный адрес", Toast.LENGTH_LONG).show();
-            } else if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
-                Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
+            } else if (password.getText().toString().length() < 6 || password.getText().toString().length() > 12) {
+                Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 6 до 12 символов", Toast.LENGTH_LONG).show();
             } else if (!isValidDateRegex(birth.getText().toString())) {
                 Toast.makeText(RegisterActivity.this, "Дата должна быть в формате ДД/ММ/ГГ", Toast.LENGTH_LONG).show();
             } else {

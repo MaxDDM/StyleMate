@@ -57,8 +57,6 @@ public class AuthActivity extends AppCompatActivity {
 
             if (!validator.isValid(email.getText().toString())) {
                 Toast.makeText(AuthActivity.this, "Указан некорретный адрес", Toast.LENGTH_LONG).show();
-            } else if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
-                Toast.makeText(AuthActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
             } else {
                 repo.loginUser(email.getText().toString(), password.getText().toString()).observe(this, resource -> {
                     switch(resource.status) {
