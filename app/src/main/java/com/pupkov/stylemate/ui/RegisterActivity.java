@@ -13,6 +13,7 @@ import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
 import com.pupkov.stylemate.ui.dialogs.SkipRegDialog;
+import com.pupkov.stylemate.ui.dialogs.PrivacyConsentDialog;
 import com.pupkov.stylemate.ui.test.TestQ1Activity;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import java.text.SimpleDateFormat;
@@ -66,29 +67,38 @@ public class RegisterActivity extends AppCompatActivity {
         verifyButton.setOnClickListener(v -> {
             EmailValidator validator = EmailValidator.getInstance();
 
+            // 1. Сначала стандартные проверки полей
             if (!validator.isValid(email.getText().toString())) {
                 Toast.makeText(RegisterActivity.this, "Указан некорретный адрес", Toast.LENGTH_LONG).show();
-            } else if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
+                return;
+            }
+
+            if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
                 Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
-            } else if (!isValidDateRegex(birth.getText().toString())) {
+                return;
+            }
+
+            if (!isValidDateRegex(birth.getText().toString())) {
                 Toast.makeText(RegisterActivity.this, "Дата должна быть в формате ДД/ММ/ГГ", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            // 2. Проверка согласия (из SharedPreferences)
+            if (isPrivacyAccepted()) {
+                // Если уже соглашался ранее — сразу отправляем email
+                sendVerificationEmail(email.getText().toString(), password.getText().toString());
             } else {
-                repo.sendEmail(email.getText().toString(), password.getText().toString()).observe(this, resource -> {
-                    switch(resource.status) {
-                        case LOADING:
-                            break;
-                        case SUCCESS:
-                            if (resource.data) {
-                                Toast.makeText(RegisterActivity.this, "На указанный адрес отправлено письмо для его верификации", Toast.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(RegisterActivity.this, "Пользователь с указанным email уже зарегистрирован", Toast.LENGTH_LONG).show();
-                            }
-                            break;
-                        case ERROR:
-                            Toast.makeText(RegisterActivity.this, resource.message, Toast.LENGTH_LONG).show();
-                            break;
+                // Если еще не соглашался — показываем диалог
+                PrivacyConsentDialog dialog = new PrivacyConsentDialog();
+                dialog.setOnConsentListener(isGranted -> {
+                    if (isGranted) {
+                        savePrivacyAccepted(); // Сохраняем, чтобы больше не спрашивать
+                        sendVerificationEmail(email.getText().toString(), password.getText().toString());
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Для регистрации необходимо принять соглашение", Toast.LENGTH_SHORT).show();
                     }
                 });
+                dialog.show(getSupportFragmentManager(), "PrivacyDialog");
             }
         });
 
@@ -122,6 +132,37 @@ public class RegisterActivity extends AppCompatActivity {
 
             dialog.show(getSupportFragmentManager(), "DeleteDialog");
         });
+    }
+
+    private void sendVerificationEmail(String emailStr, String passwordStr) {
+        repo.sendEmail(emailStr, passwordStr).observe(this, resource -> {
+            switch(resource.status) {
+                case LOADING:
+                    break;
+                case SUCCESS:
+                    if (resource.data) {
+                        Toast.makeText(RegisterActivity.this, "На указанный адрес отправлено письмо для его верификации", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Пользователь с указанным email уже зарегистрирован", Toast.LENGTH_LONG).show();
+                    }
+                    break;
+                case ERROR:
+                    Toast.makeText(RegisterActivity.this, resource.message, Toast.LENGTH_LONG).show();
+                    break;
+            }
+        });
+    }
+
+    private boolean isPrivacyAccepted() {
+        return getSharedPreferences("app_prefs", MODE_PRIVATE)
+                .getBoolean("privacy_accepted", false);
+    }
+
+    private void savePrivacyAccepted() {
+        getSharedPreferences("app_prefs", MODE_PRIVATE)
+                .edit()
+                .putBoolean("privacy_accepted", true)
+                .apply();
     }
 
     public boolean isValidDateRegex(String dateStr) {

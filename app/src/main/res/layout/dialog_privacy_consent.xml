@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:gravity="center"
+    android:layout_margin="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center"
+        android:backgroundTint="@android:color/white">
+        <TextView
+            android:id="@+id/tvPrivacyText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Вы согласны с Политикой конфиденциальности и правилами использования?"
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:layout_marginBottom="32dp"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnConfirm"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="Подтверждаю согласие"
+            android:background="@drawable/bg_button_oval_dark"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:layout_marginBottom="12dp"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnExit"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="Выйти"
+            android:background="@drawable/bg_button_oval_light"
+            android:textColor="#333333"
+            android:textAllCaps="false"/>
+    </LinearLayout>
+</LinearLayout>
