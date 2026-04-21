@@ -73,8 +73,8 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            if (password.getText().toString().length() < 10 || password.getText().toString().length() > 20) {
-                Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 10 до 20 символов", Toast.LENGTH_LONG).show();
+            if (password.getText().toString().length() < 6 || password.getText().toString().length() > 12) {
+                Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 6 до 12 символов", Toast.LENGTH_LONG).show();
                 return;
             }
 

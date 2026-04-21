@@ -12,7 +12,7 @@
         android:layout_width="344dp"
         android:layout_height="75dp"
         android:layout_marginStart="43dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="35dp"
         android:fontFamily="@font/ttcommons_regular"
         android:text="Как бы вы описали ваш идеальный стиль?"
         android:textSize="35sp"

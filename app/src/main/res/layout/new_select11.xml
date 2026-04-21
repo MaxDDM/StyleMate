@@ -12,7 +12,7 @@
         android:layout_width="344dp"
         android:layout_height="111dp"
         android:layout_marginStart="43dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="40dp"
         android:fontFamily="@font/ttcommons_regular"
         android:text="Для какого вида отдыха вы ищете образ?"
         android:textSize="35sp"
