@@ -138,6 +138,7 @@ public class RegisterActivity extends AppCompatActivity {
         repo.sendEmail(emailStr, passwordStr).observe(this, resource -> {
             switch(resource.status) {
                 case LOADING:
+                    Toast.makeText(RegisterActivity.this, "Отправка письма с подтверждением...", Toast.LENGTH_SHORT).show();
                     break;
                 case SUCCESS:
                     if (resource.data) {

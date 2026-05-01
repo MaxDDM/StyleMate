@@ -194,7 +194,7 @@ public class UserRepository {
             user.reload().addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     if (user.isEmailVerified()) {
-                        table.addListenerForSingleValueEvent(new ValueEventListener() {
+                        table.child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 UserProfile userPr = new UserProfile(name, phone, email, birthDate, password, avatarUrl);
@@ -209,16 +209,18 @@ public class UserRepository {
 
                             @Override
                             public void onCancelled(@NonNull DatabaseError error) {
-                                result.setValue(Resource.error("Возникла ошибка"));
+                                result.setValue(Resource.error("Ошибка Firebase Database: " + error.getMessage()));
                             }
                         });
                     } else {
                         result.setValue(Resource.success(false));
                     }
                 } else {
-                    result.setValue(Resource.error("Нет связи с сервером"));
+                    result.setValue(Resource.error("Не удалось обновить статус: " + task.getException().getMessage()));
                 }
             });
+        } else {
+            result.setValue(Resource.error("Сессия истекла. Нажмите подтверждение почты еще раз."));
         }
 
         return result;
@@ -239,7 +241,8 @@ public class UserRepository {
                         || e instanceof FirebaseAuthInvalidUserException) {
                             result.setValue(Resource.error("Неверный email или пароль"));
                         } else {
-                            result.setValue(Resource.error("Нет связи с сервером"));
+                            String errorMsg = (e != null) ? e.getMessage() : "Неизвестная ошибка сервера";
+                            result.setValue(Resource.error("Ошибка: " + errorMsg));
                         }
                     }
                 });
