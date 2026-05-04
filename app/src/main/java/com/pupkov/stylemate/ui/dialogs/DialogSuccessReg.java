@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.pupkov.stylemate.R;
+import com.pupkov.stylemate.analytics.RegisterCount;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
 import com.pupkov.stylemate.ui.RegisterActivity;
@@ -63,6 +64,9 @@ public class DialogSuccessReg extends DialogFragment {
         });
 
         btnContinue.setOnClickListener(v -> {
+            RegisterCount.updateRegisterCount();
+
+            assert getArguments() != null;
             String uid = getArguments().getString("uid");
             ActiveUserInfo.setDefaults("isRegistered", uid, requireContext());
 
