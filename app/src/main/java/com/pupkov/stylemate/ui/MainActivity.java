@@ -15,6 +15,11 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.pupkov.stylemate.R;
+import com.pupkov.stylemate.analytics.TestCompleteCount;
+import com.pupkov.stylemate.analytics.TimeAnalytics;
+import com.pupkov.stylemate.repository.UserRepository;
+
+import java.time.LocalDateTime;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,11 +31,20 @@ public class MainActivity extends AppCompatActivity {
     private final Fragment homeFragment = new HomeFragment();
     private final Fragment profileFragment = new ProfileFragment();
 
+    private final UserRepository repo = new UserRepository();
+
     // Запоминаем, какой фрагмент сейчас активен
     private Fragment activeFragment = homeFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (repo.isLogged(MainActivity.this)) {
+            TimeAnalytics.saveDate(LocalDateTime.now(), repo.getUID());
+        }
+
+        TestCompleteCount count = new TestCompleteCount();
+        count.setTestCompleteCount();
+
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
