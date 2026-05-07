@@ -87,7 +87,16 @@
         android:layout_width="344dp"
         android:layout_height="90dp"
         android:layout_marginTop="-30dp"
-        android:background="@drawable/ic_pic29"
+        android:background="@drawable/reg_button"
+        android:layout_gravity="center_horizontal"
+        />
+
+    <ImageButton
+        android:id="@+id/skipAuthButton"
+        android:layout_width="344dp"
+        android:layout_height="90dp"
+        android:layout_marginTop="-30dp"
+        android:background="@drawable/scip_reg"
         android:layout_gravity="center_horizontal"
         />
 </LinearLayout>

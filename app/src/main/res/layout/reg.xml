@@ -11,7 +11,7 @@
     <TextView
         android:layout_width="191dp"
         android:layout_height="61dp"
-        android:layout_marginTop="65dp"
+        android:layout_marginTop="130dp"
         android:fontFamily="@font/ttcommons_regular"
         android:text="Регистрация"
         android:textSize="36sp"
@@ -23,7 +23,7 @@
         android:layout_width="55dp"
         android:layout_height="30dp"
         android:layout_marginStart="45dp"
-        android:layout_marginTop="0dp"
+        android:layout_marginTop="40dp"
         android:fontFamily="@font/ttcommons_regular"
         android:text="Почта"
         android:textSize="20sp"
@@ -127,21 +127,22 @@
         />
 
     <ImageButton
+        android:id="@+id/backToAuth"
+        android:layout_width="344dp"
+        android:layout_height="90dp"
+        android:layout_marginTop="21dp"
+        android:background="@drawable/auth_button"
+        android:layout_gravity="center_horizontal"
+        android:visibility="visible" />
+
+    <ImageButton
         android:id="@+id/verifyEmail"
         android:layout_width="344dp"
         android:layout_height="90dp"
         android:layout_marginTop="21dp"
         android:background="@drawable/ic_pic50"
         android:layout_gravity="center_horizontal"
-        />
-
-    <ImageButton
-        android:id="@+id/continueRegButton"
-        android:layout_width="344dp"
-        android:layout_height="90dp"
-        android:layout_marginTop="-30dp"
-        android:background="@drawable/ic_pic7"
-        android:layout_gravity="center_horizontal"
+        android:visibility="gone"
         />
 
     <ImageButton
@@ -149,7 +150,7 @@
         android:layout_width="344dp"
         android:layout_height="90dp"
         android:layout_marginTop="-30dp"
-        android:background="@drawable/ic_pic8"
+        android:background="@drawable/scip_reg"
         android:layout_gravity="center_horizontal"
         />
 </LinearLayout>

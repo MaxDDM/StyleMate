@@ -3,6 +3,9 @@ package com.pupkov.stylemate.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -43,6 +46,10 @@ public class RegisterActivity extends AppCompatActivity {
         EditText name = findViewById(R.id.nameReg);
         EditText birth = findViewById(R.id.birthDateReg);
 
+        ImageButton backToAuth = findViewById(R.id.backToAuth);
+
+        backToAuth.setOnClickListener(v -> finish());
+
         birth.setOnClickListener(v -> {
             // 1. Создаем календарь
             MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
@@ -65,10 +72,29 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         ImageButton verifyButton = findViewById(R.id.verifyEmail);
-        ImageButton continueButton = findViewById(R.id.continueRegButton);
+        //ImageButton continueButton = findViewById(R.id.continueRegButton);
         ImageButton skipRegButton = findViewById(R.id.skipRegButton);
 
-        verifyButton.setOnClickListener(v -> {
+        TextWatcher watcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                boolean allFilled = !email.getText().toString().trim().isEmpty() &&
+                        !password.getText().toString().trim().isEmpty() &&
+                        !name.getText().toString().trim().isEmpty() &&
+                        !birth.getText().toString().trim().isEmpty();
+
+                backToAuth.setVisibility(allFilled ? View.GONE : View.VISIBLE);
+                verifyButton.setVisibility(allFilled ? View.VISIBLE : View.GONE);
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        };
+
+        email.addTextChangedListener(watcher);
+        password.addTextChangedListener(watcher);
+        name.addTextChangedListener(watcher);
+        birth.addTextChangedListener(watcher);
+
+        /*verifyButton.setOnClickListener(v -> {
             EmailValidator validator = EmailValidator.getInstance();
 
             // 1. Сначала стандартные проверки полей
@@ -113,9 +139,9 @@ public class RegisterActivity extends AppCompatActivity {
             dialog.setArguments(args);
 
             dialog.show(getSupportFragmentManager(), "DeleteDialog");
-        });
+        });*/
 
-        continueButton.setOnClickListener(v -> {
+        /*continueButton.setOnClickListener(v -> {
             repo.checkEmailVerifiedAndRegister(name.getText().toString(), "", email.getText().toString(), birth.getText().toString(), "", password.getText().toString()).observe(this, resource -> {
                 switch(resource.status) {
                     case LOADING:
@@ -146,15 +172,138 @@ public class RegisterActivity extends AppCompatActivity {
                         break;
                 }
             });
+        });*/
+
+        verifyButton.setOnClickListener(v -> {
+            // 1. Валидация
+            if (!validateInputs()) return;
+
+            // 2. Проверка политики
+            if (isPrivacyAccepted()) {
+                startVerificationChain();
+            } else {
+                PrivacyConsentDialog dialog = new PrivacyConsentDialog();
+                dialog.setOnConsentListener(isGranted -> {
+                    if (isGranted) {
+                        savePrivacyAccepted();
+                        startVerificationChain();
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Для регистрации нужно принять соглашение", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                dialog.show(getSupportFragmentManager(), "PrivacyDialog");
+            }
         });
 
-        skipRegButton.setOnClickListener(v -> {
+        /*skipRegButton.setOnClickListener(v -> {
             SkipRegDialog dialog = new SkipRegDialog();
 
             dialog.setListener(this::finish);
 
             dialog.show(getSupportFragmentManager(), "DeleteDialog");
+        });*/
+
+        backToAuth.setOnClickListener(v -> {
+            // Просто закрываем текущую активность, возвращаясь на AuthActivity
+            finish();
         });
+
+        skipRegButton.setOnClickListener(v -> {
+            if (isPrivacyAccepted()) {
+                // Если уже принимал — сразу показываем диалог пропуска
+                showSkipDialog();
+            } else {
+                // Если нет — просим согласиться
+                PrivacyConsentDialog dialog = new PrivacyConsentDialog();
+                dialog.setOnConsentListener(isGranted -> {
+                    if (isGranted) {
+                        savePrivacyAccepted(); // Сохраняем выбор
+                        showSkipDialog();      // Открываем диалог пропуска
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Для продолжения необходимо принять соглашение", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                dialog.show(getSupportFragmentManager(), "PrivacyDialog");
+            }
+        });
+    }
+
+    private boolean validateInputs() {
+        EditText email = findViewById(R.id.emailReg);
+        EditText password = findViewById(R.id.passwordReg);
+        EditText birth = findViewById(R.id.birthDateReg);
+        EmailValidator validator = EmailValidator.getInstance();
+
+        if (!validator.isValid(email.getText().toString())) {
+            Toast.makeText(this, "Указан некорретный адрес", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        if (password.getText().length() < 6 || password.getText().length() > 12) {
+            Toast.makeText(this, "Пароль должен содержать от 6 до 12 символов", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        if (!isValidDateRegex(birth.getText().toString())) {
+            Toast.makeText(this, "Дата должна быть в формате ДД/ММ/ГГ", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
+    private void startVerificationChain() {
+        String emailStr = ((EditText)findViewById(R.id.emailReg)).getText().toString();
+        String passwordStr = ((EditText)findViewById(R.id.passwordReg)).getText().toString();
+
+        // 1. Отправляем письмо
+        sendVerificationEmail(emailStr, passwordStr, this);
+
+        // 2. Показываем диалог VerifyEmailDialog (Инструкция)
+        VerifyEmailDialog verifyDialog = new VerifyEmailDialog();
+        Bundle args = new Bundle();
+        args.putString("email", emailStr);
+        args.putString("password", passwordStr);
+        verifyDialog.setArguments(args);
+
+        // ВАЖНО: Вешаем слушатель на кнопку "Я подтвердил" в этом диалоге
+        verifyDialog.setListener(this::checkUserStatusAndFinalize);
+
+        verifyDialog.show(getSupportFragmentManager(), "VerifyDialog");
+    }
+
+    private void checkUserStatusAndFinalize() {
+        String emailStr = ((EditText)findViewById(R.id.emailReg)).getText().toString();
+        String passwordStr = ((EditText)findViewById(R.id.passwordReg)).getText().toString();
+        String nameStr = ((EditText)findViewById(R.id.nameReg)).getText().toString();
+        String birthStr = ((EditText)findViewById(R.id.birthDateReg)).getText().toString();
+
+        repo.checkEmailVerifiedAndRegister(nameStr, "", emailStr, birthStr, "", passwordStr)
+                .observe(this, resource -> {
+                    switch(resource.status) {
+                        case LOADING:
+                            Toast.makeText(this, "Проверяем статус подтверждения...", Toast.LENGTH_SHORT).show();
+                            break;
+                        case SUCCESS:
+                            if (resource.data) {
+                                // УСПЕХ: Почта подтверждена
+                                DialogSuccessReg dialog = new DialogSuccessReg();
+                                Bundle args = new Bundle();
+                                args.putString("uid", repo.getUID());
+                                dialog.setArguments(args);
+                                dialog.show(getSupportFragmentManager(), "SuccessDialog");
+                            } else {
+                                // ОШИБКА: Посылка не подтверждена
+                                DialogCheckEmail dialog = new DialogCheckEmail();
+                                Bundle args = new Bundle();
+                                args.putString("email", emailStr);
+                                args.putString("password", passwordStr);
+                                dialog.setArguments(args);
+                                dialog.show(getSupportFragmentManager(), "CheckEmailDialog");
+                            }
+                            break;
+                        case ERROR:
+                            Toast.makeText(this, resource.message, Toast.LENGTH_LONG).show();
+                            break;
+                    }
+                });
     }
 
     public void sendVerificationEmail(String emailStr, String passwordStr, Context context) {
@@ -175,6 +324,13 @@ public class RegisterActivity extends AppCompatActivity {
                     break;
             }
         });
+    }
+
+    private void showSkipDialog() {
+        SkipRegDialog dialog = new SkipRegDialog();
+        // При нажатии "Продолжить без регистрации" в диалоге — закрываем экран (finish)
+        dialog.setListener(this::finish);
+        dialog.show(getSupportFragmentManager(), "SkipDialog");
     }
 
     private boolean isPrivacyAccepted() {
