@@ -21,7 +21,7 @@ public class TimeAnalytics {
     static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
     static DatabaseReference tableAnalytics = database.getReference("Analytics");
     public static void saveDate(LocalDateTime date, String uid) {
-        tableAnalytics.child("Dates").child(uid).child(String.valueOf(date)).setValue("true");
+        tableAnalytics.child("Dates").child(uid).child(String.valueOf(date).replace('.', '|')).setValue("true");
     }
 
     public static void countRR() {
@@ -98,7 +98,15 @@ public class TimeAnalytics {
         tableAnalytics.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                HashMap<String, HashMap<LocalDateTime, String>> dates = snapshot.child("Dates").getValue(HashMap.class);
+                HashMap<String, HashMap<String, String>> datesNotFormatted = snapshot.child("Dates").getValue(HashMap.class);
+                HashMap<String, HashMap<LocalDateTime, String>> dates = new HashMap<>();
+                for (String key : datesNotFormatted.keySet()) {
+                    HashMap<LocalDateTime, String> map = new HashMap<>();
+                    for (String key1 : datesNotFormatted.get(key).keySet()) {
+                        map.put(LocalDateTime.parse(key1.replace('|', '.')), datesNotFormatted.get(key).get(key1));
+                    }
+                    dates.put(key, map);
+                }
                 liveData.setValue(Resource.success(dates));
             }
 
