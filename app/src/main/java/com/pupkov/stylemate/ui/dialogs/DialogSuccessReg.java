@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.pupkov.stylemate.R;
+import com.pupkov.stylemate.analytics.AnalyticsManager;
 import com.pupkov.stylemate.analytics.RegisterCount;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
@@ -69,6 +70,7 @@ public class DialogSuccessReg extends DialogFragment {
             assert getArguments() != null;
             String uid = getArguments().getString("uid");
             ActiveUserInfo.setDefaults("isRegistered", uid, requireContext());
+            AnalyticsManager.trackTimeRegistration(uid);
 
             Intent intent = new Intent(requireContext(), TestQ1Activity.class);
             startActivity(intent);

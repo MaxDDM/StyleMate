@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.pupkov.stylemate.analytics.AnalyticsManager;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.StyleTestRepository;
 import com.pupkov.stylemate.repository.UserRepository;
@@ -99,6 +100,7 @@ public class TestViewModel extends AndroidViewModel {
                 .addOnSuccessListener(aVoid -> {
                     // Успех
                     repository.clearState(getApplication());
+                    AnalyticsManager.trackCollectionCountChange(repo.getUID());
                     // Ставим флаг, что это не гость (на всякий случай для UI)
                     ActiveUserInfo.setDefaults("is_guest", "false", getApplication());
                     // Переходим
@@ -126,6 +128,7 @@ public class TestViewModel extends AndroidViewModel {
         // Стиль намеренно не пишем (он будет null), чтобы сработал поиск по ситуации
 
         newCollectionRef.setValue(collectionData);
+        AnalyticsManager.trackCollectionCountChange(repo.getUID());
     }
 
     private void saveToLocal(String selectionName, String styleName, int winnerIndex) {

@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.pupkov.stylemate.analytics.AnalyticsManager;
 import com.pupkov.stylemate.model.Outfit;
 import com.pupkov.stylemate.ui.FavouriteOutfits; // Импорт нашей модели
 
@@ -305,6 +306,9 @@ public class UserCollectionsRepository {
 
         if (isLiked) {
             favRef.setValue(true); // Ставим лайк
+            String uid = repo.getUID();
+            AnalyticsManager.trackFirstLookAddition(uid);
+            AnalyticsManager.trackItemFavorite(outfitId);
         } else {
             favRef.removeValue(); // Удаляем лайк
         }
@@ -433,6 +437,7 @@ public class UserCollectionsRepository {
         if (!repo.isLogged(context)) return;
 
         // Заходим в user_collections -> email -> id и удаляем ВСЮ ветку (вместе с лайками внутри)
+        AnalyticsManager.trackCollectionDeletion(repo.getUID());
         dbRef.child("user_collections")
                 .child(repo.getUID())
                 .child(collectionId)
