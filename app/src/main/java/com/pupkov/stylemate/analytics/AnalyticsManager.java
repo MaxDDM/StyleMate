@@ -12,7 +12,7 @@ public class AnalyticsManager {
 
     private static final FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
     private static final DatabaseReference analyticsRef = database.getReference("Analytics");
-    private static final DatabaseReference usersRef = database.getReference("Users");
+    private static final DatabaseReference usersRef = database.getReference("User");
     private static final DatabaseReference itemsRef = database.getReference("items");
 
     /**
@@ -63,7 +63,7 @@ public class AnalyticsManager {
 
         // 1. Записываем время регистрации в профиль пользователя
         usersRef.child(userId).child("registrationTimestamp").setValue(timestamp);
-
+        incrementCounter(analyticsRef.child("RegisterCount"), 1);
     }
 
     /**
@@ -108,38 +108,35 @@ public class AnalyticsManager {
     }
 
     public static void trackCollectionCountChange(String userId) {
-        DatabaseReference userRef = database.getReference("Users").child(userId);
+        // Запускаем транзакцию на ВЕСЬ объект пользователя
+        DatabaseReference userRef = database.getReference("User").child(userId);
 
-        userRef.child("collectionsCount").runTransaction(new Transaction.Handler() {
+        userRef.runTransaction(new Transaction.Handler() {
             @NonNull @Override
             public Transaction.Result doTransaction(@NonNull MutableData currentData) {
-                Integer count = currentData.getValue(Integer.class);
+                // Теперь достаем collectionsCount из "ребенка"
+                Integer count = currentData.child("collectionsCount").getValue(Integer.class);
                 if (count == null) count = 0;
 
                 int newCount = count + 1;
-                currentData.setValue(newCount);
+                currentData.child("collectionsCount").setValue(newCount);
 
-                // Глобальные счетчики в Analytics
-                DatabaseReference statsRef = database.getReference("Analytics");
-
+                // Теперь это сработает, так как мы находимся в корне пользователя
                 if (newCount == 2) {
-                    // Стал счастливым обладателем двух подборок
-                    incrementCounter(statsRef.child("usersWithTwoCollections"), 1);
-
                     Long regTime = currentData.child("registrationTimestamp").getValue(Long.class);
 
                     if (regTime != null && regTime > 0) {
-                        long currentTime = System.currentTimeMillis();
-                        long diffInSeconds = (currentTime - regTime) / 1000;
-
-                        // Сохраняем интервал "второго шага"
+                        long diffInSeconds = (System.currentTimeMillis() - regTime) / 1000;
+                        // Поле появится на том же уровне, что и collectionsCount
                         currentData.child("timeToSecondCollection").setValue(diffInSeconds);
                     }
 
-                } else if (newCount == 3) {
-                    // Перешел в лигу 3+, вычитаем из лиги "ровно 2"
-                    incrementCounter(statsRef.child("usersWithTwoCollections"), -1);
-                    incrementCounter(statsRef.child("usersWithThreePlusCollections"), 1);
+                    // Обновляем глобальную статку (вне транзакции текущего юзера)
+                    incrementCounter(analyticsRef.child("usersWithTwoCollections"), 1);
+                }
+                else if (newCount == 3) {
+                    incrementCounter(analyticsRef.child("usersWithTwoCollections"), -1);
+                    incrementCounter(analyticsRef.child("usersWithThreePlusCollections"), 1);
                 }
 
                 return Transaction.success(currentData);
@@ -156,7 +153,7 @@ public class AnalyticsManager {
      * 2. Фиксирует факт удаления для юзера (если впервые).
      */
     public static void trackCollectionDeletion(String userId) {
-        DatabaseReference userRef = database.getReference("Users").child(userId);
+        DatabaseReference userRef = database.getReference("User").child(userId);
 
         userRef.runTransaction(new Transaction.Handler() {
             @NonNull @Override

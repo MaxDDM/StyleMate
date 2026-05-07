@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.pupkov.stylemate"
-    compileSdk = 36
+    compileSdk = 35
 
     flavorDimensions += "firebase"
 
@@ -19,7 +19,7 @@ android {
     defaultConfig {
         applicationId = "com.pupkov.stylemate"
         minSdk = 31
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 6
         versionName = "6.0"
 
