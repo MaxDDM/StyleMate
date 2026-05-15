@@ -65,7 +65,7 @@ public class DialogSuccessReg extends DialogFragment {
         });
 
         btnContinue.setOnClickListener(v -> {
-            RegisterCount.updateRegisterCount();
+            // RegisterCount.updateRegisterCount();
 
             assert getArguments() != null;
             String uid = getArguments().getString("uid");

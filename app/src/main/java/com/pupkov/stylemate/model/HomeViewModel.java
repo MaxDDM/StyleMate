@@ -241,7 +241,7 @@ public class HomeViewModel extends AndroidViewModel {
     private void refreshLikesOnly() {
         if (currentCollectionId == null) return;
 
-        // Вызываем наш НОВЫЙ легкий метод
+        // Вызываем легкий метод
         repository.getLikedIdsOnly(getApplication(), currentCollectionId,new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> likedIds) {
@@ -249,12 +249,12 @@ public class HomeViewModel extends AndroidViewModel {
 
                 boolean changed = false;
 
-                // Пробегаем по уже загруженной одежде в памяти
+                // Пробегаем по загруженной одежде в памяти
                 for (Outfit outfit : allOutfits) {
-                    // Проверяем: есть ли ID этой одежды в списке лайков из базы?
+                    // Проверяем есть ли ID этой одежды в списке лайков из базы
                     boolean isLikedInDb = likedIds.contains(outfit.getId());
 
-                    // Если статус отличается от того, что на экране -> меняем
+                    // Если статус отличается от того, что на экране, меняем
                     if (outfit.isLiked() != isLikedInDb) {
                         outfit.setLiked(isLikedInDb);
                         changed = true;
@@ -263,24 +263,22 @@ public class HomeViewModel extends AndroidViewModel {
 
                 // Если были изменения, обновляем UI
                 if (changed) {
-                    // Если используешь фильтры, то лучше вызвать applyFilters(currentFilterState)
-                    // Если нет, то просто _outfits.setValue(allOutfits);
                     _outfits.setValue(_outfits.getValue());
                 }
             }
 
             @Override
-            public void onError(String error) { /* Игнорируем */ }
+            public void onError(String error) {}
         });
     }
 
     // Метод для обновления данных (вызывается из onResume)
     public void refreshData() {
-        // ШАГ 1: Всегда проверяем актуальный список папок (это легкий запрос имен)
+        // Всегда проверяем актуальный список папок
         repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> data) {
-                // СЛУЧАЙ А: Удалили последнюю коллекцию
+                // Удалили последнюю коллекцию
                 if (data == null || data.isEmpty()) {
                     _isEmptyState.setValue(true);
                     _collections.setValue(new ArrayList<>());
@@ -288,23 +286,21 @@ public class HomeViewModel extends AndroidViewModel {
                     _selectedName.setValue(null);
                     currentCollectionId = null;
                     allOutfits.clear(); // Очищаем кэш
-                    return; // Заглушка покажется сама благодаря observer в фрагменте
+                    return;
                 }
 
-                // СЛУЧАЙ Б: Коллекции есть
                 _isEmptyState.setValue(false);
                 _collections.setValue(data);
 
                 String currentName = _selectedName.getValue();
 
-                // Проверяем: та папка, на которой мы стояли, всё еще существует?
+                // Проверяем существует ли выбранная папка
                 if (currentName != null && data.contains(currentName)) {
-                    // Папка на месте -> запускаем ЛЕГКОЕ обновление лайков (без перерисовки картинок)
+                    // Папка на месте, запускаем легкое обновление лайков
                     refreshLikesOnly();
                 }
                 else {
-                    // Папки больше нет (её удалили, но остались другие) ->
-                    // Грузим первую доступную папку полностью (Тяжелый запрос, но это неизбежно)
+                    // Папки больше нет, грузим первую доступную папку полностью
                     onCollectionSelected(data.get(0));
                 }
             }
