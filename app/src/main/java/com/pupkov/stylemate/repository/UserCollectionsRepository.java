@@ -306,7 +306,7 @@ public class UserCollectionsRepository {
             favRef.setValue(true); // Ставим лайк
             String uid = repo.getUID();
             AnalyticsManager.trackFirstLookAddition(uid);
-            AnalyticsManager.trackItemFavorite(outfitId);
+            AnalyticsManager.trackOutfitFavorite(outfitId);
         } else {
             favRef.removeValue(); // Удаляем лайк
         }

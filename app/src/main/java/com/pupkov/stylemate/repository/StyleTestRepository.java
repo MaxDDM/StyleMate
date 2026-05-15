@@ -153,7 +153,7 @@ public class StyleTestRepository {
     public String getStyleName(int index) {
         switch (index) {
             case 2: return "classic";
-            case 3: return "grunge";
+            case 3: return "grange";
             case 4: return "old_money";
             case 5: return "sport";
             default: return "casual";

@@ -10,7 +10,11 @@ public class AnalyticsTest {
         // Вызываем расчеты
         AnalyticsManager.calculateAndSaveActivationRate();
         AnalyticsManager.calculateAverageTimeToFirstLike();
-        AnalyticsManager.calculateAverageLooksPerUser();
-        System.out.println("Analytics update triggered!");
+        AnalyticsManager.calculateAverageLikesPerUser();
+        try {
+            Thread.sleep(15000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

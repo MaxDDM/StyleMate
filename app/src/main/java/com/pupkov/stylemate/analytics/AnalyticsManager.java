@@ -7,13 +7,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
+import com.google.firebase.database.ServerValue;
 
 public class AnalyticsManager {
 
     private static final FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
     private static final DatabaseReference analyticsRef = database.getReference("Analytics");
     private static final DatabaseReference usersRef = database.getReference("User");
-    private static final DatabaseReference itemsRef = database.getReference("items");
+    private static final DatabaseReference outfitsRef = database.getReference("outfits");
 
     /**
      * Вызывать в toggleLikeInFirebase, когда isLiked == true
@@ -69,10 +70,10 @@ public class AnalyticsManager {
     /**
      * Увеличивает счетчик лайков конкретного образа
      */
-    public static void trackItemFavorite(String itemId) {
-        DatabaseReference itemRef = itemsRef.child(itemId);
+    public static void trackOutfitFavorite(String outfitId) {
+        DatabaseReference outfitRef = outfitsRef.child(outfitId);
 
-        itemRef.child("countFavorites").runTransaction(new Transaction.Handler() {
+        outfitRef.child("countFavorites").runTransaction(new Transaction.Handler() {
             @NonNull @Override
             public Transaction.Result doTransaction(@NonNull MutableData currentData) {
                 Integer current = currentData.getValue(Integer.class);
@@ -83,18 +84,18 @@ public class AnalyticsManager {
             @Override
             public void onComplete(DatabaseError e, boolean b, DataSnapshot s) {
                 // Как только лайк записан, обновляем Favorite Rate для этой вещи
-                calculateItemFavoriteRate(itemId);
+                calculateOutfitFavoriteRate(outfitId);
             }
         });
     }
 
     /**
-     * Считает FR для конкретной вещи: (лайки / просмотры) * 100
+     * Считает FR для конкретного образа: (лайки / просмотры) * 100
      */
-    public static void calculateItemFavoriteRate(String itemId) {
-        DatabaseReference itemRef = itemsRef.child(itemId);
+    public static void calculateOutfitFavoriteRate(String outfitId) {
+        DatabaseReference outfitRef = outfitsRef.child(outfitId);
 
-        itemRef.get().addOnSuccessListener(snapshot -> {
+        outfitRef.get().addOnSuccessListener(snapshot -> {
             Integer favorites = snapshot.child("countFavorites").getValue(Integer.class);
 
             // Если у тебя поле называется countShows, достаем его
@@ -102,48 +103,45 @@ public class AnalyticsManager {
 
             if (favorites != null && shows != null && shows > 0) {
                 double fr = (favorites * 100.0) / shows;
-                itemRef.child("favoriteRate").setValue(fr);
+                outfitRef.child("favoriteRate").setValue(fr);
             }
         });
     }
 
     public static void trackCollectionCountChange(String userId) {
-        // Запускаем транзакцию на ВЕСЬ объект пользователя
-        DatabaseReference userRef = database.getReference("User").child(userId);
-
+        DatabaseReference userRef = usersRef.child(userId);
         userRef.runTransaction(new Transaction.Handler() {
+            int globalAction = 0; // 1: встал в "две коллекции", 2: перешел в "три+"
+
             @NonNull @Override
             public Transaction.Result doTransaction(@NonNull MutableData currentData) {
-                // Теперь достаем collectionsCount из "ребенка"
                 Integer count = currentData.child("collectionsCount").getValue(Integer.class);
                 if (count == null) count = 0;
-
                 int newCount = count + 1;
                 currentData.child("collectionsCount").setValue(newCount);
 
-                // Теперь это сработает, так как мы находимся в корне пользователя
                 if (newCount == 2) {
+                    globalAction = 1;
                     Long regTime = currentData.child("registrationTimestamp").getValue(Long.class);
-
-                    if (regTime != null && regTime > 0) {
-                        long diffInSeconds = (System.currentTimeMillis() - regTime) / 1000;
-                        // Поле появится на том же уровне, что и collectionsCount
-                        currentData.child("timeToSecondCollection").setValue(diffInSeconds);
+                    if (regTime != null) {
+                        currentData.child("timeToSecondCollection").setValue((System.currentTimeMillis() - regTime) / 1000);
                     }
-
-                    // Обновляем глобальную статку (вне транзакции текущего юзера)
-                    incrementCounter(analyticsRef.child("usersWithTwoCollections"), 1);
+                } else if (newCount == 3) {
+                    globalAction = 2;
                 }
-                else if (newCount == 3) {
-                    incrementCounter(analyticsRef.child("usersWithTwoCollections"), -1);
-                    incrementCounter(analyticsRef.child("usersWithThreePlusCollections"), 1);
-                }
-
                 return Transaction.success(currentData);
             }
 
             @Override
-            public void onComplete(DatabaseError e, boolean b, DataSnapshot s) {}
+            public void onComplete(DatabaseError e, boolean committed, DataSnapshot s) {
+                if (committed) {
+                    if (globalAction == 1) incrementCounter(analyticsRef.child("usersWithTwoCollections"), 1);
+                    else if (globalAction == 2) {
+                        incrementCounter(analyticsRef.child("usersWithTwoCollections"), -1);
+                        incrementCounter(analyticsRef.child("usersWithThreePlusCollections"), 1);
+                    }
+                }
+            }
         });
     }
 
@@ -153,65 +151,54 @@ public class AnalyticsManager {
      * 2. Фиксирует факт удаления для юзера (если впервые).
      */
     public static void trackCollectionDeletion(String userId) {
-        DatabaseReference userRef = database.getReference("User").child(userId);
-
+        DatabaseReference userRef = usersRef.child(userId);
         userRef.runTransaction(new Transaction.Handler() {
+            boolean shouldIncrementDeletedGlobal = false;
+            int globalAction = 0; // 1: из 3 в 2, 2: из 2 в 1
+
             @NonNull @Override
             public Transaction.Result doTransaction(@NonNull MutableData currentData) {
-                // 1. Работаем со счетчиком коллекций
                 Integer count = currentData.child("collectionsCount").getValue(Integer.class);
                 if (count == null) count = 0;
-
                 int newCount = Math.max(0, count - 1);
                 currentData.child("collectionsCount").setValue(newCount);
 
-                // Обновляем глобальные счетчики в Analytics
-                DatabaseReference statsRef = database.getReference("Analytics");
+                // Логика перемещения между группами статки
+                if (count == 3) globalAction = 1;
+                else if (count == 2) globalAction = 2;
 
-                // Если было 3, а стало 2
-                if (count == 3) {
-                    incrementCounter(statsRef.child("usersWithThreePlusCollections"), -1);
-                    incrementCounter(statsRef.child("usersWithTwoCollections"), 1);
-                }
-                // Если было 2, а стало 1
-                else if (count == 2) {
-                    incrementCounter(statsRef.child("usersWithTwoCollections"), -1);
-                }
-
-                // 2. Флаг "Удалил хотя бы одну"
+                // Логика первого удаления
                 Boolean alreadyDeleted = currentData.child("hasDeletedCollection").getValue(Boolean.class);
                 if (alreadyDeleted == null || !alreadyDeleted) {
                     currentData.child("hasDeletedCollection").setValue(true);
-
-                    Long regTimestamp = currentData.child("registrationTimestamp").getValue(Long.class);
-                    if (regTimestamp != null && regTimestamp > 0) {
-                        long diffInSeconds = (System.currentTimeMillis() - regTimestamp) / 1000;
-                        currentData.child("timeToFirstDeletion").setValue(diffInSeconds);
+                    shouldIncrementDeletedGlobal = true;
+                    Long regTime = currentData.child("registrationTimestamp").getValue(Long.class);
+                    if (regTime != null) {
+                        currentData.child("timeToFirstDeletion").setValue((System.currentTimeMillis() - regTime) / 1000);
                     }
-                    // Увеличиваем глобальный счетчик людей, которые хоть раз удаляли
-                    incrementCounter(statsRef.child("totalUsersWhoDeletedSomething"), 1);
                 }
-
                 return Transaction.success(currentData);
             }
 
             @Override
-            public void onComplete(DatabaseError e, boolean b, DataSnapshot s) {}
+            public void onComplete(DatabaseError e, boolean committed, DataSnapshot s) {
+                if (committed) {
+                    if (shouldIncrementDeletedGlobal) incrementCounter(analyticsRef.child("totalUsersWhoDeletedSomething"), 1);
+                    if (globalAction == 1) {
+                        incrementCounter(analyticsRef.child("usersWithThreePlusCollections"), -1);
+                        incrementCounter(analyticsRef.child("usersWithTwoCollections"), 1);
+                    } else if (globalAction == 2) {
+                        incrementCounter(analyticsRef.child("usersWithTwoCollections"), -1);
+                    }
+                }
+            }
         });
     }
 
     // Вспомогательный метод для изменения глобальных цифр
     private static void incrementCounter(DatabaseReference ref, int value) {
-        ref.runTransaction(new Transaction.Handler() {
-            @NonNull @Override
-            public Transaction.Result doTransaction(@NonNull MutableData currentData) {
-                Integer current = currentData.getValue(Integer.class);
-                currentData.setValue(current == null ? Math.max(0, value) : Math.max(0, current + value));
-                return Transaction.success(currentData);
-            }
-            @Override
-            public void onComplete(DatabaseError e, boolean b, DataSnapshot s) {}
-        });
+        // Используем атомарный инкремент на стороне сервера
+        ref.setValue(ServerValue.increment(value));
     }
 
     public static void calculateAndSaveActivationRate() {
@@ -258,7 +245,7 @@ public class AnalyticsManager {
     /**
      * Считает среднее кол-во добавленных образов на всех зарегистрированных пользователей
      */
-    public static void calculateAverageLooksPerUser() {
+    public static void calculateAverageLikesPerUser() {
         // 1. Сначала берем общее кол-во юзеров
         analyticsRef.child("RegisterCount").get().addOnSuccessListener(regSnapshot -> {
             Integer totalUsers = regSnapshot.getValue(Integer.class);
@@ -266,7 +253,7 @@ public class AnalyticsManager {
             if (totalUsers != null && totalUsers > 0) {
 
                 // 2. Затем считаем сумму всех лайков в items
-                itemsRef.get().addOnSuccessListener(itemsSnapshot -> {
+                outfitsRef.get().addOnSuccessListener(itemsSnapshot -> {
                     long totalLikes = 0;
 
                     for (DataSnapshot item : itemsSnapshot.getChildren()) {

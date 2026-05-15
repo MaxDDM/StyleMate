@@ -105,7 +105,7 @@ public class OutfitDetailViewModel extends AndroidViewModel {
         switch (styleKey.toLowerCase()) {
             case "casual": return "повседневном"; // или "кэжуал"
             case "classic": return "классическом";
-            case "grunge": return "гранж";
+            case "grange": return "гранж";
             case "old_money": return "олд мани";
             case "sport": return "спортивном";
             default: return styleKey;
