@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,8 +18,6 @@ import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.analytics.AnalyticsManager;
 import com.pupkov.stylemate.analytics.RegisterCount;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
-import com.pupkov.stylemate.repository.UserRepository;
-import com.pupkov.stylemate.ui.RegisterActivity;
 import com.pupkov.stylemate.ui.test.TestQ1Activity;
 
 public class DialogSuccessReg extends DialogFragment {
