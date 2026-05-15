@@ -14,18 +14,21 @@ import com.pupkov.stylemate.model.Resource;
 
 import java.util.Objects;
 
+
 public class avgOutfitTime {
-    static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-    static DatabaseReference tableAnalytics = database.getReference("analytics");
+    static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app//");
+    static DatabaseReference tableAnalytics = database.getReference("Analytics");
     public static void changeAvgTime(int outfitId, double time) {
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
                 if (Objects.requireNonNull(resource.status) == Resource.Status.SUCCESS) {
-                    Observer<Resource<Long>> observer1 = new Observer<Resource<Long>>() {
+                    Observer<Resource<Double>> observer1 = new Observer<Resource<Double>>() {
                         @Override
-                        public void onChanged(Resource<Long> resource1) {
-                            tableAnalytics.child("AvgTime").child(String.valueOf(outfitId)).setValue((resource.data * resource1.data + time) / (resource.data + 1));
+                        public void onChanged(Resource<Double> resource1) {
+                            if (Objects.requireNonNull(resource1.status) == Resource.Status.SUCCESS) {
+                                tableAnalytics.child("AvgTime").child(String.valueOf(outfitId)).setValue(((resource.data - 1) * resource1.data + time) / resource.data);
+                            }
                         }
                     };
 
@@ -33,20 +36,19 @@ public class avgOutfitTime {
                 }
             }
         };
-
-        CTR.getOutfitShows(outfitId).observeForever(observer);
+        new CTR().getOutfitShows(outfitId).observeForever(observer);
     }
 
-    public static LiveData<Resource<Long>> getAvgTime(int outfitId) {
-        MutableLiveData<Resource<Long>> liveData = new MutableLiveData<>();
+    public static LiveData<Resource<Double>> getAvgTime(int outfitId) {
+        MutableLiveData<Resource<Double>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
         tableAnalytics.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Long avgTime = 0L;
+                Double avgTime = 0D;
                 if(snapshot.child("AvgTime").child(String.valueOf(outfitId)).exists()) {
-                    avgTime = snapshot.child("AvgTime").child(String.valueOf(outfitId)).getValue(Long.class);
+                    avgTime = snapshot.child("AvgTime").child(String.valueOf(outfitId)).getValue(Double.class);
                 }
                 liveData.setValue(Resource.success(avgTime));
             }

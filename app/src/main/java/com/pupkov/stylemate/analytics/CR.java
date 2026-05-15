@@ -15,15 +15,17 @@ import com.pupkov.stylemate.model.Resource;
 import java.util.Objects;
 
 public class CR {
-    static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-    static DatabaseReference tableOutfits = database.getReference("outfits");
-    static DatabaseReference tableAnalytics = database.getReference("Analytics");
-    public static void updateCountLink(int outfitId) {
+    public void updateCountLink(int outfitId) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+
+        DatabaseReference tableOutfits = database.getReference("outfits");
+
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
                 if (Objects.requireNonNull(resource.status) == Resource.Status.SUCCESS) {
                     tableOutfits.child(String.valueOf(outfitId)).child("countLinks").setValue(resource.data + 1);
+                    getCountLink(outfitId).removeObserver(this);
                 }
             }
         };
@@ -31,7 +33,11 @@ public class CR {
         getCountLink(outfitId).observeForever(observer);
     }
 
-    public static LiveData<Resource<Integer>> getCountLink(int outfitId) {
+    public LiveData<Resource<Integer>> getCountLink(int outfitId) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+
+        DatabaseReference tableOutfits = database.getReference("outfits");
+
         MutableLiveData<Resource<Integer>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
@@ -55,6 +61,12 @@ public class CR {
     }
 
     public void countCR(int outfitId) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+
+        DatabaseReference tableAnalytics = database.getReference("Analytics");
+
+        CTR ctr = new CTR();
+
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
@@ -63,12 +75,13 @@ public class CR {
                         @Override
                         public void onChanged(Resource<Integer> resource1) {
                             if (Objects.requireNonNull(resource1.status) == Resource.Status.SUCCESS) {
-                                tableAnalytics.child("CR").child(String.valueOf(outfitId)).setValue(resource.data / resource1.data);
+                                tableAnalytics.child("CR").child(String.valueOf(outfitId)).setValue((double) resource.data / resource1.data);
+                                ctr.getOutfitShows(outfitId).removeObserver(this);
                             }
                         }
                     };
 
-                    CTR.getOutfitShows(outfitId).observeForever(observer1);
+                    ctr.getOutfitShows(outfitId).observeForever(observer1);
                 }
             }
         };

@@ -15,6 +15,8 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.pupkov.stylemate.R;
+import com.pupkov.stylemate.analytics.CR;
+import com.pupkov.stylemate.analytics.CTR;
 import com.pupkov.stylemate.analytics.TestCompleteCount;
 import com.pupkov.stylemate.analytics.TimeAnalytics;
 import com.pupkov.stylemate.repository.UserRepository;
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        TimeAnalytics.countAU(1);
         if (repo.isLogged(MainActivity.this)) {
             TimeAnalytics.saveDate(LocalDateTime.now(), repo.getUID());
         }

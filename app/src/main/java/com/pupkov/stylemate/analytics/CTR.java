@@ -15,19 +15,17 @@ import com.pupkov.stylemate.model.Resource;
 import java.util.Objects;
 
 public class CTR {
-    static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-    static DatabaseReference tableOutfits = database.getReference("outfits");
-    static DatabaseReference tableCollections = database.getReference("user_collections");
-    static DatabaseReference tableAnalytics = database.getReference("analytics");
-    public static void updateOutfitShows(int outfitId) {
+    public void updateOutfitShows(int outfitId) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+
+        DatabaseReference tableOutfits = database.getReference("outfits");
+
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
-                switch (resource.status) {
-                    case SUCCESS:
-                        tableOutfits.child(String.valueOf(outfitId)).child("countShows").setValue(resource.data + 1);
-                        getOutfitShows(outfitId).removeObserver(this);
-                        break;
+                if (Objects.requireNonNull(resource.status) == Resource.Status.SUCCESS) {
+                    tableOutfits.child(String.valueOf(outfitId)).child("countShows").setValue(resource.data + 1);
+                    getOutfitShows(outfitId).removeObserver(this);
                 }
             }
         };
@@ -35,7 +33,11 @@ public class CTR {
         getOutfitShows(outfitId).observeForever(observer);
     }
 
-    static LiveData<Resource<Integer>> getOutfitShows(int outfitId) {
+    public LiveData<Resource<Integer>> getOutfitShows(int outfitId) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+
+        DatabaseReference tableOutfits = database.getReference("outfits");
+
         MutableLiveData<Resource<Integer>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
@@ -61,6 +63,10 @@ public class CTR {
     }
 
     private LiveData<Resource<String>> getData(int outfitId, String dataName) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+
+        DatabaseReference tableOutfits = database.getReference("outfits");
+
         MutableLiveData<Resource<String>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
@@ -81,6 +87,10 @@ public class CTR {
     }
 
     public LiveData<Resource<Integer>> countAppearanceInSelections(String style, String situation) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+
+        DatabaseReference tableCollections = database.getReference("user_collections");
+
         MutableLiveData<Resource<Integer>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
@@ -113,6 +123,10 @@ public class CTR {
     }
 
     public void setCTR(int outfitId) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+
+        DatabaseReference tableAnalytics = database.getReference("Analytics");
+
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
 
             @Override
@@ -129,21 +143,27 @@ public class CTR {
                                             Observer<Resource<Integer>> observer3 = new Observer<Resource<Integer>>() {
                                                 @Override
                                                 public void onChanged(Resource<Integer> resource3) {
-                                                    tableAnalytics.child("CTR").child(String.valueOf(outfitId)).setValue(resource.data / resource3.data * 100);
+                                                    if (Objects.requireNonNull(resource3.status) == Resource.Status.SUCCESS) {
+                                                        tableAnalytics.child("CTR").child(String.valueOf(outfitId)).setValue(resource.data / resource3.data * 100);
+                                                        countAppearanceInSelections(resource1.data, resource2.data).removeObserver(this);
+                                                    }
                                                 }
                                             };
 
                                             countAppearanceInSelections(resource1.data, resource2.data).observeForever(observer3);
                                         }
+                                        getData(outfitId,"situation").removeObserver(this);
                                     }
                                 };
 
                                 getData(outfitId,"situation").observeForever(observer2);
+                                getData(outfitId, "style").removeObserver(this);
                             }
                         }
                     };
 
                     getData(outfitId,"style").observeForever(observer1);
+                    getOutfitShows(outfitId).removeObserver(this);
                 }
             }
         };

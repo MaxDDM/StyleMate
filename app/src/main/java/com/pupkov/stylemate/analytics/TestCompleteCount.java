@@ -30,11 +30,13 @@ public class TestCompleteCount {
                         public void onChanged(Resource<Integer> resource1) {
                             if (Objects.requireNonNull(resource1.status) == Resource.Status.SUCCESS) {
                                 tableAnalytics.child("TestCompleteCount").setValue(resource.data - resource1.data);
+                                getCount(tableCollections).removeObserver(this);
                             }
                         }
                     };
 
                     getCount(tableCollections).observeForever(observer1);
+                    getCount(tableCollections).removeObserver(this);
                 }
             }
         };

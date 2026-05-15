@@ -12,6 +12,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.pupkov.stylemate.model.Resource;
 
+import java.util.Objects;
+
 public class RegisterCount {
     static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
     static DatabaseReference table = database.getReference("Analytics");
@@ -20,11 +22,9 @@ public class RegisterCount {
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
-                switch (resource.status) {
-                    case SUCCESS:
-                        table.child("RegisterCount").setValue(resource.data);
-                        getUserCount().removeObserver(this);
-                        break;
+                if (Objects.requireNonNull(resource.status) == Resource.Status.SUCCESS) {
+                    table.child("RegisterCount").setValue(resource.data);
+                    getUserCount().removeObserver(this);
                 }
             }
         };

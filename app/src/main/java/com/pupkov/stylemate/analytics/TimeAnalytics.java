@@ -1,5 +1,7 @@
 package com.pupkov.stylemate.analytics;
 
+import android.provider.ContactsContract;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -50,7 +52,12 @@ public class TimeAnalytics {
                             ++count2;
                         }
                     }
-                    tableAnalytics.child("RR").setValue((double) count1 / count2);
+                    if (count2 != 0) {
+                        tableAnalytics.child("RR").setValue((double) count1 / count2);
+                    } else {
+                        tableAnalytics.child("RR").setValue(-1);
+                    }
+                    getDates().removeObserver(this);
                 }
             }
         };
@@ -85,6 +92,7 @@ public class TimeAnalytics {
                             break;
                     }
                 }
+                getDates().removeObserver(this);
             }
         };
 
@@ -98,14 +106,15 @@ public class TimeAnalytics {
         tableAnalytics.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                HashMap<String, HashMap<String, String>> datesNotFormatted = snapshot.child("Dates").getValue(HashMap.class);
+                Iterable<DataSnapshot> snapshots = snapshot.child("Dates").getChildren();
                 HashMap<String, HashMap<LocalDateTime, String>> dates = new HashMap<>();
-                for (String key : datesNotFormatted.keySet()) {
-                    HashMap<LocalDateTime, String> map = new HashMap<>();
-                    for (String key1 : datesNotFormatted.get(key).keySet()) {
-                        map.put(LocalDateTime.parse(key1.replace('|', '.')), datesNotFormatted.get(key).get(key1));
+                for (DataSnapshot shot : snapshots) {
+                    Iterable<DataSnapshot> snapshots1 = shot.getChildren();
+                    HashMap<LocalDateTime, String> dates1 = new HashMap<>();
+                    for (DataSnapshot shot1 : snapshots1) {
+                        dates1.put(LocalDateTime.parse(shot1.getKey().replace('|', '.')), shot1.getValue(String.class));
                     }
-                    dates.put(key, map);
+                    dates.put(shot.getKey(), dates1);
                 }
                 liveData.setValue(Resource.success(dates));
             }

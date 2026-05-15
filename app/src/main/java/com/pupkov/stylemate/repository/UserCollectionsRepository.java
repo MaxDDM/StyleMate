@@ -1,7 +1,6 @@
 package com.pupkov.stylemate.repository;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -21,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class UserCollectionsRepository {
     private final DatabaseReference dbRef;

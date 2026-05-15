@@ -1,6 +1,5 @@
 package com.pupkov.stylemate.ui;
 
-import static com.pupkov.stylemate.analytics.CTR.updateOutfitShows;
 import static com.pupkov.stylemate.analytics.avgOutfitTime.changeAvgTime;
 
 import android.content.Intent;
@@ -19,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide; // Не забудь добавить зависимость Glide в build.gradle, если нет
 import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.analytics.CR;
+import com.pupkov.stylemate.analytics.CTR;
 import com.pupkov.stylemate.model.Outfit;
 import com.pupkov.stylemate.model.OutfitDetailViewModel;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
@@ -82,7 +82,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
         // 5. Подписываемся на обновления данных (Observer)
         observeViewModel();
 
-        updateOutfitShows(Integer.parseInt(currentOutfitId));
+        new CTR().updateOutfitShows(Integer.parseInt(currentOutfitId));
 
         // 6. Кнопки
         btnBack.setOnClickListener(v -> finish());
@@ -144,7 +144,8 @@ public class OutfitDetailActivity extends AppCompatActivity {
         // Передаем слушатель клика: открываем ссылку в браузере
         adapter = new ItemAdapter(url -> {
             if (url != null && !url.isEmpty()) {
-                CR.updateCountLink(Integer.parseInt(currentOutfitId));
+                CR cr = new CR();
+                cr.updateCountLink(Integer.parseInt(currentOutfitId));
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(browserIntent);
             } else {
@@ -220,7 +221,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
         setResult(RESULT_OK, resultIntent);
 
         long end = System.nanoTime();
-        changeAvgTime(Integer.parseInt(currentOutfitId), (end - start) / 1_000_000.0);
+        changeAvgTime(Integer.parseInt(currentOutfitId), (end - start) / 1_000_000_000.0);
         super.finish(); // Закрываем экран
     }
 }
