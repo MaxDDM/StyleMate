@@ -23,7 +23,7 @@ public class RegisterCount {
             @Override
             public void onChanged(Resource<Integer> resource) {
                 if (Objects.requireNonNull(resource.status) == Resource.Status.SUCCESS) {
-                    table.child("RegisterCount").setValue(resource.data);
+                    table.child("RegisterCount").setValue(resource.data + 1);
                     getUserCount().removeObserver(this);
                 }
             }
