@@ -18,6 +18,7 @@ import java.util.Objects;
 public class avgOutfitTime {
     static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app//");
     static DatabaseReference tableAnalytics = database.getReference("Analytics");
+    static DatabaseReference tableOutfits = database.getReference("outfits");
     public static void changeAvgTime(int outfitId, double time) {
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
@@ -27,7 +28,11 @@ public class avgOutfitTime {
                         @Override
                         public void onChanged(Resource<Double> resource1) {
                             if (Objects.requireNonNull(resource1.status) == Resource.Status.SUCCESS) {
-                                tableAnalytics.child("AvgTime").child(String.valueOf(outfitId)).setValue(((resource.data - 1) * resource1.data + time) / resource.data);
+                                if (resource.data != 0) {
+                                    tableAnalytics.child("AvgTime").child(String.valueOf(outfitId)).setValue(((resource.data - 1) * resource1.data + time) / resource.data);
+                                } else {
+                                    tableAnalytics.child("AvgTime").child(String.valueOf(outfitId)).setValue(0);
+                                }
                             }
                         }
                     };
@@ -62,4 +67,19 @@ public class avgOutfitTime {
         return liveData;
     }
 
+    public static void setZeroAvgTimeForAllItems() {
+        tableOutfits.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot snapshot1 : snapshot.getChildren()) {
+                    tableAnalytics.child("AvgTime").child(String.valueOf(snapshot1.getKey())).setValue(0);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
 }

@@ -15,11 +15,10 @@ import com.pupkov.stylemate.model.Resource;
 import java.util.Objects;
 
 public class CR {
-    public void updateCountLink(int outfitId) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-
-        DatabaseReference tableOutfits = database.getReference("outfits");
-
+    static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+    static DatabaseReference tableOutfits = database.getReference("outfits");
+    static DatabaseReference tableAnalytics = database.getReference("Analytics");
+    public static void updateCountLink(int outfitId) {
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
@@ -33,11 +32,23 @@ public class CR {
         getCountLink(outfitId).observeForever(observer);
     }
 
-    public LiveData<Resource<Integer>> getCountLink(int outfitId) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+    public static void setZeroCountLink() {
+        tableOutfits.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot snapshot1 : snapshot.getChildren()) {
+                    tableOutfits.child(Objects.requireNonNull(snapshot1.getKey())).child("countLinks").setValue(0);
+                }
+            }
 
-        DatabaseReference tableOutfits = database.getReference("outfits");
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
 
+            }
+        });
+    }
+
+    public static LiveData<Resource<Integer>> getCountLink(int outfitId) {
         MutableLiveData<Resource<Integer>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
@@ -60,13 +71,7 @@ public class CR {
         return liveData;
     }
 
-    public void countCR(int outfitId) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-
-        DatabaseReference tableAnalytics = database.getReference("Analytics");
-
-        CTR ctr = new CTR();
-
+    public static void countCR(int outfitId) {
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
@@ -75,17 +80,37 @@ public class CR {
                         @Override
                         public void onChanged(Resource<Integer> resource1) {
                             if (Objects.requireNonNull(resource1.status) == Resource.Status.SUCCESS) {
-                                tableAnalytics.child("CR").child(String.valueOf(outfitId)).setValue((double) resource.data / resource1.data);
-                                ctr.getOutfitShows(outfitId).removeObserver(this);
+                                if (resource1.data != 0) {
+                                    tableAnalytics.child("CR").child(String.valueOf(outfitId)).setValue((double) resource.data / resource1.data);
+                                } else {
+                                    tableAnalytics.child("CR").child(String.valueOf(outfitId)).setValue(0d);
+                                }
+                                CTR.getOutfitShows(outfitId).removeObserver(this);
                             }
                         }
                     };
 
-                    ctr.getOutfitShows(outfitId).observeForever(observer1);
+                    CTR.getOutfitShows(outfitId).observeForever(observer1);
                 }
             }
         };
 
         getCountLink(outfitId).observeForever(observer);
+    }
+
+    public static void setCRforAllOutfits() {
+        tableOutfits.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot snapshot1 : snapshot.getChildren()) {
+                    countCR(Integer.parseInt(Objects.requireNonNull(snapshot1.getKey())));
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 }

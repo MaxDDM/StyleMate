@@ -20,8 +20,7 @@ import com.pupkov.stylemate.analytics.CR;
 @RunWith(AndroidJUnit4.class)
 public class ExampleInstrumentedTest {
     @Test
-    public void useAppContext() {
-        // Context of the app under test.
+    public void useAppContext() throws InterruptedException {
 
     }
 }
