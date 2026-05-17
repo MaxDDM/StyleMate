@@ -20,8 +20,8 @@ android {
         applicationId = "com.pupkov.stylemate"
         minSdk = 31
         targetSdk = 35
-        versionCode = 7
-        versionName = "7.0"
+        versionCode = 10
+        versionName = "10.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
