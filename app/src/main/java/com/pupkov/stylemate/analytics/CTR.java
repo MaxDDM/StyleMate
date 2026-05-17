@@ -15,7 +15,7 @@ import com.pupkov.stylemate.model.Resource;
 import java.util.Objects;
 
 public class CTR {
-    public void updateOutfitShows(int outfitId) {
+    public void updateOutfitShows(int outfitId, Runnable onComplete) {
         FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
 
         DatabaseReference tableOutfits = database.getReference("outfits");
@@ -26,6 +26,9 @@ public class CTR {
                 if (Objects.requireNonNull(resource.status) == Resource.Status.SUCCESS) {
                     tableOutfits.child(String.valueOf(outfitId)).child("countShows").setValue(resource.data + 1);
                     getOutfitShows(outfitId).removeObserver(this);
+                    if (onComplete != null) {
+                        onComplete.run();
+                    }
                 }
             }
         };

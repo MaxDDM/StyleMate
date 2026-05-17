@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide; // Не забудь добавить зависимость Glide в build.gradle, если нет
 import com.pupkov.stylemate.R;
+import com.pupkov.stylemate.analytics.AnalyticsManager;
 import com.pupkov.stylemate.analytics.CR;
 import com.pupkov.stylemate.analytics.CTR;
 import com.pupkov.stylemate.model.Outfit;
@@ -82,7 +83,9 @@ public class OutfitDetailActivity extends AppCompatActivity {
         // 5. Подписываемся на обновления данных (Observer)
         observeViewModel();
 
-        new CTR().updateOutfitShows(Integer.parseInt(currentOutfitId));
+        new CTR().updateOutfitShows(Integer.parseInt(currentOutfitId), () -> {
+            AnalyticsManager.calculateOutfitFavoriteRate(currentOutfitId);
+        });
 
         // 6. Кнопки
         btnBack.setOnClickListener(v -> finish());

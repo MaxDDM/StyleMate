@@ -11,6 +11,7 @@ public class AnalyticsTest {
         AnalyticsManager.calculateAndSaveActivationRate();
         AnalyticsManager.calculateAverageTimeToFirstLike();
         AnalyticsManager.calculateAverageLikesPerUser();
+       // AnalyticsManager.resetOutfitAnalyticsFields();
         try {
             Thread.sleep(15000);
         } catch (InterruptedException e) {

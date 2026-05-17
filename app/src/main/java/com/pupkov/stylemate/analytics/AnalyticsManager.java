@@ -270,4 +270,27 @@ public class AnalyticsManager {
             }
         });
     }
+
+    /**
+     * Проходит по всей таблице outfits и сбрасывает аналитические поля в дефолтные значения.
+     * Если нужно полностью УДАЛИТЬ поле из БД, замените setValue(0) на setValue(null).
+     */
+    public static void resetOutfitAnalyticsFields() {
+        outfitsRef.get().addOnSuccessListener(snapshot -> {
+            if (!snapshot.exists()) return;
+
+            // Проходим циклом по каждому образу (outfit)
+            for (DataSnapshot outfitSnapshot : snapshot.getChildren()) {
+                DatabaseReference currentOutfitRef = outfitSnapshot.getRef();
+
+                // Вариант 1: Установка дефолтных значений (0 и 0.0)
+                currentOutfitRef.child("countFavorites").setValue(0);
+                currentOutfitRef.child("countShows").setValue(0);
+                currentOutfitRef.child("favoriteRate").setValue(0.0);
+            }
+        }).addOnFailureListener(e -> {
+            // Здесь можно обработать ошибку, если нет прав на чтение/запись
+            e.printStackTrace();
+        });
+    }
 }
