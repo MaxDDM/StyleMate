@@ -19,13 +19,16 @@ public class CTR {
     static DatabaseReference tableOutfits = database.getReference("outfits");
     static DatabaseReference tableCollections = database.getReference("user_collections");
     static DatabaseReference tableAnalytics = database.getReference("Analytics");
-    public static void updateOutfitShows(int outfitId) {
+    public static void updateOutfitShows(int outfitId, Runnable onComplete) {
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
                 if (Objects.requireNonNull(resource.status) == Resource.Status.SUCCESS) {
                     tableOutfits.child(String.valueOf(outfitId)).child("countShows").setValue(resource.data + 1);
                     getOutfitShows(outfitId).removeObserver(this);
+                    if (onComplete != null) {
+                        onComplete.run();
+                    }
                 }
             }
         };
