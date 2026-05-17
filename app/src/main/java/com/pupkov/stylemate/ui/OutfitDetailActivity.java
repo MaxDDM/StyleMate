@@ -147,8 +147,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
         // Передаем слушатель клика: открываем ссылку в браузере
         adapter = new ItemAdapter(url -> {
             if (url != null && !url.isEmpty()) {
-                CR cr = new CR();
-                cr.updateCountLink(Integer.parseInt(currentOutfitId));
+                CR.updateCountLink(Integer.parseInt(currentOutfitId));
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(browserIntent);
             } else {

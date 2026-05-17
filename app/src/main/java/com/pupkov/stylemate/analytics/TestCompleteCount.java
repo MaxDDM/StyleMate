@@ -15,12 +15,12 @@ import com.pupkov.stylemate.model.Resource;
 import java.util.Objects;
 
 public class TestCompleteCount {
-    FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-    DatabaseReference tableUser = database.getReference("User");
-    DatabaseReference tableCollections = database.getReference("user_collections");
-    DatabaseReference tableAnalytics = database.getReference("Analytics");
+    static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+    static DatabaseReference tableUser = database.getReference("User");
+    static DatabaseReference tableCollections = database.getReference("user_collections");
+    static DatabaseReference tableAnalytics = database.getReference("Analytics");
 
-    public void setTestCompleteCount() {
+    public static void setTestCompleteCount() {
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
@@ -44,7 +44,7 @@ public class TestCompleteCount {
         getCount(tableUser).observeForever(observer);
     }
 
-    public LiveData<Resource<Integer>> getCount(DatabaseReference table) {
+    public static LiveData<Resource<Integer>> getCount(DatabaseReference table) {
         MutableLiveData<Resource<Integer>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 

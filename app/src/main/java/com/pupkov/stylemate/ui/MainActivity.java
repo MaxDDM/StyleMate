@@ -40,13 +40,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        TimeAnalytics.countAU(1);
         if (repo.isLogged(MainActivity.this)) {
             TimeAnalytics.saveDate(LocalDateTime.now(), repo.getUID());
         }
-
-        TestCompleteCount count = new TestCompleteCount();
-        count.setTestCompleteCount();
 
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);

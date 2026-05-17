@@ -17,7 +17,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.pupkov.stylemate.R;
-import com.pupkov.stylemate.model.Resource;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
 import com.pupkov.stylemate.ui.dialogs.PrivacyConsentDialog;

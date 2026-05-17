@@ -15,20 +15,17 @@ import com.pupkov.stylemate.model.Resource;
 import java.util.Objects;
 
 public class CTR {
-    public void updateOutfitShows(int outfitId, Runnable onComplete) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-
-        DatabaseReference tableOutfits = database.getReference("outfits");
-
+    static FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+    static DatabaseReference tableOutfits = database.getReference("outfits");
+    static DatabaseReference tableCollections = database.getReference("user_collections");
+    static DatabaseReference tableAnalytics = database.getReference("Analytics");
+    public static void updateOutfitShows(int outfitId) {
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
             @Override
             public void onChanged(Resource<Integer> resource) {
                 if (Objects.requireNonNull(resource.status) == Resource.Status.SUCCESS) {
                     tableOutfits.child(String.valueOf(outfitId)).child("countShows").setValue(resource.data + 1);
                     getOutfitShows(outfitId).removeObserver(this);
-                    if (onComplete != null) {
-                        onComplete.run();
-                    }
                 }
             }
         };
@@ -36,11 +33,23 @@ public class CTR {
         getOutfitShows(outfitId).observeForever(observer);
     }
 
-    public LiveData<Resource<Integer>> getOutfitShows(int outfitId) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
+    public static void setZeroOutfitShows() {
+        tableOutfits.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot snapshot1 : snapshot.getChildren()) {
+                    tableOutfits.child(Objects.requireNonNull(snapshot1.getKey())).child("countShows").setValue(0);
+                }
+            }
 
-        DatabaseReference tableOutfits = database.getReference("outfits");
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
 
+            }
+        });
+    }
+
+    public static LiveData<Resource<Integer>> getOutfitShows(int outfitId) {
         MutableLiveData<Resource<Integer>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
@@ -65,11 +74,7 @@ public class CTR {
         return liveData;
     }
 
-    private LiveData<Resource<String>> getData(int outfitId, String dataName) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-
-        DatabaseReference tableOutfits = database.getReference("outfits");
-
+    private static LiveData<Resource<String>> getData(int outfitId, String dataName) {
         MutableLiveData<Resource<String>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
@@ -89,11 +94,7 @@ public class CTR {
         return liveData;
     }
 
-    public LiveData<Resource<Integer>> countAppearanceInSelections(String style, String situation) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-
-        DatabaseReference tableCollections = database.getReference("user_collections");
-
+    public static LiveData<Resource<Integer>> countAppearanceInSelections(String style, String situation) {
         MutableLiveData<Resource<Integer>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
 
@@ -125,11 +126,7 @@ public class CTR {
         return liveData;
     }
 
-    public void setCTR(int outfitId) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
-
-        DatabaseReference tableAnalytics = database.getReference("Analytics");
-
+    public static void setCTR(int outfitId) {
         Observer<Resource<Integer>> observer = new Observer<Resource<Integer>>() {
 
             @Override
@@ -147,7 +144,11 @@ public class CTR {
                                                 @Override
                                                 public void onChanged(Resource<Integer> resource3) {
                                                     if (Objects.requireNonNull(resource3.status) == Resource.Status.SUCCESS) {
-                                                        tableAnalytics.child("CTR").child(String.valueOf(outfitId)).setValue(resource.data / resource3.data * 100);
+                                                        if(resource3.data != 0) {
+                                                            tableAnalytics.child("CTR").child(String.valueOf(outfitId)).setValue(resource.data / resource3.data * 100);
+                                                        } else {
+                                                            tableAnalytics.child("CTR").child(String.valueOf(outfitId)).setValue(0);
+                                                        }
                                                         countAppearanceInSelections(resource1.data, resource2.data).removeObserver(this);
                                                     }
                                                 }
@@ -172,5 +173,21 @@ public class CTR {
         };
 
         getOutfitShows(outfitId).observeForever(observer);
+    }
+
+    public static void setCTRforAllOutfits() {
+        tableOutfits.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot snapshot1 : snapshot.getChildren()) {
+                    setCTR(Integer.parseInt(Objects.requireNonNull(snapshot1.getKey())));
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 }
