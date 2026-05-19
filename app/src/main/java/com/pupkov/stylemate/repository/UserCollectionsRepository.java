@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 
 import com.pupkov.stylemate.analytics.AnalyticsManager;
 import com.pupkov.stylemate.model.Outfit;
-import com.pupkov.stylemate.ui.FavouriteOutfits; // Импорт нашей модели
+import com.pupkov.stylemate.ui.FavouriteOutfits;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -15,7 +15,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.Query;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,26 +22,25 @@ import java.util.Map;
 
 public class UserCollectionsRepository {
     private final DatabaseReference dbRef;
-
     private final UserRepository repo = new UserRepository();
 
     public UserCollectionsRepository() {
         dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
     }
 
-    // Интерфейс для возврата данных
+    // интерфейс для возврата данных (списков)
     public interface DataCallback<T> {
         void onDataLoaded(T data);
         void onError(String error);
     }
 
-    // Интерфейс для возврата данных + ID коллекции
+    // Интерфейс для загрузки одежды с привязкой к ID коллекции
     public interface CollectionDataCallback {
         void onDataLoaded(List<Outfit> outfits, String collectionId);
         void onError(String error);
     }
 
-    // 1. Получить названия (без изменений)
+    // Получить названия коллекций текущего пользователя
     public void getCollectionNames(Context context, DataCallback<List<String>> callback) {
         String uid = "";
 
@@ -58,9 +56,7 @@ public class UserCollectionsRepository {
                                 String name = collection.child("name").getValue(String.class);
                                 if (name != null) names.add(name);
                             }
-
-                            // УБРАЛИ ПРОВЕРКУ НА ПУСТОТУ!
-                            // Теперь если список пуст, мы вернем ПУСТОЙ СПИСОК (size=0)
+                            // Возвращаем список (если пустой — вернется пустой список с size=0)
                             callback.onDataLoaded(names);
                         }
 
@@ -72,18 +68,18 @@ public class UserCollectionsRepository {
         }
     }
 
-    // 2. Получить одежду + Лайки + ID коллекции
+    // Получить образы для конкретной коллекции с проверкой лайков и ID коллекции
     public void getOutfitsForCollection(String collectionName, Context context, CollectionDataCallback callback) {
         if (!repo.isLogged(context)) {
-            // ГОСТЬ: Лайков нет
+            // Логика для гостя: загружаем дефолтный стиль, лайков и ID коллекции нет
             String guestStyle = ActiveUserInfo.getDefaults("guest_style_name", context);
             String targetStyle = (guestStyle != null) ? guestStyle : "casual";
             loadOutfitsFromDbFiltered(targetStyle, null, null, (outfits) -> {
-                callback.onDataLoaded(outfits, null); // ID коллекции нет
+                callback.onDataLoaded(outfits, null);
             });
 
         } else {
-            // ЮЗЕР
+            // Логика для авторизованного пользователя: ищем коллекцию по имени
             dbRef.child("user_collections").child(repo.getUID())
                     .orderByChild("name").equalTo(collectionName)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -91,14 +87,11 @@ public class UserCollectionsRepository {
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
                             if (snapshot.exists()) {
                                 for (DataSnapshot match : snapshot.getChildren()) {
-                                    // 1. ПОЛУЧАЕМ ID КОЛЛЕКЦИИ!
+                                    // Извлекаем ID коллекции, параметры фильтрации и список лайков
                                     String collectionId = match.getKey();
-
-                                    // 2. Параметры фильтрации
                                     String style = match.child("style").getValue(String.class);
                                     String situation = match.child("situation").getValue(String.class);
 
-                                    // 3. СПИСОК ЛАЙКОВ (Map<OutfitID, Boolean>)
                                     Map<String, Boolean> favorites = new HashMap<>();
                                     if (match.child("favorites").exists()) {
                                         for (DataSnapshot fav : match.child("favorites").getChildren()) {
@@ -106,14 +99,14 @@ public class UserCollectionsRepository {
                                         }
                                     }
 
-                                    // 4. Грузим одежду и передаем список лайков для проверки
+                                    // Грузим вещи с учетом фильтров и мапы лайков
                                     loadOutfitsFromDbFiltered(style, situation, favorites, (outfits) -> {
                                         callback.onDataLoaded(outfits, collectionId);
                                     });
                                     return;
                                 }
                             } else {
-                                // Коллекция не найдена, грузим дефолт
+                                // Если коллекция не найдена — отдаем дефолтный casual
                                 loadOutfitsFromDbFiltered("casual", null, null, (outfits) -> callback.onDataLoaded(outfits, null));
                             }
                         }
@@ -125,30 +118,26 @@ public class UserCollectionsRepository {
         }
     }
 
-    // Внутренний метод загрузки
+    // интерфейс для передачи отфильтрованного списка
     private interface InternalLoadCallback { void onLoad(List<Outfit> list); }
 
+    // метод фильтрации по стилю и пересечению ситуаций
     private void loadOutfitsFromDbFiltered(String style, String collectionSituation, Map<String, Boolean> userFavorites, InternalLoadCallback callback) {
         Query query;
 
-        // 2. Выбираем, как искать в базе
+        // Выбираем стратегию выборки из Firebase
         if (style != null && !style.isEmpty()) {
-            // Если стиль задан -> Ищем по стилю (Твой старый вариант)
             query = dbRef.child("outfits").orderByChild("style").equalTo(style);
         } else {
-            // Если стиля нет -> Ищем по ситуации
-            // Firebase ищет только по точному совпадению, берем первую ситуацию из списка
             query = dbRef.child("outfits");
         }
 
-        // 3. Дальше твой код (только замени dbRef... на query)
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<Outfit> filteredList = new ArrayList<>();
 
-                // --- ЛОГИКА НАПАРНИКА (Адаптированная под твою структуру) ---
-                // 1. Разбиваем строку ситуаций из коллекции на массив (например: "work,party")
+                // Парсим целевые ситуации коллекции (разделитель — запятая с пробелом)
                 String[] targetSituations;
                 if (collectionSituation != null && !collectionSituation.isEmpty()) {
                     targetSituations = collectionSituation.split(", ");
@@ -163,35 +152,32 @@ public class UserCollectionsRepository {
                     String outfitId = item.getKey();
                     outfit.setId(outfitId);
 
-                    // --- ТВОЯ ЛОГИКА (Проверка лайков) ---
+                    // Проверяем, лайкнута ли вещь пользователем
                     if (userFavorites != null && userFavorites.containsKey(outfitId)) {
                         outfit.setLiked(true);
                     } else {
                         outfit.setLiked(false);
                     }
 
-                    // --- ЛОГИКА НАПАРНИКА (Фильтрация по списку ситуаций) ---
+                    // Парсим ситуации самой вещи
                     String situations = outfit.getFilter_situation();
-
                     String[] outfitSits;
                     if (situations == null) {
-                        outfitSits = new String[]{"any"}; // Если у одежды нет ситуации, она универсальна
+                        outfitSits = new String[]{"any"};
                     } else {
                         outfitSits = situations.split(", ");
                     }
 
                     boolean isSituationMatch = false;
 
-                    // Проверяем, совпадает ли ситуация одежды хотя бы с одной из ситуаций коллекции
+                    // Алгоритм проверки пересечения списков ситуаций
                     for (String target : targetSituations) {
-                        String cleanTarget = target.trim(); // Убираем лишние пробелы
+                        String cleanTarget = target.trim();
 
-                        // Если одежда подходит ко всему ("any")
-                        // ИЛИ если одежда совпадает с одной из требуемых ситуаций
                         for (String outfitSit : outfitSits) {
                             if (outfitSit.equals("any") || cleanTarget.equals("any") || outfitSit.equals(cleanTarget)) {
                                 isSituationMatch = true;
-                                break; // Нашли совпадение, дальше перебирать не нужно
+                                break;
                             }
                         }
                         if (isSituationMatch) {
@@ -210,29 +196,24 @@ public class UserCollectionsRepository {
         });
     }
 
-    // =========================================================================
-    // НОВЫЙ МЕТОД: Получить коллекции с превью (для Профиля)
-    // =========================================================================
+    // Получить все коллекции пользователя с первыми 4 картинками для экрана профиля
     public void getUserCollectionsWithPreviews(Context context, DataCallback<List<FavouriteOutfits>> callback) {
-        // Если не залогинен - возвращаем пустой список
         if (!repo.isLogged(context)) {
             callback.onDataLoaded(new ArrayList<>());
             return;
         }
 
-        // ШАГ 1: Загружаем ВСЮ одежду, чтобы знать картинки по ID
-        // (В реальном большом проекте так не делают, но для курсовой/стартапа это ОК)
+        // Кэшируем всю ветку outfits (ID -> imageUrl) для быстрого сопоставления
         dbRef.child("outfits").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot outfitsSnapshot) {
-                // Сохраняем все образы в Map для быстрого поиска: ID -> ImageUrl
                 Map<String, String> imagesMap = new HashMap<>();
                 for (DataSnapshot item : outfitsSnapshot.getChildren()) {
                     String url = item.child("imageUrl").getValue(String.class);
                     imagesMap.put(item.getKey(), url);
                 }
 
-                // ШАГ 2: Теперь грузим коллекции пользователя
+                // Переходим к сборке структуры коллекций
                 loadUserCollectionsStructure(imagesMap, callback);
             }
 
@@ -243,6 +224,7 @@ public class UserCollectionsRepository {
         });
     }
 
+    // метод сборки превью-моделей на основе закэшированных картинок
     private void loadUserCollectionsStructure(Map<String, String> imagesMap, DataCallback<List<FavouriteOutfits>> callback) {
         dbRef.child("user_collections").child(repo.getUID())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -251,34 +233,30 @@ public class UserCollectionsRepository {
                         List<FavouriteOutfits> resultList = new ArrayList<>();
 
                         for (DataSnapshot colSnapshot : snapshot.getChildren()) {
-                            // Получаем ID и имя коллекции
                             String colId = colSnapshot.getKey();
                             String colName = colSnapshot.child("name").getValue(String.class);
                             if (colName == null) colName = "Без названия";
 
-                            // Ищем ID лайкнутых вещей внутри favorites
                             List<String> previewUrls = new ArrayList<>();
                             DataSnapshot favs = colSnapshot.child("favorites");
 
-                            // Берем первые 4 (или меньше) лайка
+                            // Отбираем максимум 4 картинки из лайкнутых вещей
                             for (DataSnapshot favItem : favs.getChildren()) {
-                                if (previewUrls.size() >= 4) break; // Нам нужно только 4 для превью
+                                if (previewUrls.size() >= 4) break;
 
                                 String outfitId = favItem.getKey();
-                                // Достаем картинку из нашей Map, которую загрузили шагом ранее
                                 String url = imagesMap.get(outfitId);
                                 if (url != null) {
                                     previewUrls.add(url);
                                 }
                             }
 
-                            // Заполняем модель (если картинок меньше 4, передаем null)
+                            // Безопасное извлечение урлов для конструктора
                             String p1 = previewUrls.size() > 0 ? previewUrls.get(0) : null;
                             String p2 = previewUrls.size() > 1 ? previewUrls.get(1) : null;
                             String p3 = previewUrls.size() > 2 ? previewUrls.get(2) : null;
                             String p4 = previewUrls.size() > 3 ? previewUrls.get(3) : null;
 
-                            // Добавляем в список
                             resultList.add(new FavouriteOutfits(colId, colName, p1, p2, p3, p4));
                         }
 
@@ -292,9 +270,9 @@ public class UserCollectionsRepository {
                 });
     }
 
-    // 3. Метод записи лайка в Firebase
+    // Переключение состояния лайка (добавление в favorites или удаление)
     public void toggleLikeInFirebase(Context context, String collectionId, String outfitId, boolean isLiked) {
-        if (!repo.isLogged(context)) return; // Гости не пишут в базу
+        if (!repo.isLogged(context)) return;
 
         DatabaseReference favRef = dbRef.child("user_collections")
                 .child(repo.getUID())
@@ -303,43 +281,38 @@ public class UserCollectionsRepository {
                 .child(outfitId);
 
         if (isLiked) {
-            favRef.setValue(true); // Ставим лайк
+            favRef.setValue(true);
             String uid = repo.getUID();
             AnalyticsManager.trackFirstLookAddition(uid);
             AnalyticsManager.trackOutfitFavorite(outfitId);
         } else {
-            favRef.removeValue(); // Удаляем лайк
+            favRef.removeValue();
         }
     }
 
-    // =========================================================================
-    // НОВЫЙ МЕТОД: Загрузка лайков конкретной коллекции (Игнорируя фильтры)
-    // =========================================================================
+    // Загрузка всех лайкнутых вещей из конкретной коллекции в обход фильтров ситуации/стиля
     public void getCollectionFavorites(Context context, String collectionId, DataCallback<List<Outfit>> callback) {
-        // Гости не имеют БД, возвращаем пустоту
         if (!repo.isLogged(context)) {
             callback.onDataLoaded(new ArrayList<>());
             return;
         }
 
-        // 1. Идем в папку: user_collections -> email -> collectionId -> favorites
         dbRef.child("user_collections").child(repo.getUID()).child(collectionId).child("favorites")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        // Если папки favorites нет или она пустая
                         if (!snapshot.exists()) {
                             callback.onDataLoaded(new ArrayList<>());
                             return;
                         }
 
-                        // 2. Собираем список ID (ключи)
+                        // Собираем массив ID из ключей структуры favorites
                         List<String> favoriteIds = new ArrayList<>();
                         for (DataSnapshot item : snapshot.getChildren()) {
                             favoriteIds.add(item.getKey());
                         }
 
-                        // 3. Грузим сами данные по этим ID
+                        // Загружаем полные объекты одежды по вытащенным ID
                         loadOutfitsByIds(favoriteIds, callback);
                     }
 
@@ -350,26 +323,21 @@ public class UserCollectionsRepository {
                 });
     }
 
-    // Вспомогательный метод: загружает одежду по списку ID
+    // метод пакетной загрузки объектов Outfit по списку их идентификаторов
     private void loadOutfitsByIds(List<String> ids, DataCallback<List<Outfit>> callback) {
-        // ОПТИМИЗАЦИЯ: Чтобы не делать 50 запросов, загрузим ветку outfits один раз.
-        // Для курсовой/MVP это нормально. Для продакшена с 1млн товаров тут нужен другой подход (Query).
         dbRef.child("outfits").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<Outfit> resultList = new ArrayList<>();
 
-                // Бежим по списку наших ID из избранного
                 for (String id : ids) {
-                    // Ищем этот ID в общем списке одежды
                     DataSnapshot itemSnapshot = snapshot.child(id);
 
                     if (itemSnapshot.exists()) {
                         Outfit outfit = itemSnapshot.getValue(Outfit.class);
                         if (outfit != null) {
                             outfit.setId(id);
-                            // ВАЖНО: Раз мы в папке избранного, значит лайк точно стоит
-                            outfit.setLiked(true);
+                            outfit.setLiked(true); // Так как вещь из папки favorites, лайк гарантирован
                             resultList.add(outfit);
                         }
                     }
@@ -384,17 +352,13 @@ public class UserCollectionsRepository {
         });
     }
 
-    // =========================================================================
-    // ОПТИМИЗАЦИЯ: Получить ТОЛЬКО список ID лайков (без загрузки самой одежды)
-    // =========================================================================
+    // метод получения чистого списка ID лайков без выгрузки самих вещей
     public void getLikedIdsOnly(Context context, String collectionId, DataCallback<List<String>> callback) {
-        // Если гость - возвращаем пустой список
         if (!repo.isLogged(context)) {
             callback.onDataLoaded(new ArrayList<>());
             return;
         }
 
-        // Запрашиваем только папку favorites
         dbRef.child("user_collections")
                 .child(repo.getUID())
                 .child(collectionId)
@@ -403,11 +367,9 @@ public class UserCollectionsRepository {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         List<String> ids = new ArrayList<>();
-                        // Собираем только ключи (ID)
                         for (DataSnapshot item : snapshot.getChildren()) {
                             ids.add(item.getKey());
                         }
-                        // Возвращаем список строк ["id1", "id2"], а не тяжелые объекты
                         callback.onDataLoaded(ids);
                     }
 
@@ -418,11 +380,10 @@ public class UserCollectionsRepository {
                 });
     }
 
-    // 1. Переименование коллекции
+    // Переименование существующей коллекции пользователя
     public void renameCollection(Context context, String collectionId, String newName) {
         if (!repo.isLogged(context)) return;
 
-        // Заходим в user_collections -> email -> id -> name и ставим новое значение
         dbRef.child("user_collections")
                 .child(repo.getUID())
                 .child(collectionId)
@@ -430,11 +391,10 @@ public class UserCollectionsRepository {
                 .setValue(newName);
     }
 
-    // 2. Полное удаление коллекции
+    // Полное удаление ветки коллекции из базы данных
     public void deleteCollection(Context context, String collectionId) {
         if (!repo.isLogged(context)) return;
 
-        // Заходим в user_collections -> email -> id и удаляем ВСЮ ветку (вместе с лайками внутри)
         AnalyticsManager.trackCollectionDeletion(repo.getUID());
         dbRef.child("user_collections")
                 .child(repo.getUID())

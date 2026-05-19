@@ -207,10 +207,8 @@ public class AnalyticsManager {
             Integer totalRegistered = snapshot.child("RegisterCount").getValue(Integer.class);
 
             if (totalWithLooks != null && totalRegistered != null && totalRegistered > 0) {
-                // Считаем процент
                 double percentage = (totalWithLooks * 100.0) / totalRegistered;
 
-                // Записываем обратно в Analytics
                 analyticsRef.child("lookActivationRate").setValue(percentage);
             }
         });
@@ -236,7 +234,6 @@ public class AnalyticsManager {
             if (usersWithRecord > 0) {
                 long averageTime = totalSeconds / usersWithRecord;
 
-                // Для удобства можно записать еще и в минутах (опционально)
                 analyticsRef.child("averageTimeToFirstLikeMinutes").setValue(averageTime / 60.0);
             }
         });
@@ -279,17 +276,14 @@ public class AnalyticsManager {
         outfitsRef.get().addOnSuccessListener(snapshot -> {
             if (!snapshot.exists()) return;
 
-            // Проходим циклом по каждому образу (outfit)
             for (DataSnapshot outfitSnapshot : snapshot.getChildren()) {
                 DatabaseReference currentOutfitRef = outfitSnapshot.getRef();
 
-                // Вариант 1: Установка дефолтных значений (0 и 0.0)
                 currentOutfitRef.child("countFavorites").setValue(0);
                 currentOutfitRef.child("countShows").setValue(0);
                 currentOutfitRef.child("favoriteRate").setValue(0.0);
             }
         }).addOnFailureListener(e -> {
-            // Здесь можно обработать ошибку, если нет прав на чтение/запись
             e.printStackTrace();
         });
     }

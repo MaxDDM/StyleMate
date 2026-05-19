@@ -1,11 +1,5 @@
 package com.pupkov.stylemate.ui;
 
-import static androidx.core.content.ContextCompat.startActivity;
-
-import static com.pupkov.stylemate.model.Resource.Status.ERROR;
-import static com.pupkov.stylemate.model.Resource.Status.LOADING;
-import static com.pupkov.stylemate.model.Resource.Status.SUCCESS;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.EditText;
@@ -14,7 +8,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.LifecycleOwner;
 
 import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
@@ -34,6 +27,7 @@ public class AuthActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.auth);
 
+        // Проверка состояния приложения: если не пройден первый тест — сразу перенаправляем на первый вопрос
         String isTest1 = ActiveUserInfo.getDefaults("isTest1", this);
         if (isTest1 != null && !isTest1.isEmpty()) {
             Intent intent = new Intent(AuthActivity.this, TestQ1Activity.class);
@@ -41,6 +35,7 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
+        // Проверка авторизации: если сессия активна, переходим на главный экран
         String isAuthorized = ActiveUserInfo.getDefaults("isRegistered", this);
         if (isAuthorized != null) {
             Intent intent = new Intent(AuthActivity.this, MainActivity.class);
@@ -54,20 +49,18 @@ public class AuthActivity extends AppCompatActivity {
         ImageButton switchToRegButton = findViewById(R.id.switchToRegButton);
         ImageButton skipButton = findViewById(R.id.skipAuthButton);
 
+        // Попытка авторизации с предварительной проверкой соглашения политики
         authButton.setOnClickListener(v -> {
             String emailStr = email.getText().toString();
             String passwordStr = password.getText().toString();
 
             if (isPrivacyAccepted()) {
-                // Если политика принята, сразу запускаем процесс авторизации
                 performLogin(emailStr, passwordStr);
             } else {
-                // Иначе показываем диалог
                 PrivacyConsentDialog dialog = new PrivacyConsentDialog();
                 dialog.setOnConsentListener(isGranted -> {
                     if (isGranted) {
-                        savePrivacyAccepted(); // Сохраняем согласие
-                        // Автоматически продолжаем авторизацию
+                        savePrivacyAccepted();
                         performLogin(emailStr, passwordStr);
                     } else {
                         Toast.makeText(AuthActivity.this, "Для авторизации необходимо принять соглашение", Toast.LENGTH_SHORT).show();
@@ -77,11 +70,13 @@ public class AuthActivity extends AppCompatActivity {
             }
         });
 
+        // Переход на экран регистрации
         switchToRegButton.setOnClickListener(v -> {
             Intent intent = new Intent(AuthActivity.this, RegisterActivity.class);
             startActivity(intent);
         });
 
+        // Гостевой вход (пропуск авторизации) с проверкой соглашения политики конфиденциальности
         skipButton.setOnClickListener(v -> {
             if (isPrivacyAccepted()) {
                 SkipRegDialog dialog = new SkipRegDialog();
@@ -105,6 +100,7 @@ public class AuthActivity extends AppCompatActivity {
 
     }
 
+    // Процедура авторизации пользователя через Firebase репозиторий
     private void performLogin(String emailStr, String passwordStr) {
         EmailValidator validator = EmailValidator.getInstance();
 

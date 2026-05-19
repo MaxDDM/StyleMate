@@ -15,22 +15,19 @@ public class CustomToast {
 
         TextView textView = new TextView(context);
         textView.setText(message);
-        textView.setTextColor(Color.BLACK); // Черный текст
+        textView.setTextColor(Color.BLACK);
         textView.setTextSize(15);
-        textView.setTypeface(null); // Жирный шрифт (если нужно Typeface.DEFAULT_BOLD)
+        textView.setTypeface(null);
         textView.setPadding(40, 24, 40, 24);
 
-        // Устанавливаем белый фон (убедитесь, что drawable существует)
         textView.setBackgroundResource(R.drawable.bg_toast_white);
 
-        // Тень
         textView.setElevation(10f);
 
         Toast toast = new Toast(context);
         toast.setDuration(Toast.LENGTH_SHORT);
         toast.setView(textView);
 
-        // Позиция сверху
         toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 160);
         toast.show();
     }

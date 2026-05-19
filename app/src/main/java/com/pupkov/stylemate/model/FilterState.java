@@ -4,24 +4,32 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Неизменяемый контейнер состояния фильтров.
+ * Используется для безопасной передачи выбранных тегов между экранами приложения
+ */
 public class FilterState implements Serializable {
-    private Set<String> selectedTypes;
-    private Set<String> selectedColors;
-    private Set<String> selectedSeasons;
+    private final Set<String> selectedTypes;
+    private final Set<String> selectedColors;
+    private final Set<String> selectedSeasons;
 
-    // Конструктор
+    /**
+     * Создает снимок состояния фильтров.
+     */
     public FilterState(Set<String> types, Set<String> colors, Set<String> seasons) {
-        this.selectedTypes = new HashSet<>(types);     // Делаем копии, чтобы разорвать связь
-        this.selectedColors = new HashSet<>(colors);
-        this.selectedSeasons = new HashSet<>(seasons);
+        this.selectedTypes = types != null ? new HashSet<>(types) : new HashSet<>();
+        this.selectedColors = colors != null ? new HashSet<>(colors) : new HashSet<>();
+        this.selectedSeasons = seasons != null ? new HashSet<>(seasons) : new HashSet<>();
     }
 
-    // Геттеры
     public Set<String> getSelectedTypes() { return selectedTypes; }
     public Set<String> getSelectedColors() { return selectedColors; }
     public Set<String> getSelectedSeasons() { return selectedSeasons; }
 
-    // Проверка: пусты ли фильтры вообще?
+    /**
+     * Проверка на наличие активных фильтров.
+     * Используется для скрытия или показа индикатора фильтрации на главном экране.
+     */
     public boolean isEmpty() {
         return selectedTypes.isEmpty() && selectedColors.isEmpty() && selectedSeasons.isEmpty();
     }

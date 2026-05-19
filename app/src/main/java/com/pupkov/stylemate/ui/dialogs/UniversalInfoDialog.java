@@ -24,8 +24,6 @@ public class UniversalInfoDialog extends DialogFragment {
     private static final String ARG_TEXT = "arg_text";
     private static final String ARG_SHOW_ARROW = "arg_show_arrow";
 
-    // --- ГЛАВНЫЙ МЕТОД ДЛЯ СОЗДАНИЯ ДИАЛОГА ---
-    // Вызывайте его так: UniversalInfoDialog.newInstance("Текст...", true/false);
     public static UniversalInfoDialog newInstance(String text, boolean showArrow) {
         UniversalInfoDialog fragment = new UniversalInfoDialog();
         Bundle args = new Bundle();
@@ -50,10 +48,10 @@ public class UniversalInfoDialog extends DialogFragment {
             String text = getArguments().getString(ARG_TEXT, "");
             boolean showArrow = getArguments().getBoolean(ARG_SHOW_ARROW, false);
 
-            // 1. Устанавливаем текст
+            // Устанавливаем текст
             tvMessage.setText(text);
 
-            // 2. Управляем стрелкой
+            // Управляем стрелкой
             if (showArrow) {
                 ivArrow.setVisibility(View.VISIBLE);
             } else {
@@ -67,7 +65,6 @@ public class UniversalInfoDialog extends DialogFragment {
         return view;
     }
 
-    // Делаем фон прозрачным (чтобы стрелка могла "торчать" за пределы карточки, если нужно)
     @Override
     public void onStart() {
         super.onStart();

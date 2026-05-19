@@ -7,13 +7,9 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.pupkov.stylemate.repository.ActiveUserInfo;
-import com.pupkov.stylemate.ui.MainActivity; // <-- Убедись, что это твоя главная активность
 import com.pupkov.stylemate.R;
-import com.pupkov.stylemate.model.TestViewModel;
-import com.pupkov.stylemate.ui.AuthActivity;
 import com.pupkov.stylemate.ui.SetSelectionNameActivity;
 
 public class TestQ5Activity extends AppCompatActivity {
@@ -35,8 +31,6 @@ public class TestQ5Activity extends AppCompatActivity {
         ImageButton nextButton = findViewById(R.id.btnNextQuestTest5);
         ImageButton skipButton = findViewById(R.id.btnSkipQuestTest5);
 
-
-        // Обработчики нажатий (визуал)
         test1Button.setOnClickListener(v -> {
             ans = 1;
             setSelections(test1Button, test2Button, test3Button, test4Button, test5Button, test6Button);
@@ -63,20 +57,25 @@ public class TestQ5Activity extends AppCompatActivity {
         });
 
         test6Button.setOnClickListener(v -> {
-            ans = 6; // Это вариант "Не определился"
+            ans = 6; // Вариант "Не определился"
             setSelections(test6Button, test1Button, test2Button, test3Button, test4Button, test5Button);
         });
 
-        // 2. ФИНАЛ: КНОПКА ДАЛЕЕ
         nextButton.setOnClickListener(v -> {
+            // Тест завершен: очищаем локальный статус прохождения первого теста
             ActiveUserInfo.setDefaults("isTest1", "", TestQ5Activity.this);
 
             if (ans != -1) {
                 Intent intent = new Intent(TestQ5Activity.this, SetSelectionNameActivity.class);
+
+                // Очищаем стек активностей, чтобы нельзя было вернуться назад к вопросам теста
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                // Передаем маркер теста, выбранный ответ и флаг того, что вопрос НЕ пропущен
                 intent.putExtra("testNumber", 1);
                 intent.putExtra("ans", ans);
                 intent.putExtra("notSkip", 1);
+
                 startActivity(intent);
                 finish();
             } else {
@@ -84,24 +83,27 @@ public class TestQ5Activity extends AppCompatActivity {
             }
         });
 
-        // 3. ФИНАЛ: КНОПКА ПРОПУСТИТЬ
         skipButton.setOnClickListener(v -> {
+            // При пропуске также сбрасываем локальный статус прохождения теста
             ActiveUserInfo.setDefaults("isTest1", "", TestQ5Activity.this);
 
             Intent intent = new Intent(TestQ5Activity.this, SetSelectionNameActivity.class);
+
+            // Очищаем стек и передаем флаг пропуска (notSkip = 0) без передачи индекса ответа
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.putExtra("testNumber", 1);
             intent.putExtra("notSkip", 0);
+
             startActivity(intent);
             finish();
         });
     }
 
-    // Вспомогательный метод, чтобы не копировать код смены картинок 6 раз
+    // Вспомогательный метод для изменения графического состояния выбранной кнопки и сброса остальных
     private void setSelections(ImageButton selected, ImageButton... others) {
-        selected.setBackgroundResource(R.drawable.ic_pic6); // Выбран
+        selected.setBackgroundResource(R.drawable.ic_pic6);
         for (ImageButton other : others) {
-            other.setBackgroundResource(R.drawable.ic_pic5); // Не выбран
+            other.setBackgroundResource(R.drawable.ic_pic5);
         }
     }
 }

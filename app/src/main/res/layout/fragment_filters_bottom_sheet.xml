@@ -7,7 +7,6 @@
     android:background="@drawable/bg_bottom_sheet_rounded"
     android:paddingTop="20dp">
 
-    <!-- Кнопка Сбросить -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnReset"
         android:layout_width="150dp"
@@ -38,7 +37,6 @@
             android:orientation="vertical"
             android:paddingHorizontal="16dp">
 
-            <!-- ТИП ОДЕЖДЫ -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -49,7 +47,6 @@
                 android:layout_marginBottom="10dp"
                 android:layout_marginStart="4dp"/>
 
-            <!-- columnCount="3" - ДЕЛАЕТ ВСЮ РАБОТУ ЗА НАС -->
             <com.google.android.flexbox.FlexboxLayout
                 android:id="@+id/gridTypes"
                 android:layout_width="match_parent"
@@ -58,7 +55,6 @@
                 app:alignItems="stretch"
                 app:justifyContent="flex_start" />
 
-            <!-- ЦВЕТ -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -78,7 +74,6 @@
                 app:alignItems="stretch"
                 app:justifyContent="flex_start" />
 
-            <!-- СЕЗОН -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -101,7 +96,6 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Кнопка Применить -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnApply"
         android:layout_width="170dp"

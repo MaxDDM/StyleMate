@@ -1,28 +1,12 @@
 package com.pupkov.stylemate.repository;
 
-import static androidx.core.content.ContextCompat.startActivity;
-
 import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 
-import com.pupkov.stylemate.R;
-// Убедись, что FavouriteOutfits импортирован правильно.
-// Если он лежит просто в корне пакета com.pupkov.stylemate, импорт не нужен.
-// Если перенес в model - добавь import.
 import com.pupkov.stylemate.model.Resource;
-import com.pupkov.stylemate.ui.AuthActivity;
-import com.pupkov.stylemate.ui.FavouriteOutfits;
 import com.pupkov.stylemate.model.UserProfile;
-import com.pupkov.stylemate.ui.RegisterActivity;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
@@ -37,12 +21,11 @@ import android.net.Uri;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class UserRepository {
 
+    // Инициализация сервисов Firebase: База данных, Аутентификация и Storage
     FirebaseDatabase database = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app");
     DatabaseReference table = database.getReference("User");
     DatabaseReference connectedRef = database.getReference(".info/connected");
@@ -50,22 +33,21 @@ public class UserRepository {
     FirebaseStorage storage = FirebaseStorage.getInstance();
     StorageReference storageRef = storage.getReference();
 
-    // --- НОВЫЙ ИНТЕРФЕЙС ДЛЯ CALLBACK ---
+    // Интерфейс обратного вызова для однократного получения данных профиля
     public interface ProfileCallback {
         void onLoaded(UserProfile profile);
         void onError(String error);
     }
 
+    // Интерфейс обратного вызова для отслеживания загрузки аватарки
     public interface AvatarCallback {
-        void onSuccess(String downloadUrl);  // Фото загружено, вот ссылка
-        void onError(String error);          // Что-то пошло не так
+        void onSuccess(String downloadUrl);
+        void onError(String error);
     }
 
-    // --- НОВЫЙ МЕТОД ДЛЯ ПРОФИЛЯ (One-shot request) ---
+    // Однократный запрос профиля через асинхронный слушатель
     public void loadUserProfile(Context context, ProfileCallback callback) {
-
         if (!isLogged(context)) {
-            // Гость
             callback.onLoaded(null);
             return;
         }
@@ -88,6 +70,7 @@ public class UserRepository {
         });
     }
 
+    // Получение профиля в виде LiveData с предварительной проверкой интернет-соединения
     public LiveData<Resource<UserProfile>> getUserProfile(Context context) {
         MutableLiveData<Resource<UserProfile>> liveData = new MutableLiveData<>();
         liveData.setValue(Resource.loading());
@@ -130,15 +113,16 @@ public class UserRepository {
         return liveData;
     }
 
+    // Выход из аккаунта и полная очистка локальных настроек устройства
     public void logout(Context context) {
         if (isLogged(context)) {
             FirebaseAuth mAuth = FirebaseAuth.getInstance();
             mAuth.signOut();
         }
-
         ActiveUserInfo.clearAllDefaults(context);
     }
 
+    // Создание учетной записи и отправка email-ссылки для подтверждения почты
     public LiveData<Resource<Boolean>> sendEmail(String email, String password) {
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());
@@ -148,7 +132,6 @@ public class UserRepository {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
-                            // отправляем письмо для подтверждения
                             user.sendEmailVerification()
                                     .addOnCompleteListener(verifyTask -> {
                                         if (verifyTask.isSuccessful()) {
@@ -159,6 +142,7 @@ public class UserRepository {
                                     });
                         }
                     } else {
+                        // Если аккаунт уже создан, но не верифицирован — пробуем выслать письмо повторно
                         Exception e = task.getException();
                         if (e instanceof FirebaseAuthUserCollisionException) {
                             if ("ERROR_EMAIL_ALREADY_IN_USE".equals(((FirebaseAuthUserCollisionException) e).getErrorCode())) {
@@ -185,12 +169,14 @@ public class UserRepository {
         return result;
     }
 
+    // Проверка клика по верификационной ссылке и создание записи пользователя в Realtime Database
     public LiveData<Resource<Boolean>> checkEmailVerifiedAndRegister(String name, String phone, String email, String birthDate, String avatarUrl, String password) {
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());
 
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
+            // Обновляем данные пользователя, чтобы считать свежий статус верификации почты
             user.reload().addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     if (user.isEmailVerified()) {
@@ -226,6 +212,7 @@ public class UserRepository {
         return result;
     }
 
+    // Вход пользователя в систему по почте и паролю
     public LiveData<Resource<Boolean>> loginUser(String email, String password) {
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());
@@ -236,9 +223,8 @@ public class UserRepository {
                         result.setValue(Resource.success(true));
                     } else {
                         Exception e = task.getException();
-
                         if (e instanceof FirebaseAuthInvalidCredentialsException || e instanceof FirebaseAuthUserCollisionException
-                        || e instanceof FirebaseAuthInvalidUserException) {
+                                || e instanceof FirebaseAuthInvalidUserException) {
                             result.setValue(Resource.error("Неверный email или пароль"));
                         } else {
                             String errorMsg = (e != null) ? e.getMessage() : "Неизвестная ошибка сервера";
@@ -250,6 +236,7 @@ public class UserRepository {
         return result;
     }
 
+    // Проверка соответствия введенного пароля текущему (перед его изменением)
     public LiveData<Resource<Boolean>> checkCurrentPassword(String input, Context context) {
         MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
         result.setValue(Resource.loading());
@@ -293,10 +280,10 @@ public class UserRepository {
         return result;
     }
 
+    // Синхронное обновление пароля в Realtime Database и в системе аутентификации Firebase
     public void changePassword(String newPassword, Context context) {
         if (isLogged(context)) {
             table.child(getUID()).child("password").setValue(newPassword);
-
             Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).updatePassword(newPassword);
         }
     }
@@ -306,47 +293,40 @@ public class UserRepository {
         return mAuth.getCurrentUser().getUid();
     }
 
+    // Проверка статуса авторизации через локальные настройки устройства
     public boolean isLogged(Context context) {
         return ActiveUserInfo.getDefaults("isRegistered", context) != null &&
                 !ActiveUserInfo.getDefaults("isRegistered", context).isEmpty();
     }
 
+    // Прямое обновление конкретного поля пользователя в базе данных
     public void changeParameter(String parameter, String value) {
         table.child(getUID()).child(parameter).setValue(value);
     }
 
+    // Загрузка аватарки в Storage с последующим сохранением публичной ссылки в Realtime Database
     public void uploadAvatar(Context context, Uri imageUri, AvatarCallback callback) {
-
-        // 1. Проверяем, залогинен ли пользователь
         if (!isLogged(context)) {
             callback.onError("Смена аватарки доступна только после регистрации");
             return;
         }
 
-        // 2. Формируем путь в Storage: avatars/{uid}.jpg
-        //    Один файл на пользователя — при повторной загрузке просто перезаписывается
         String uid = getUID();
         StorageReference avatarRef = storageRef.child("avatars/" + uid + ".jpg");
 
-        // 3. Загружаем файл
         avatarRef.putFile(imageUri)
                 .addOnSuccessListener(taskSnapshot -> {
-
-                    // 4. Файл загружен — теперь получаем публичную ссылку на него
+                    // Файл успешно загружен в хранилище, запрашиваем URL-ссылку на него
                     avatarRef.getDownloadUrl()
                             .addOnSuccessListener(downloadUri -> {
-
                                 String url = downloadUri.toString();
 
-                                // 5. Сохраняем ссылку в Realtime Database
-                                //    User/{uid}/avatarUrl = "https://firebasestorage.googleapis.com/..."
+                                // Обновляем поле avatarUrl в профиле базы данных
                                 table.child(uid).child("avatarUrl").setValue(url)
                                         .addOnSuccessListener(unused -> {
-                                            // Всё прошло успешно
                                             callback.onSuccess(url);
                                         })
                                         .addOnFailureListener(e -> {
-                                            // Фото загрузилось, но ссылку не удалось сохранить в БД
                                             callback.onError("Не удалось сохранить ссылку: " + e.getMessage());
                                         });
                             })
@@ -355,9 +335,7 @@ public class UserRepository {
                             });
                 })
                 .addOnFailureListener(e -> {
-                    // Файл не удалось загрузить в Storage
                     callback.onError("Ошибка загрузки фото: " + e.getMessage());
                 });
     }
-
 }

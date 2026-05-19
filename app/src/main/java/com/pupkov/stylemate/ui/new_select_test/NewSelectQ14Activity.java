@@ -7,12 +7,8 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.pupkov.stylemate.R;
-import com.pupkov.stylemate.model.TestViewModel;
-import com.pupkov.stylemate.repository.ActiveUserInfo;
-import com.pupkov.stylemate.repository.SituationsRepository;
 import com.pupkov.stylemate.ui.MainActivity;
 import com.pupkov.stylemate.ui.SetSelectionNameActivity;
 

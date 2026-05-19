@@ -1,38 +1,35 @@
 package com.pupkov.stylemate.model;
 
 import com.google.firebase.database.PropertyName;
-
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Сущностный класс модели образа для десериализации данных из Firebase
+ */
 public class Outfit {
     private String id;
-    private String style;           // "casual"
-    private String imageUrl;        // Ссылка
+    private String style;
+    private String imageUrl;
+    private String filter_season;
+    private String situation;
 
-    // Новые поля для фильтров (как в твоем JSON)
-    private String filter_season;   // "лето"
-    private String situation;// "any"
-
-    // Firebase хранит списки как Map<String, Boolean>: {"Белый": true, "Голубой": true}
+    // Списки признаков и связей, представленные в NoSQL-формате
     private Map<String, Boolean> filter_colors = new HashMap<>();
     private Map<String, Boolean> filter_types = new HashMap<>();
-    private Map<String, Boolean> items = new HashMap<>(); // Список ID вещей {"66": true}
+    private Map<String, Boolean> items = new HashMap<>();
 
-    // Локальное поле (не из БД), нужно для UI (сердечко)
+    // Состояние пользовательского интерфейса
     private boolean isLiked = false;
 
-    // Обязательный пустой конструктор для Firebase
     public Outfit() { }
 
-    // Конструктор для удобства (если понадобится создавать вручную)
     public Outfit(String id, String imageUrl, String style) {
         this.id = id;
         this.imageUrl = imageUrl;
         this.style = style;
     }
 
-    // --- Геттеры и Сеттеры ---
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -44,8 +41,8 @@ public class Outfit {
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public String getFilter_season() { return filter_season; }
-
     public void setFilter_season(String filter_season) { this.filter_season = filter_season; }
+
     @PropertyName("situation")
     public String getFilter_situation() { return situation; }
 

@@ -22,8 +22,6 @@ public class TestQ3Activity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(TestViewModel.class);
         super.onCreate(savedInstanceState);
 
-        // 2. ПОДПИСКА НА ДАННЫЕ (СНИЗУ ВВЕРХ)
-        // Следим за статусом сессии. Если ViewModel скажет "false", уходим.
         viewModel.getSessionValidState().observe(this, isValid -> {
             if (!isValid) {
                 Toast.makeText(this, "Время сессии истекло. Пожалуйста, зарегистрируйтесь.", Toast.LENGTH_LONG).show();
@@ -33,7 +31,6 @@ public class TestQ3Activity extends AppCompatActivity {
             }
         });
 
-        // Запускаем проверку сессии (событие сверху вниз)
         viewModel.checkSession();
 
         EdgeToEdge.enable(this);
@@ -79,14 +76,10 @@ public class TestQ3Activity extends AppCompatActivity {
             test4Button.setBackgroundResource(R.drawable.ic_pic6);
         });
 
-        // 2. КНОПКА ДАЛЕЕ
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
-                // А. Сообщаем ViewModel о выборе (2 - номер вопроса)
-                // Внутри ViewModel сама вызовет репозиторий и сохранит прогресс
                 viewModel.processAnswer(3, ans);
 
-                // Переход к 4-му вопросу
                 Intent intent = new Intent(TestQ3Activity.this, TestQ4Activity.class);
                 startActivity(intent);
             } else {
@@ -94,9 +87,7 @@ public class TestQ3Activity extends AppCompatActivity {
             }
         });
 
-        // 3. КНОПКА ПРОПУСТИТЬ
         skipButton.setOnClickListener(v -> {
-            // Сохраняем только время активности
             viewModel.saveProgressOnly();
 
             Intent intent = new Intent(TestQ3Activity.this, TestQ4Activity.class);

@@ -1,4 +1,4 @@
-package com.pupkov.stylemate.ui; // Пакет UI
+package com.pupkov.stylemate.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,16 +17,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.model.ProfileViewModel;
-import com.google.android.material.bottomnavigation.BottomNavigationView; // !!! ВАЖНО: Добавь этот импорт
 
 import java.util.ArrayList;
 
+/**
+ * Фрагмент личного кабинета пользователя.
+ * Отображает информацию о профиле, аватарку и сетку сохраненных образов одежды по подборкам.
+ */
 public class ProfileFragment extends Fragment {
 
     private ProfileViewModel viewModel;
     private FavoriteOutfitsAdapter adapter;
 
-    // UI элементы делаем полями класса, чтобы к ним был доступ везде
     private TextView tvEmptyState;
     private TextView tvFavoritesTitle;
     private RecyclerView rvFavorites;
@@ -35,7 +36,6 @@ public class ProfileFragment extends Fragment {
     private TextView tvUserName;
 
     public ProfileFragment() {
-        // Пустой конструктор
     }
 
     @Override
@@ -48,38 +48,31 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // 1. Инициализируем ViewModel
         viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
 
-        // 2. Находим View
         initViews(view);
-
-        // 3. Настраиваем RecyclerView (пустой пока)
         setupRecyclerView();
-
-        // 4. Настраиваем Кнопки (Настройки и т.д.)
         setupClickListeners(view);
-
-        // 5. ПОДПИСЫВАЕМСЯ (Главная часть MVVM)
         observeViewModel();
     }
 
-    // Этот метод срабатывает, когда переключаем вкладки (hide/show)
+    /**
+     * Обработка переключения вкладок.
+     * Позволяет обновлять данные профиля в репозитории без полного пересоздания View.
+     */
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
-        // Если фрагмент стал ВИДИМЫМ (hidden = false)
         if (!hidden && viewModel != null) {
-            viewModel.refreshData();
+            viewModel.refreshData(); // Актуализация данных при возврате на вкладку
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Как только экран становится видимым — обновляем данные
         if (viewModel != null) {
-            viewModel.refreshData();
+            viewModel.refreshData(); // Синхронизация состояния при возвращении на экран из других Activity
         }
     }
 
@@ -91,21 +84,17 @@ public class ProfileFragment extends Fragment {
         tvUserName = view.findViewById(R.id.tvUserName);
     }
 
+    /**
+     * Конфигурация сетки для отображения обложек коллекций.
+     */
     private void setupRecyclerView() {
-        // Если хочешь 2 колонки:
         GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 2);
         rvFavorites.setLayoutManager(layoutManager);
 
-        // ВАЖНО: Передаем getContext() первым параметром
         adapter = new FavoriteOutfitsAdapter(getContext(), new ArrayList<>(), item -> {
-            // ОБРАБОТКА КЛИКА ПО ПАПКЕ
-
-            // ТУТ БУДЕТ ПЕРЕХОД:
-            // Либо открывай CollectionDetailActivity (если она есть)
-            // Либо передавай данные на главный экран
             Intent intent = new Intent(requireContext(), CollectionDetailActivity.class);
             intent.putExtra("COLLECTION_TITLE", item.getTitle());
-            intent.putExtra("COLLECTION_ID", item.getId()); // Передаем ID!
+            intent.putExtra("COLLECTION_ID", item.getId());
             startActivity(intent);
         });
 
@@ -122,22 +111,22 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    /**
+     * Подписка на LiveData состояния профиля (имя, аватар, списки коллекций и флаги видимости).
+     */
     private void observeViewModel() {
         viewModel.userName.observe(getViewLifecycleOwner(), name -> {
-            if (name != null) {
-                tvUserName.setText(name);
-            }
+            if (name != null) tvUserName.setText(name);
         });
 
-        // --- ЭТОГО НЕ ХВАТАЛО: Подписка на АВАТАРКУ ---
+        // Асинхронная загрузка и скругление изображения профиля через Glide с обработкой плейсхолдеров
         viewModel.userAvatarUrl.observe(getViewLifecycleOwner(), url -> {
-            // Glide загрузит картинку по ссылке или поставит заглушку, если url == null
             if (imgAvatar != null) {
                 if (url != null && !url.isEmpty()) {
                     com.bumptech.glide.Glide.with(this)
                             .load(url)
                             .apply(com.bumptech.glide.request.RequestOptions.circleCropTransform())
-                            .placeholder(R.drawable.ic_placeholder_avatar) // Убедись, что этот ресурс существует!
+                            .placeholder(R.drawable.ic_placeholder_avatar)
                             .error(R.drawable.ic_placeholder_avatar)
                             .into(imgAvatar);
                 } else {
@@ -145,43 +134,38 @@ public class ProfileFragment extends Fragment {
                 }
             }
         });
-        // 1. Обновляем список, когда приходят данные
+
         viewModel.favorites.observe(getViewLifecycleOwner(), list -> {
             if (list != null) {
                 adapter.updateList(list);
             }
         });
 
-        // 2. Логика НАВИГАЦИИ (Если удалили последнюю подборку)
+        // Триггер автоматического редиректа на главный экран, при удалении последней папки в Firebase
         viewModel.navigateToHomeEvent.observe(getViewLifecycleOwner(), shouldNavigate -> {
             if (shouldNavigate != null && shouldNavigate) {
-                navigateToHome(); // Переходим на Home
+                navigateToHome();
             }
         });
 
-        // 2. Управляем видимостью элементов (То, что ты просил)
+        // Динамическое переключение видимости контейнеров при отсутствии или наличии избранного
         viewModel.isEmptyState.observe(getViewLifecycleOwner(), isEmpty -> {
             if (isEmpty != null && isEmpty) {
-                // ЕСЛИ ПУСТО:
-                tvEmptyState.setVisibility(View.VISIBLE);      // Показываем "Нет образов"
-                tvFavoritesTitle.setVisibility(View.GONE);     // Скрываем заголовок "Избранное"
-                rvFavorites.setVisibility(View.GONE);          // Скрываем список
+                tvEmptyState.setVisibility(View.VISIBLE);
+                tvFavoritesTitle.setVisibility(View.GONE);
+                rvFavorites.setVisibility(View.GONE);
             } else {
-                // ЕСЛИ ЕСТЬ ДАННЫЕ:
-                tvEmptyState.setVisibility(View.GONE);         // Скрываем "Нет образов"
-                tvFavoritesTitle.setVisibility(View.VISIBLE);  // Показываем заголовок "Избранное"
-                rvFavorites.setVisibility(View.VISIBLE);       // Показываем список
+                tvEmptyState.setVisibility(View.GONE);
+                tvFavoritesTitle.setVisibility(View.VISIBLE);
+                rvFavorites.setVisibility(View.VISIBLE);
             }
         });
     }
 
     private void navigateToHome() {
         if (getActivity() != null) {
-            // Мы ищем FrameLayout кнопки (потому что у вас кастомная панель)
             View btnHome = getActivity().findViewById(R.id.btnHome);
-
             if (btnHome != null) {
-                // Программно нажимаем на кнопку, чтобы сработал ваш код в MainActivity
                 btnHome.performClick();
             }
         }

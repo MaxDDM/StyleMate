@@ -13,19 +13,23 @@ import android.widget.ImageView;
 
 import com.pupkov.stylemate.R;
 
+/**
+ * Выпадающий адаптер-список для переключения активной коллекции
+ */
 public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsNameAdapter.ViewHolder> {
 
     private List<String> collectionNames;
     private final OnItemClickListener listener;
 
-    // --- СОСТОЯНИЕ ---
-    private boolean isExpanded = false; // Развернут список или нет
-    private String selectedName;        // Текущее выбранное имя
+    private boolean isExpanded = false;
+    private String selectedName;
 
-    // Цвета
     private final int COLOR_BLUE = Color.parseColor("#3D7DFF");
     private final int COLOR_GRAY = Color.parseColor("#595959");
 
+    /**
+     * Слушатель кликов. Передает имя выбранной коллекции, либо null, если требуется просто изменить состояние раскрытия.
+     */
     public interface OnItemClickListener {
         void onItemClick(String name);
     }
@@ -36,13 +40,17 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsName
         this.listener = listener;
     }
 
-    // Метод для переключения режима (Свернут/Развернут)
+    /**
+     * Переключение режима отображения (Свернут / Развернут).
+     */
     public void setExpanded(boolean expanded) {
         this.isExpanded = expanded;
-        notifyDataSetChanged(); // Полная перерисовка
+        notifyDataSetChanged();
     }
 
-    // Обновляем выбранный элемент
+    /**
+     * Смена текущего выбранного элемента с обновлением UI.
+     */
     public void setSelectedName(String name) {
         this.selectedName = name;
         notifyDataSetChanged();
@@ -58,39 +66,32 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsName
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // ЛОГИКА ОТОБРАЖЕНИЯ ДАННЫХ
         String currentItemName;
 
-        // 2. ОБРАБОТКА "ПРИЗРАЧНОГО" ВТОРОГО ЭЛЕМЕНТА
-        // Проверяем: если список развернут, в нем 1 элемент, а мы сейчас рисуем позицию №1 (вторую строку)
+        // формирование пустой "заглушки", если в раскрытом списке всего 1 элемент
         if (isExpanded && collectionNames.size() == 1 && position == 1) {
-            // Настраиваем пустышку
-            holder.tvCollectionName.setText(" "); // Пробел, чтобы сохранилась высота строки
-            holder.arrowContainer.setVisibility(View.GONE); // Скрываем стрелку
+            holder.tvCollectionName.setText(" ");
+            holder.arrowContainer.setVisibility(View.GONE);
             holder.lineSeparator.setVisibility(View.GONE);
-            holder.itemView.setOnClickListener(null); // Убираем клик
-            holder.itemView.setClickable(false);      // Отключаем нажатие
-            return; // Выходим из метода, чтобы не выполнялся код ниже
+            holder.itemView.setOnClickListener(null);
+            holder.itemView.setClickable(false);
+            return;
         }
 
         if (!isExpanded) {
-            // РЕЖИМ 1: СВЕРНУТО
-            // Показываем ВСЕГДА только выбранное имя (оно будет единственным элементом)
+            // Режим: Закрытый список (отображается только выбранный элемент)
             currentItemName = selectedName;
 
-            // Вид: Серый (неактивный), так как список закрыт
             holder.tvCollectionName.setTextColor(COLOR_GRAY);
             holder.lineSeparator.setBackgroundColor(COLOR_GRAY);
             holder.arrowContainer.setVisibility(View.VISIBLE);
             holder.ivArrow.setColorFilter(COLOR_GRAY);
-            holder.ivArrow.setRotation(0f);
+            holder.ivArrow.setRotation(0f); // Стрелка вниз
 
         } else {
-            // РЕЖИМ 2: РАЗВЕРНУТО
-            // Берем реальное имя из списка по позиции
+            // Режим: Раскрытый список со всеми доступными элементами
             currentItemName = collectionNames.get(position);
 
-            // Вид: Если это выбранный элемент -> Синий, иначе -> Серый
             if (currentItemName.equals(selectedName)) {
                 holder.tvCollectionName.setTextColor(COLOR_BLUE);
                 holder.lineSeparator.setBackgroundColor(COLOR_BLUE);
@@ -99,62 +100,53 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsName
                 holder.lineSeparator.setBackgroundColor(COLOR_GRAY);
             }
 
+            // Управление триггером-стрелкой на первой позиции раскрытого списка
             if (position == 0) {
-                // У первого элемента: Стрелка есть, Синий цвет, Смотрит вверх
                 holder.arrowContainer.setVisibility(View.VISIBLE);
                 holder.ivArrow.setColorFilter(COLOR_BLUE);
-                holder.ivArrow.setRotation(180f);
+                holder.ivArrow.setRotation(180f); // Поворот стрелки вверх
             } else {
-                // У остальных: Стрелки нет
                 holder.arrowContainer.setVisibility(View.GONE);
             }
         }
 
         holder.tvCollectionName.setText(currentItemName);
 
-        // ОБРАБОТКА КЛИКА
         holder.itemView.setOnClickListener(v -> {
             if (!isExpanded) {
-                // Если нажали на свернутый элемент -> просим Фрагмент открыть список
-                listener.onItemClick(null); // null означает "просто открой"
+                listener.onItemClick(null);
             } else {
-                // Если нажали в открытом списке -> выбираем элемент
                 listener.onItemClick(currentItemName);
             }
         });
 
-        // Клик по стрелке (она маленькая, лучше вешать клик на контейнер)
-        holder.arrowContainer.setOnClickListener(v -> {
-            // Клик по стрелке всегда работает как переключатель (открыть/закрыть)
-            // В данном контексте можно просто передать null, фрагмент поймет
-            listener.onItemClick(null);
-        });
+        holder.arrowContainer.setOnClickListener(v -> listener.onItemClick(null));
     }
 
     @Override
     public int getItemCount() {
         if (!isExpanded) {
-            return 1; // Свернуто -> всегда 1 (заголовок)
+            return 1;
         }
 
-        // Развернуто:
+        // Искусственное расширение контейнера для корректного отображения нижней границы/тени
         if (collectionNames.size() == 1) {
-            return 2; // ХИТРОСТЬ: Если реальный элемент один, говорим, что их два
+            return 2;
         }
 
         return collectionNames.size();
     }
 
     public void updateList(List<String> newList) {
-        this.collectionNames = newList; // Обновляем данные внутри адаптера
-        notifyDataSetChanged(); // Перерисовываем
+        this.collectionNames = newList;
+        notifyDataSetChanged();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvCollectionName;
         View lineSeparator;
-        FrameLayout arrowContainer; // Наш кружок
-        ImageView ivArrow;          // Сама картинка
+        FrameLayout arrowContainer;
+        ImageView ivArrow;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);

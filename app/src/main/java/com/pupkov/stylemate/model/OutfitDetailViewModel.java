@@ -13,12 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * ViewModel для управления состоянием экрана деталей образа.
+ * Отвечает за загрузку вещей, генерацию заголовков и расчет стоимости.
+ */
 public class OutfitDetailViewModel extends AndroidViewModel {
 
     private final ItemsRepository repository;
     private final UserCollectionsRepository collectionsRepository;
 
-    // Данные для UI
     private final MutableLiveData<List<Item>> _items = new MutableLiveData<>();
     public LiveData<List<Item>> items = _items;
 
@@ -34,60 +37,66 @@ public class OutfitDetailViewModel extends AndroidViewModel {
         collectionsRepository = new UserCollectionsRepository();
     }
 
-    // Этот метод мы вызовем из Activity сразу после получения Intent
+    /**
+     * Первичная инициализация состояния экрана на основе данных, полученных из Intent.
+     */
     public void init(Outfit outfit) {
         if (outfit == null) return;
 
-        // 1. Генерируем заголовок
         generateTitle(outfit.getFilter_season(), outfit.getStyle());
-
-        // 2. Загружаем вещи
         loadItems(outfit.getItems());
     }
 
-    // --- НОВЫЙ МЕТОД: ЛАЙК ---
+    /**
+     * Синхронизация статуса лайка с удаленным репозиторием Firebase.
+     */
     public void toggleLike(String collectionId, String outfitId, boolean isLiked) {
         collectionsRepository.toggleLikeInFirebase(getApplication(), collectionId, outfitId, isLiked);
     }
 
+    /**
+     * Формирование читаемого заголовка образа с локализацией стиля на русский язык.
+     */
     private void generateTitle(String season, String style) {
-        // Преобразуем английские ключи в русский текст
         String styleRu = convertStyle(style);
-
-        // Формат: "Образ на [лето] в [классическом] стиле"
         String result = "Образ " + season + " в " + styleRu + " стиле";
         _title.setValue(result);
     }
 
+    /**
+     * Асинхронный запрос списка вещей из Firebase по их уникальным идентификаторам.
+     */
     private void loadItems(Map<String, Boolean> itemsMap) {
         if (itemsMap == null || itemsMap.isEmpty()) {
             _items.setValue(new ArrayList<>());
             return;
         }
 
-        // Превращаем Map {"id1": true, "id2": true} в List ["id1", "id2"]
+        // Извлечение ID вещей из Map структуры Firebase для передачи плоского списка в репозиторий
         List<String> ids = new ArrayList<>(itemsMap.keySet());
 
         repository.getItemsByIds(ids, new ItemsRepository.ItemsCallback() {
             @Override
             public void onItemsLoaded(List<Item> loadedItems) {
                 _items.setValue(loadedItems);
-                calculateTotalPrice(loadedItems); // Считаем сумму
+                calculateTotalPrice(loadedItems);
             }
 
             @Override
             public void onError(String error) {
-                // Можно добавить LiveData для ошибок, если нужно
             }
         });
     }
 
+    /**
+     * Вычисление суммарной стоимости всех вещей в образе.
+     */
     private void calculateTotalPrice(List<Item> items) {
         int total = 0;
         for (Item item : items) {
-            // Парсим цену "2399 Р" -> 2399
             if (item.getPrice() != null) {
-                String cleanPrice = item.getPrice().replaceAll("[^0-9]", ""); // Убираем " Р" и пробелы
+                // Регулярное выражение удаляет всё, кроме цифр, для безопасного парсинга (например, "2 399 Р" -> "2399")
+                String cleanPrice = item.getPrice().replaceAll("[^0-9]", "");
                 try {
                     total += Integer.parseInt(cleanPrice);
                 } catch (NumberFormatException e) {
@@ -98,12 +107,13 @@ public class OutfitDetailViewModel extends AndroidViewModel {
         _totalPrice.setValue(total + " Р");
     }
 
-    // --- ХЕЛПЕРЫ ПЕРЕВОДА ---
-
+    /**
+     * Маппинг строковых ключей стилей из базы данных в склоняемые русскоязычные эквиваленты.
+     */
     private String convertStyle(String styleKey) {
         if (styleKey == null) return "любом";
         switch (styleKey.toLowerCase()) {
-            case "casual": return "повседневном"; // или "кэжуал"
+            case "casual": return "повседневном";
             case "classic": return "классическом";
             case "grange": return "гранж";
             case "old_money": return "олд мани";

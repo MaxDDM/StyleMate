@@ -22,14 +22,14 @@ import com.pupkov.stylemate.ui.RegisterActivity;
 import com.pupkov.stylemate.ui.test.TestQ1Activity;
 
 public class VerifyEmailDialog extends DialogFragment {
-    // 1. Создаем свой интерфейс специально для этого окна
+    // Создаем интерфейс специально для этого окна
     public interface OnVerifyListener {
         void onCheckStatus();
     }
 
     private OnVerifyListener listener;
 
-    // 2. Метод для установки слушателя
+    // Метод для установки слушателя
     public void setListener(OnVerifyListener listener) {
         this.listener = listener;
     }
@@ -61,7 +61,7 @@ public class VerifyEmailDialog extends DialogFragment {
 
 
         btnContinue.setOnClickListener(v -> {
-            // 3. САМОЕ ВАЖНОЕ: вызываем слушатель перед закрытием
+            // вызываем слушатель перед закрытием
             if (listener != null) {
                 listener.onCheckStatus();
             }

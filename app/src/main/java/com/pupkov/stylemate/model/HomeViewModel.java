@@ -4,7 +4,6 @@ import android.app.Application;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -15,40 +14,40 @@ import com.pupkov.stylemate.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * ViewModel для управления бизнес-логикой главного экрана.
+ * Обеспечивает кэширование, фильтрацию образов и синхронизацию данных с Firebase.
+ */
 public class HomeViewModel extends AndroidViewModel {
 
     private final UserRepository repo = new UserRepository();
     private final UserCollectionsRepository repository;
-    private String currentCollectionId = null; // Храним ID текущей коллекции
-    // Списки данных
+    private String currentCollectionId = null;
+
+    // LiveData для инкапсуляции и передачи состояний в UI-слой
     private final MutableLiveData<List<String>> _collections = new MutableLiveData<>();
     public LiveData<List<String>> collections = _collections;
 
     private final MutableLiveData<Boolean> _isEmptyState = new MutableLiveData<>();
     public LiveData<Boolean> isEmptyState = _isEmptyState;
+
     private final MutableLiveData<String> _selectedName = new MutableLiveData<>();
     public LiveData<String> selectedName = _selectedName;
 
-    // --- ИЗМЕНЕНИЕ: Два списка ---
-    // 1. Полный список (кеш текущей коллекции), никогда не фильтруется
+    /**
+     * allOutfits — неизменяемый локальный кэш всей коллекции
+     * outfits — отфильтрованный поток данных, на который подписан адаптер списка
+     */
     private List<Outfit> allOutfits = new ArrayList<>();
-
-    // 2. Список для отображения (LiveData), который меняется фильтрами
     private final MutableLiveData<List<Outfit>> _outfits = new MutableLiveData<>();
     public LiveData<List<Outfit>> outfits = _outfits;
 
-    // Событие ошибки фильтрации (для показа Toast/Dialog во фрагменте)
     private final MutableLiveData<Boolean> _filterEmptyEvent = new MutableLiveData<>();
     public LiveData<Boolean> filterEmptyEvent = _filterEmptyEvent;
-
 
     public HomeViewModel(@NonNull Application application) {
         super(application);
@@ -58,33 +57,18 @@ public class HomeViewModel extends AndroidViewModel {
 
     public String getCurrentCollectionId() { return currentCollectionId; }
 
+    /**
+     * Загружает коллекции
+     */
     private void loadCollectionsList() {
         if (repo.isLogged(getApplication())) {
             repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
                 @Override
                 public void onDataLoaded(List<String> data) {
-                    // 1. Проверяем на пустоту
                     if (data == null || data.isEmpty()) {
-                        // СПИСОК ПУСТ -> Включаем режим заглушки
-                        _isEmptyState.setValue(true);
-                        _collections.setValue(new ArrayList<>()); // Пустой список в адаптер
-                        _outfits.setValue(new ArrayList<>());     // Пустая сетка
-                        _selectedName.setValue(null);             // Нет выбранного имени
+                        setEmptyState();
                     } else {
-                        // СПИСОК ЕСТЬ -> Обычный режим
-                        _isEmptyState.setValue(false);
-                        _collections.setValue(data);
-                        String currentSelected = _selectedName.getValue();
-
-                        // 1. Если текущая коллекция всё еще существует в списке -> ОБНОВЛЯЕМ ЕЁ ДАННЫЕ
-                        if (currentSelected != null && data.contains(currentSelected)) {
-                            // Мы принудительно грузим одежду заново, чтобы подтянуть актуальные лайки
-                            loadOutfits(currentSelected);
-                        }
-                        // 2. Иначе (если ничего не выбрано или старую коллекцию удалили) -> берем первую
-                        else {
-                            onCollectionSelected(data.get(0));
-                        }
+                        updateCollectionsState(data);
                     }
                 }
 
@@ -94,29 +78,35 @@ public class HomeViewModel extends AndroidViewModel {
                 }
             });
         } else {
+            // Гостевой режим: извлечение локального следа последней сессии выборки
             String name = ActiveUserInfo.getDefaults("guest_selection_name", getApplication());
-
             if (name == null) {
-                _isEmptyState.setValue(true);
-                _collections.setValue(new ArrayList<>());
-                _outfits.setValue(new ArrayList<>());
-                _selectedName.setValue(null);
+                setEmptyState();
             } else {
-                ArrayList<String> data = new ArrayList<>(Arrays.asList(name));
-                _isEmptyState.setValue(false);
-                _collections.setValue(data);
-                String currentSelected = _selectedName.getValue();
-
-                // 1. Если текущая коллекция всё еще существует в списке -> ОБНОВЛЯЕМ ЕЁ ДАННЫЕ
-                if (currentSelected != null && data.contains(currentSelected)) {
-                    // Мы принудительно грузим одежду заново, чтобы подтянуть актуальные лайки
-                    loadOutfits(currentSelected);
-                }
-                // 2. Иначе (если ничего не выбрано или старую коллекцию удалили) -> берем первую
-                else {
-                    onCollectionSelected(data.get(0));
-                }
+                updateCollectionsState(new ArrayList<>(Arrays.asList(name)));
             }
+        }
+    }
+
+    private void setEmptyState() {
+        _isEmptyState.setValue(true);
+        _collections.setValue(new ArrayList<>());
+        _outfits.setValue(new ArrayList<>());
+        _selectedName.setValue(null);
+    }
+
+    /**
+     * Контролирует фокус на текущей коллекции при обновлении списков
+     */
+    private void updateCollectionsState(List<String> data) {
+        _isEmptyState.setValue(false);
+        _collections.setValue(data);
+        String currentSelected = _selectedName.getValue();
+
+        if (currentSelected != null && data.contains(currentSelected)) {
+            loadOutfits(currentSelected);
+        } else {
+            onCollectionSelected(data.get(0));
         }
     }
 
@@ -126,13 +116,12 @@ public class HomeViewModel extends AndroidViewModel {
     }
 
     private void loadOutfits(String collectionName) {
-        // Используем новый callback, который возвращает и список, и ID коллекции
         repository.getOutfitsForCollection(collectionName, getApplication(), new UserCollectionsRepository.CollectionDataCallback() {
             @Override
             public void onDataLoaded(List<Outfit> data, String collectionId) {
-                currentCollectionId = collectionId; // Сохраняем ID!
+                currentCollectionId = collectionId;
                 allOutfits = data != null ? data : new ArrayList<>();
-                _outfits.setValue(allOutfits);
+                _outfits.setValue(allOutfits); // Публикация исходного массива в UI
             }
 
             @Override
@@ -142,12 +131,15 @@ public class HomeViewModel extends AndroidViewModel {
         });
     }
 
-    // --- ГЛАВНЫЙ МЕТОД ФИЛЬТРАЦИИ ---
+    /**
+     * Выполняет многокритериальную фильтрацию
+     * логическое И между разнородными категориями (тип, цвет, сезон)
+     * и логическое ИЛИ при множественном выборе тегов внутри одной категории.
+     */
     public void applyFilters(FilterState state) {
-        android.util.Log.d("FILTER_DEBUG", "ViewModel: Начал фильтрацию. Всего вещей в базе: " + allOutfits.size()); // <--- ЛОГ
-        // Если база пустая или фильтры пустые -> сбрасываем фильтр (показываем всё)
         if (allOutfits.isEmpty()) return;
 
+        // Если все фильтры сброшены, восстанавливаем отображение полной коллекции из кэша
         if (state.isEmpty()) {
             _outfits.setValue(allOutfits);
             return;
@@ -156,76 +148,71 @@ public class HomeViewModel extends AndroidViewModel {
         List<Outfit> tempResult = new ArrayList<>();
 
         for (Outfit outfit : allOutfits) {
-            // 1. Проверка ТИПОВ (ИЛИ внутри категории)
+            // Фильтрация по типу и цвету
             boolean typeMatch = checkMatch(state.getSelectedTypes(), outfit.getFilter_types());
-
-            // 2. Проверка ЦВЕТОВ (ИЛИ внутри категории)
             boolean colorMatch = checkMatch(state.getSelectedColors(), outfit.getFilter_colors());
 
-            // 3. Проверка СЕЗОНОВ (Сравниваем строку сезона с набором)
+            // Сравнение одиночного строкового значения сезона с выбранным множеством
             boolean seasonMatch = true;
             if (!state.getSelectedSeasons().isEmpty()) {
-                // Если у аутфита нет сезона, а фильтр включен -> не подходит
-                // Если есть -> проверяем наличие в списке выбранных
                 if (outfit.getFilter_season() == null || !state.getSelectedSeasons().contains(outfit.getFilter_season())) {
                     seasonMatch = false;
                 }
             }
 
-            // ЛОГИЧЕСКОЕ И: Должны совпасть все категории
+            // Объединение результатов: объект проходит фильтр только при выполнении всех условий
             if (typeMatch && colorMatch && seasonMatch) {
                 tempResult.add(outfit);
             }
         }
 
+        // Если в результате фильтрации массив пуст, отправляем UI сигнал для вызова Toast
         if (tempResult.isEmpty()) {
-            // Ничего не нашли -> Сообщаем UI, список на экране НЕ трогаем
             _filterEmptyEvent.setValue(true);
-            // Нужно сбросить ивент сразу (можно использовать SingleLiveEvent, но пока так)
             _filterEmptyEvent.setValue(false);
         } else {
-            // Нашли -> Обновляем экран
             _outfits.setValue(tempResult);
         }
     }
 
-    // Хелпер: проверяет, есть ли пересечение между выбранными фильтрами и тегами вещи
+    /**
+     * Проверяет пересечение выбранных фильтров с тегами образа
+     */
     private boolean checkMatch(Set<String> selectedFilters, Map<String, Boolean> itemTags) {
-        if (selectedFilters.isEmpty()) return true; // Фильтр не выбран -> подходит всё
+        if (selectedFilters.isEmpty()) return true; // Если категория фильтра пуста, валидны все объекты
         if (itemTags == null) return false;
 
-        // Бежим по выбранным фильтрам (например, "белый", "синий")
         for (String filter : selectedFilters) {
-            // Бежим по тегам вещи (например, "Белый": true, "Красный": true)
             for (String tagKey : itemTags.keySet()) {
-                // Сравниваем игнорируя регистр (case-insensitive)
                 if (tagKey.equalsIgnoreCase(filter)) {
-                    return true; // Нашли совпадение!
+                    return true; // Найдено пересечение множеств внутри категории
                 }
             }
         }
         return false;
     }
 
-    // --- ЛАЙКИ (ОБНОВЛЕНО) ---
+    /**
+     * Инвертирует статус лайк. Сначала мгновенно обновляет UI, затем пишет в БД.
+     */
     public void toggleLike(String outfitId) {
-        if (currentCollectionId == null) return; // Некуда сохранять
+        if (currentCollectionId == null) return;
 
         boolean newState = false;
-
-        // 1. Обновляем UI мгновенно
         List<Outfit> currentList = _outfits.getValue();
+
         if (currentList != null) {
+            // Поиск и инверсия флага в текущем отображаемом списке на экране
             for (Outfit o : currentList) {
                 if (o.getId().equals(outfitId)) {
-                    newState = !o.isLiked(); // Переключаем
+                    newState = !o.isLiked();
                     o.setLiked(newState);
                     break;
                 }
             }
-            _outfits.setValue(currentList); // Триггерим обновление адаптера
+            _outfits.setValue(currentList);
 
-            // Обновляем в кеше тоже
+            // Синхронизация измененного флага с базовым кэшем allOutfits
             for (Outfit o : allOutfits) {
                 if (o.getId().equals(outfitId)) {
                     o.setLiked(newState);
@@ -233,35 +220,32 @@ public class HomeViewModel extends AndroidViewModel {
                 }
             }
         }
-
-        // 2. Отправляем в базу
+        // Асинхронная отправка обновления в Firebase
         repository.toggleLikeInFirebase(getApplication(), currentCollectionId, outfitId, newState);
     }
 
+    /**
+     * Легковесное обновление только идентификаторов лайков (без перезагрузки списка образов).
+     */
     private void refreshLikesOnly() {
         if (currentCollectionId == null) return;
 
-        // Вызываем легкий метод
-        repository.getLikedIdsOnly(getApplication(), currentCollectionId,new UserCollectionsRepository.DataCallback<List<String>>() {
+        repository.getLikedIdsOnly(getApplication(), currentCollectionId, new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> likedIds) {
                 if (allOutfits == null) return;
 
                 boolean changed = false;
-
-                // Пробегаем по загруженной одежде в памяти
                 for (Outfit outfit : allOutfits) {
-                    // Проверяем есть ли ID этой одежды в списке лайков из базы
                     boolean isLikedInDb = likedIds.contains(outfit.getId());
-
-                    // Если статус отличается от того, что на экране, меняем
+                    // Если статус на сервере изменился (например, через другой экран), обновляем локально
                     if (outfit.isLiked() != isLikedInDb) {
                         outfit.setLiked(isLikedInDb);
                         changed = true;
                     }
                 }
 
-                // Если были изменения, обновляем UI
+                // Перерисовываем список на UI только если обнаружены реальные расхождения данных
                 if (changed) {
                     _outfits.setValue(_outfits.getValue());
                 }
@@ -272,20 +256,17 @@ public class HomeViewModel extends AndroidViewModel {
         });
     }
 
-    // Метод для обновления данных (вызывается из onResume)
+    /**
+     * Актуализирует состояние папок и лайков
+     */
     public void refreshData() {
-        // Всегда проверяем актуальный список папок
         repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> data) {
-                // Удалили последнюю коллекцию
                 if (data == null || data.isEmpty()) {
-                    _isEmptyState.setValue(true);
-                    _collections.setValue(new ArrayList<>());
-                    _outfits.setValue(new ArrayList<>());
-                    _selectedName.setValue(null);
+                    setEmptyState();
                     currentCollectionId = null;
-                    allOutfits.clear(); // Очищаем кэш
+                    allOutfits.clear();
                     return;
                 }
 
@@ -293,22 +274,15 @@ public class HomeViewModel extends AndroidViewModel {
                 _collections.setValue(data);
 
                 String currentName = _selectedName.getValue();
-
-                // Проверяем существует ли выбранная папка
                 if (currentName != null && data.contains(currentName)) {
-                    // Папка на месте, запускаем легкое обновление лайков
-                    refreshLikesOnly();
-                }
-                else {
-                    // Папки больше нет, грузим первую доступную папку полностью
-                    onCollectionSelected(data.get(0));
+                    refreshLikesOnly(); // Папка существует -> запускаем точечную синхронизацию лайков
+                } else {
+                    onCollectionSelected(data.get(0)); // Папка удалена -> переключаемся на первую доступную
                 }
             }
 
             @Override
-            public void onError(String error) {
-                // Обработка ошибки
-            }
+            public void onError(String error) {}
         });
     }
 }

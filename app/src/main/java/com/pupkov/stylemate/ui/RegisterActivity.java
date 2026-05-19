@@ -1,7 +1,6 @@
 package com.pupkov.stylemate.ui;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,14 +13,12 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.pupkov.stylemate.R;
-import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
 import com.pupkov.stylemate.ui.dialogs.DialogCheckEmail;
 import com.pupkov.stylemate.ui.dialogs.DialogSuccessReg;
 import com.pupkov.stylemate.ui.dialogs.SkipRegDialog;
 import com.pupkov.stylemate.ui.dialogs.PrivacyConsentDialog;
 import com.pupkov.stylemate.ui.dialogs.VerifyEmailDialog;
-import com.pupkov.stylemate.ui.test.TestQ1Activity;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -33,6 +30,7 @@ import org.apache.commons.validator.routines.EmailValidator;
 import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity {
+    // Репозиторий для взаимодействия с Firebase (регистрация, отправка писем)
     UserRepository repo = new UserRepository();
 
     @Override
@@ -50,16 +48,14 @@ public class RegisterActivity extends AppCompatActivity {
 
         backToAuth.setOnClickListener(v -> finish());
 
+        // Настройка календарного диалога для выбора даты рождения
         birth.setOnClickListener(v -> {
-            // 1. Создаем календарь
             MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                     .setTitleText("Выберите дату рождения")
                     .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                     .build();
 
-            // 2. Слушатель нажатия "OK"
             datePicker.addOnPositiveButtonClickListener(selection -> {
-                // Форматируем выбранную дату в твой формат ДД/ММ/ГГ
                 Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 calendar.setTimeInMillis(selection);
                 SimpleDateFormat format = new SimpleDateFormat("dd/MM/yy", Locale.getDefault());
@@ -72,9 +68,9 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         ImageButton verifyButton = findViewById(R.id.verifyEmail);
-        //ImageButton continueButton = findViewById(R.id.continueRegButton);
         ImageButton skipRegButton = findViewById(R.id.skipRegButton);
 
+        // Если все поля заполнены - прячем Назад и открываем Подтвердить почту
         TextWatcher watcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -94,91 +90,10 @@ public class RegisterActivity extends AppCompatActivity {
         name.addTextChangedListener(watcher);
         birth.addTextChangedListener(watcher);
 
-        /*verifyButton.setOnClickListener(v -> {
-            EmailValidator validator = EmailValidator.getInstance();
-
-            // 1. Сначала стандартные проверки полей
-            if (!validator.isValid(email.getText().toString())) {
-                Toast.makeText(RegisterActivity.this, "Указан некорретный адрес", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            if (password.getText().toString().length() < 6 || password.getText().toString().length() > 12) {
-                Toast.makeText(RegisterActivity.this, "Пароль должен содержать от 6 до 12 символов", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            if (!isValidDateRegex(birth.getText().toString())) {
-                Toast.makeText(RegisterActivity.this, "Дата должна быть в формате ДД/ММ/ГГ", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            // 2. Проверка согласия (из SharedPreferences)
-            if (isPrivacyAccepted()) {
-                // Если уже соглашался ранее — сразу отправляем email
-                sendVerificationEmail(email.getText().toString(), password.getText().toString(), RegisterActivity.this);
-            } else {
-                // Если еще не соглашался — показываем диалог
-                PrivacyConsentDialog dialog = new PrivacyConsentDialog();
-                dialog.setOnConsentListener(isGranted -> {
-                    if (isGranted) {
-                        savePrivacyAccepted(); // Сохраняем, чтобы больше не спрашивать
-                        sendVerificationEmail(email.getText().toString(), password.getText().toString(), RegisterActivity.this);
-                    } else {
-                        Toast.makeText(RegisterActivity.this, "Для регистрации необходимо принять соглашение", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                dialog.show(getSupportFragmentManager(), "PrivacyDialog");
-            }
-
-            VerifyEmailDialog dialog = new VerifyEmailDialog();
-
-            Bundle args = new Bundle();
-            args.putString("email", email.getText().toString());
-            args.putString("password", password.getText().toString());
-            dialog.setArguments(args);
-
-            dialog.show(getSupportFragmentManager(), "DeleteDialog");
-        });*/
-
-        /*continueButton.setOnClickListener(v -> {
-            repo.checkEmailVerifiedAndRegister(name.getText().toString(), "", email.getText().toString(), birth.getText().toString(), "", password.getText().toString()).observe(this, resource -> {
-                switch(resource.status) {
-                    case LOADING:
-                        Toast.makeText(RegisterActivity.this, "Идёт процесс регистрации", Toast.LENGTH_LONG).show();
-                        break;
-                    case SUCCESS:
-                        if (resource.data) {
-                            DialogSuccessReg dialog = new DialogSuccessReg();
-
-                            Bundle args = new Bundle();
-                            args.putString("uid", repo.getUID());
-                            dialog.setArguments(args);
-
-                            dialog.show(getSupportFragmentManager(), "DeleteDialog");
-                        } else {
-                            DialogCheckEmail dialog = new DialogCheckEmail();
-
-                            Bundle args = new Bundle();
-                            args.putString("email", email.getText().toString());
-                            args.putString("password", password.getText().toString());
-                            dialog.setArguments(args);
-
-                            dialog.show(getSupportFragmentManager(), "DeleteDialog");
-                        }
-                        break;
-                    case ERROR:
-                        Toast.makeText(RegisterActivity.this, resource.message, Toast.LENGTH_LONG).show();
-                        break;
-                }
-            });
-        });*/
-
+        // Обработка клика регистрации: проверка полей, проверка политики конфиденциальности, запуск верификации
         verifyButton.setOnClickListener(v -> {
-            // 1. Валидация
             if (!validateInputs()) return;
 
-            // 2. Проверка политики
             if (isPrivacyAccepted()) {
                 startVerificationChain();
             } else {
@@ -195,30 +110,20 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
 
-        /*skipRegButton.setOnClickListener(v -> {
-            SkipRegDialog dialog = new SkipRegDialog();
-
-            dialog.setListener(this::finish);
-
-            dialog.show(getSupportFragmentManager(), "DeleteDialog");
-        });*/
-
         backToAuth.setOnClickListener(v -> {
-            // Просто закрываем текущую активность, возвращаясь на AuthActivity
             finish();
         });
 
+        // Пропуск регистрации: требует сначала принять политику, затем открывает диалог гостевого режима
         skipRegButton.setOnClickListener(v -> {
             if (isPrivacyAccepted()) {
-                // Если уже принимал — сразу показываем диалог пропуска
                 showSkipDialog();
             } else {
-                // Если нет — просим согласиться
                 PrivacyConsentDialog dialog = new PrivacyConsentDialog();
                 dialog.setOnConsentListener(isGranted -> {
                     if (isGranted) {
-                        savePrivacyAccepted(); // Сохраняем выбор
-                        showSkipDialog();      // Открываем диалог пропуска
+                        savePrivacyAccepted();
+                        showSkipDialog();
                     } else {
                         Toast.makeText(RegisterActivity.this, "Для продолжения необходимо принять соглашение", Toast.LENGTH_SHORT).show();
                     }
@@ -228,6 +133,7 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    // Валидация входных данных: корректность email, длина пароля (6-12) и формат даты
     private boolean validateInputs() {
         EditText email = findViewById(R.id.emailReg);
         EditText password = findViewById(R.id.passwordReg);
@@ -249,26 +155,25 @@ public class RegisterActivity extends AppCompatActivity {
         return true;
     }
 
+    // Запуск процесса подтверждения: отправляет письмо и вешает слушатель на диалог ожидания клика пользователя
     private void startVerificationChain() {
         String emailStr = ((EditText)findViewById(R.id.emailReg)).getText().toString();
         String passwordStr = ((EditText)findViewById(R.id.passwordReg)).getText().toString();
 
-        // 1. Отправляем письмо
         sendVerificationEmail(emailStr, passwordStr, this);
 
-        // 2. Показываем диалог VerifyEmailDialog (Инструкция)
         VerifyEmailDialog verifyDialog = new VerifyEmailDialog();
         Bundle args = new Bundle();
         args.putString("email", emailStr);
         args.putString("password", passwordStr);
         verifyDialog.setArguments(args);
 
-        // ВАЖНО: Вешаем слушатель на кнопку "Я подтвердил" в этом диалоге
         verifyDialog.setListener(this::checkUserStatusAndFinalize);
 
         verifyDialog.show(getSupportFragmentManager(), "VerifyDialog");
     }
 
+    // Финальный шаг: проверяем в БД, перешел ли юзер по ссылке. Если да - регистрируем профиль в Firebase
     private void checkUserStatusAndFinalize() {
         String emailStr = ((EditText)findViewById(R.id.emailReg)).getText().toString();
         String passwordStr = ((EditText)findViewById(R.id.passwordReg)).getText().toString();
@@ -306,6 +211,7 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
+    // Отправка ссылки для верификации email через репозиторий
     public void sendVerificationEmail(String emailStr, String passwordStr, Context context) {
         repo.sendEmail(emailStr, passwordStr).observe(this, resource -> {
             switch(resource.status) {
@@ -328,11 +234,11 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void showSkipDialog() {
         SkipRegDialog dialog = new SkipRegDialog();
-        // При нажатии "Продолжить без регистрации" в диалоге — закрываем экран (finish)
         dialog.setListener(this::finish);
         dialog.show(getSupportFragmentManager(), "SkipDialog");
     }
 
+    // Работа с локальным хранилищем для флага согласия с политикой
     private boolean isPrivacyAccepted() {
         return getSharedPreferences("app_prefs", MODE_PRIVATE)
                 .getBoolean("privacy_accepted", false);

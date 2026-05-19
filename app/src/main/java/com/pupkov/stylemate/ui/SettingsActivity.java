@@ -1,7 +1,5 @@
 package com.pupkov.stylemate.ui;
 
-import static androidx.core.content.ContextCompat.startActivity;
-
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.net.Uri;

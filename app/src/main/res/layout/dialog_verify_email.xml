@@ -13,7 +13,6 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- Текст вопроса -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,7 +26,6 @@
             android:textSize="19sp"
             android:textStyle="bold" />
 
-        <!-- Кнопка УДАЛИТЬ (Светлая) -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnContinueVerify"
             android:layout_width="match_parent"
@@ -40,7 +38,6 @@
             android:layout_marginTop="15dp"
             android:textSize="18sp" />
 
-        <!-- Кнопка ОТМЕНИТЬ (Темная) -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnRepeatVerify"
             android:layout_width="match_parent"

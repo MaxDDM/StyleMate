@@ -15,7 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide; // Не забудь добавить зависимость Glide в build.gradle, если нет
+import com.bumptech.glide.Glide;
 import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.analytics.AnalyticsManager;
 import com.pupkov.stylemate.analytics.CR;
@@ -29,6 +29,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Экран детального просмотра образа с возможностью лайка и перехода в магазин.
+ */
 public class OutfitDetailActivity extends AppCompatActivity {
 
     long start = System.nanoTime();
@@ -36,93 +39,71 @@ public class OutfitDetailActivity extends AppCompatActivity {
     private ItemAdapter adapter;
 
     private ImageView ivMain;
-    private TextView tvTitle;      // "Образ на лето..."
-    private TextView tvTotalPrice; // "15 000 Р" (сумма)
+    private TextView tvTitle;
+    private TextView tvTotalPrice;
     private RecyclerView rvProducts;
-    private ImageButton btnLike; // Вынесли кнопку в поле класса
+    private ImageButton btnLike;
 
-    // Поля для логики лайков
     private String currentCollectionId;
     private String currentOutfitId;
     private boolean isLiked = false;
-    // Цвета
+
     private final int COLOR_BLUE = android.graphics.Color.parseColor("#3D7DFF");
     private final int COLOR_GRAY = android.graphics.Color.parseColor("#5C5C5C");
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_outfit_detail);
 
-        // 1. Инициализация ViewModel
         viewModel = new ViewModelProvider(this).get(OutfitDetailViewModel.class);
-
-        // 2. Находим View
         ivMain = findViewById(R.id.ivDetailImage);
         ImageButton btnBack = findViewById(R.id.btnBack);
         btnLike = findViewById(R.id.btnDetailLike);
-
-        // ВАЖНО: Убедись, что в XML есть эти ID, или добавь их!
         tvTitle = findViewById(R.id.tvOutfitTitle);
-        tvTotalPrice = findViewById(R.id.tvTotalPrice); // Если есть поле для общей суммы
+        tvTotalPrice = findViewById(R.id.tvTotalPrice);
         rvProducts = findViewById(R.id.rvProducts);
 
-        // 3. Настраиваем RecyclerView
         setupRecyclerView();
-
-        // Сначала грузим данные, там же инициализируем переменные лайков
         loadDataFromIntent();
-
-        // После загрузки данных обновляем вид кнопки
         updateLikeButtonUI();
-
-        // 4. Получаем данные из Intent и запускаем загрузку
-        loadDataFromIntent();
-
-        // 5. Подписываемся на обновления данных (Observer)
         observeViewModel();
 
-        new CTR().updateOutfitShows(Integer.parseInt(currentOutfitId), () -> {
-            AnalyticsManager.calculateOutfitFavoriteRate(currentOutfitId);
-        });
+        // Фиксация показа образа в аналитике CTR
+        if (currentOutfitId != null && !currentOutfitId.isEmpty()) {
+            try {
+                int id = Integer.parseInt(currentOutfitId);
+                new CTR().updateOutfitShows(id, () -> {
+                    AnalyticsManager.calculateOutfitFavoriteRate(currentOutfitId);
+                });
+            } catch (NumberFormatException ignored) {
+            }
+        }
 
-        // 6. Кнопки
         btnBack.setOnClickListener(v -> finish());
 
-        // --- ЛОГИКА ЛАЙКА ---
         btnLike.setOnClickListener(v -> {
-            // 1. Проверка на гостя (у гостя collectionId == null)
+            // Запрет сохранения для неавторизованных пользователей (гостей)
             if (currentCollectionId == null) {
                 Toast.makeText(this, "Войдите или зарегистрируйтесь, чтобы сохранять образы", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // 2. Инвертируем (было лайкнуто -> стало не лайкнуто, и наоборот)
             isLiked = !isLiked;
+            updateLikeButtonUI(); // Мгновенный отклик интерфейса до отправки сетевого запроса
 
-            // 3. Обновляем вид кнопки
-            updateLikeButtonUI();
-
-            // 4. Отправляем в базу
             viewModel.toggleLike(currentCollectionId, currentOutfitId, isLiked);
 
-            // 5. Обратная связь
             if (isLiked) {
                 Toast.makeText(this, "Добавлено в избранное", Toast.LENGTH_SHORT).show();
-                // --- НАЧАЛО ВСТАВКИ: ОБУЧЕНИЕ ---
-                // Проверяем, показывали ли мы уже обучение про лайки
-                String isShown = ActiveUserInfo.getDefaults("IS_FIRST_LIKE_SHOWN", this);
 
-                // Если НЕ показывали (т.е. там null или "false")
+                // подсказка показывается только при самом первом лайке в приложении
+                String isShown = ActiveUserInfo.getDefaults("IS_FIRST_LIKE_SHOWN", this);
                 if (!"true".equals(isShown)) {
                     String text = "Вы поставили лайк образу\nТеперь он сохранен в папке в\nличном кабинете.";
-
-                    // Показываем диалог (false = стрелка не нужна)
                     UniversalInfoDialog dialog = UniversalInfoDialog.newInstance(text, false);
                     dialog.show(getSupportFragmentManager(), "FirstLikeTag");
 
-                    // Записываем, что теперь показали
                     ActiveUserInfo.setDefaults("IS_FIRST_LIKE_SHOWN", "true", this);
                 }
             } else {
@@ -131,23 +112,29 @@ public class OutfitDetailActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Динамическое переключение цвета иконки лайка (выделенный/серый контур).
+     */
     private void updateLikeButtonUI() {
-        if (isLiked) {
-            btnLike.setColorFilter(COLOR_BLUE);
-            btnLike.setImageResource(R.drawable.ic_heart_outline); // Если есть заполненное сердце, иначе ic_heart_outline
-        } else {
-            btnLike.setColorFilter(COLOR_GRAY);
-            btnLike.setImageResource(R.drawable.ic_heart_outline);
-        }
+        btnLike.setColorFilter(isLiked ? COLOR_BLUE : COLOR_GRAY);
+        btnLike.setImageResource(R.drawable.ic_heart_outline);
     }
 
+    /**
+     * Конфигурация горизонтального списка товаров и обработка кликов по вещам
+     */
     private void setupRecyclerView() {
         rvProducts.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 
-        // Передаем слушатель клика: открываем ссылку в браузере
+        // Открытие карточки товара во внешнем браузере с логированием клика в CR-аналитику
         adapter = new ItemAdapter(url -> {
             if (url != null && !url.isEmpty()) {
-                CR.updateCountLink(Integer.parseInt(currentOutfitId));
+                if (currentOutfitId != null && !currentOutfitId.isEmpty()) {
+                    try {
+                        CR.updateCountLink(Integer.parseInt(currentOutfitId));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(browserIntent);
             } else {
@@ -157,32 +144,30 @@ public class OutfitDetailActivity extends AppCompatActivity {
         rvProducts.setAdapter(adapter);
     }
 
+    /**
+     * Парсинг данных из вызывающего Intent и инициализация слоя ViewModel
+     */
     private void loadDataFromIntent() {
-        // Достаем простые типы данных
         String imageUrl = getIntent().getStringExtra("image_url");
-        currentOutfitId = getIntent().getStringExtra("outfit_id"); // Сохраняем ID образа
+        currentOutfitId = getIntent().getStringExtra("outfit_id");
         String style = getIntent().getStringExtra("style");
         String season = getIntent().getStringExtra("season");
         currentCollectionId = getIntent().getStringExtra("collection_id");
         isLiked = getIntent().getBooleanExtra("is_liked", false);
 
-        // Достаем список ID вещей (переданный как ArrayList<String>)
         ArrayList<String> itemIds = getIntent().getStringArrayListExtra("item_ids");
 
-        // Устанавливаем картинку сразу (Glide)
         if (imageUrl != null) {
             Glide.with(this).load(imageUrl).into(ivMain);
         }
 
-        // --- ХИТРОСТЬ ---
-        // ViewModel ожидает объект Outfit, но передавать его целиком через Intent сложно (надо Parcelable).
-        // Мы соберем "временный" объект Outfit из того, что пришло в Intent.
+        // Временная сборка сущности Outfit
         Outfit tempOutfit = new Outfit();
         tempOutfit.setId(currentOutfitId);
         tempOutfit.setStyle(style);
         tempOutfit.setFilter_season(season);
 
-        // Превращаем список List обратно в Map для модели
+        // Конвертация плоского списка ID из Intent в Map-структуру, необходимую для Firebase репозитория
         Map<String, Boolean> itemsMap = new HashMap<>();
         if (itemIds != null) {
             for (String id : itemIds) {
@@ -191,22 +176,21 @@ public class OutfitDetailActivity extends AppCompatActivity {
         }
         tempOutfit.setItems(itemsMap);
 
-        // Запускаем логику во ViewModel
         viewModel.init(tempOutfit);
     }
 
+    /**
+     * Подписка на LiveData-потоки состояния экрана (список вещей, название, суммарная стоимость).
+     */
     private void observeViewModel() {
-        // Список вещей
         viewModel.items.observe(this, items -> {
             adapter.updateList(items);
         });
 
-        // Заголовок "Образ на лето..."
         viewModel.title.observe(this, title -> {
             if (tvTitle != null) tvTitle.setText(title);
         });
 
-        // Общая цена
         viewModel.totalPrice.observe(this, price -> {
             if (tvTotalPrice != null) tvTotalPrice.setText(price);
         });
@@ -214,16 +198,21 @@ public class OutfitDetailActivity extends AppCompatActivity {
 
     @Override
     public void finish() {
-        // Подготавливаем данные для возврата
+        // Передача финального статуса лайка обратно вызывающему экрану для мгновенного обновления в общем списке
         Intent resultIntent = new Intent();
         resultIntent.putExtra("outfit_id", currentOutfitId);
-        resultIntent.putExtra("is_liked", isLiked); // Возвращаем финальное состояние
-
-        // Ставим штамп "Все ок" и прикладываем данные
+        resultIntent.putExtra("is_liked", isLiked);
         setResult(RESULT_OK, resultIntent);
 
-        long end = System.nanoTime();
-        changeAvgTime(Integer.parseInt(currentOutfitId), (end - start) / 1_000_000_000.0);
-        super.finish(); // Закрываем экран
+        // Расчет чистой дельты времени сессии просмотра экрана и отправка в аналитику удержания
+        if (currentOutfitId != null && !currentOutfitId.isEmpty()) {
+            try {
+                long end = System.nanoTime();
+                changeAvgTime(Integer.parseInt(currentOutfitId), (end - start) / 1_000_000_000.0);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        super.finish();
     }
 }

@@ -6,15 +6,13 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF"
     android:scrollbars="none"
-    android:fillViewport="true"> <!-- ЭТО ВАЖНО: Растягивает контент на весь экран -->
+    android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="24dp"> <!-- Отступ от самого низа экрана -->
+        android:paddingBottom="24dp">
 
-        <!-- КНОПКА НАЗАД -->
-        <!-- Убрал FrameLayout, он тут лишний. Добавил padding, чтобы увеличить область нажатия -->
         <ImageButton
             android:id="@+id/btnBack"
             android:layout_width="54dp"
@@ -30,7 +28,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:tint="#000000" />
 
-        <!-- АВАТАР -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardAvatar"
             android:layout_width="110dp"
@@ -48,12 +45,10 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_edit_avatar"
-                tools:srcCompat="@tools:sample/avatars" /> <!-- Заглушка для превью в студии -->
+                tools:srcCompat="@tools:sample/avatars" />
         </androidx.cardview.widget.CardView>
 
-        <!-- === БЛОК ВВОДА ДАННЫХ === -->
 
-        <!-- ИМЯ -->
         <TextView
             android:id="@+id/lblName"
             android:layout_width="wrap_content"
@@ -88,7 +83,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/lblName" />
 
-        <!-- НОМЕР -->
         <TextView
             android:id="@+id/lblPhone"
             android:layout_width="wrap_content"
@@ -119,7 +113,6 @@
             app:layout_constraintStart_toStartOf="@+id/etName"
             app:layout_constraintTop_toBottomOf="@+id/lblPhone" />
 
-        <!-- ПОЧТА -->
         <TextView
             android:id="@+id/lblEmail"
             android:layout_width="wrap_content"
@@ -150,7 +143,6 @@
             app:layout_constraintStart_toStartOf="@+id/etName"
             app:layout_constraintTop_toBottomOf="@+id/lblEmail" />
 
-        <!-- ДАТА РОЖДЕНИЯ -->
         <TextView
             android:id="@+id/lblDate"
             android:layout_width="wrap_content"
@@ -181,7 +173,6 @@
             app:layout_constraintStart_toStartOf="@+id/etName"
             app:layout_constraintTop_toBottomOf="@+id/lblDate" />
 
-        <!-- КНОПКИ -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnChangePassword"
             android:layout_width="0dp"
@@ -211,10 +202,6 @@
             app:layout_constraintEnd_toEndOf="@+id/etName"
             app:layout_constraintStart_toStartOf="@+id/etName"
             app:layout_constraintTop_toBottomOf="@+id/btnChangePassword" />
-
-        <!-- === ФУТЕР (Прибит к низу) === -->
-        <!-- bias=1.0 заставляет этот блок липнуть к низу родителя, если есть свободное место -->
-        <!-- constraintTop_toBottomOf="btnLogout" гарантирует, что они не налезут на кнопку на маленьких экранах -->
 
         <TextView
             android:id="@+id/tvFooterLeft"
