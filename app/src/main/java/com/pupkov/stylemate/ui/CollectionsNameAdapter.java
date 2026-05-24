@@ -16,8 +16,11 @@ import com.pupkov.stylemate.R;
 /**
  * Выпадающий адаптер-список для переключения активной коллекции
  */
-public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsNameAdapter.ViewHolder> {
+public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    // Определяем константы для типов ячеек
+    private static final int TYPE_ITEM = 0;
+    private static final int TYPE_CREATE_BUTTON = 1;
     private List<String> collectionNames;
     private final OnItemClickListener listener;
 
@@ -32,6 +35,7 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsName
      */
     public interface OnItemClickListener {
         void onItemClick(String name);
+        void onCreateNewClick();
     }
 
     public CollectionsNameAdapter(List<String> collectionNames, String initialName, OnItemClickListener listener) {
@@ -56,71 +60,13 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsName
         notifyDataSetChanged();
     }
 
-    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_collection_name_list, parent, false);
-        return new ViewHolder(view);
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String currentItemName;
-
-        // формирование пустой "заглушки", если в раскрытом списке всего 1 элемент
-        if (isExpanded && collectionNames.size() == 1 && position == 1) {
-            holder.tvCollectionName.setText(" ");
-            holder.arrowContainer.setVisibility(View.GONE);
-            holder.lineSeparator.setVisibility(View.GONE);
-            holder.itemView.setOnClickListener(null);
-            holder.itemView.setClickable(false);
-            return;
+    public int getItemViewType(int position) {
+        // Если список раскрыт и мы дошли до последнего элемента
+        if (isExpanded && position == collectionNames.size()) {
+            return TYPE_CREATE_BUTTON;
         }
-
-        if (!isExpanded) {
-            // Режим: Закрытый список (отображается только выбранный элемент)
-            currentItemName = selectedName;
-
-            holder.tvCollectionName.setTextColor(COLOR_GRAY);
-            holder.lineSeparator.setBackgroundColor(COLOR_GRAY);
-            holder.arrowContainer.setVisibility(View.VISIBLE);
-            holder.ivArrow.setColorFilter(COLOR_GRAY);
-            holder.ivArrow.setRotation(0f); // Стрелка вниз
-
-        } else {
-            // Режим: Раскрытый список со всеми доступными элементами
-            currentItemName = collectionNames.get(position);
-
-            if (currentItemName.equals(selectedName)) {
-                holder.tvCollectionName.setTextColor(COLOR_BLUE);
-                holder.lineSeparator.setBackgroundColor(COLOR_BLUE);
-            } else {
-                holder.tvCollectionName.setTextColor(COLOR_GRAY);
-                holder.lineSeparator.setBackgroundColor(COLOR_GRAY);
-            }
-
-            // Управление триггером-стрелкой на первой позиции раскрытого списка
-            if (position == 0) {
-                holder.arrowContainer.setVisibility(View.VISIBLE);
-                holder.ivArrow.setColorFilter(COLOR_BLUE);
-                holder.ivArrow.setRotation(180f); // Поворот стрелки вверх
-            } else {
-                holder.arrowContainer.setVisibility(View.GONE);
-            }
-        }
-
-        holder.tvCollectionName.setText(currentItemName);
-
-        holder.itemView.setOnClickListener(v -> {
-            if (!isExpanded) {
-                listener.onItemClick(null);
-            } else {
-                listener.onItemClick(currentItemName);
-            }
-        });
-
-        holder.arrowContainer.setOnClickListener(v -> listener.onItemClick(null));
+        return TYPE_ITEM;
     }
 
     @Override
@@ -128,13 +74,74 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsName
         if (!isExpanded) {
             return 1;
         }
+        return collectionNames.size() + 1;
+    }
 
-        // Искусственное расширение контейнера для корректного отображения нижней границы/тени
-        if (collectionNames.size() == 1) {
-            return 2;
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        if (viewType == TYPE_CREATE_BUTTON) {
+            View view = inflater.inflate(R.layout.item_collection_create, parent, false);
+            return new CreateButtonViewHolder(view);
+        } else {
+            View view = inflater.inflate(R.layout.item_collection_name_list, parent, false);
+            return new ItemViewHolder(view);
         }
+    }
 
-        return collectionNames.size();
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder.getItemViewType() == TYPE_CREATE_BUTTON) {
+            // Логика для кнопки "Создать подборку"
+            CreateButtonViewHolder createHolder = (CreateButtonViewHolder) holder;
+            createHolder.itemView.setOnClickListener(v -> listener.onCreateNewClick());
+        }
+        else {
+            // Логика для обычной подборки
+            ItemViewHolder itemHolder = (ItemViewHolder) holder;
+            String currentItemName;
+
+            if (!isExpanded) {
+                // Закрытое состояние
+                currentItemName = selectedName;
+                itemHolder.tvCollectionName.setTextColor(COLOR_GRAY);
+                itemHolder.arrowContainer.setVisibility(View.VISIBLE);
+                itemHolder.ivArrow.setColorFilter(COLOR_GRAY);
+                itemHolder.ivArrow.setRotation(0f); // Стрелка вниз
+            } else {
+                // Открытое состояние
+                currentItemName = collectionNames.get(position);
+
+                if (currentItemName.equals(selectedName)) {
+                    itemHolder.tvCollectionName.setTextColor(COLOR_BLUE);
+                } else {
+                    itemHolder.tvCollectionName.setTextColor(COLOR_GRAY);
+                }
+
+                // Стрелка вверх только у первого элемента
+                if (position == 0) {
+                    itemHolder.arrowContainer.setVisibility(View.VISIBLE);
+                    itemHolder.ivArrow.setColorFilter(COLOR_BLUE);
+                    itemHolder.ivArrow.setRotation(180f);
+                } else {
+                    itemHolder.arrowContainer.setVisibility(View.GONE);
+                }
+            }
+
+            itemHolder.tvCollectionName.setText(currentItemName);
+
+            // Клики по тексту
+            itemHolder.itemView.setOnClickListener(v -> {
+                if (!isExpanded) {
+                    listener.onItemClick(null); // Просто раскрываем
+                } else {
+                    listener.onItemClick(currentItemName); // Выбираем подборку
+                }
+            });
+
+        }
     }
 
     public void updateList(List<String> newList) {
@@ -142,18 +149,24 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsName
         notifyDataSetChanged();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    // 1. Холдер для обычного текста подборки
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView tvCollectionName;
-        View lineSeparator;
         FrameLayout arrowContainer;
         ImageView ivArrow;
 
-        public ViewHolder(@NonNull View itemView) {
+        public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
             tvCollectionName = itemView.findViewById(R.id.tvCollectionName);
-            lineSeparator = itemView.findViewById(R.id.lineSeparator);
             arrowContainer = itemView.findViewById(R.id.flArrowContainer);
             ivArrow = itemView.findViewById(R.id.ivItemArrow);
+        }
+    }
+
+    // 2. Холдер для кнопки "Создать подборку"
+    public static class CreateButtonViewHolder extends RecyclerView.ViewHolder {
+        public CreateButtonViewHolder(@NonNull View itemView) {
+            super(itemView);
         }
     }
 }

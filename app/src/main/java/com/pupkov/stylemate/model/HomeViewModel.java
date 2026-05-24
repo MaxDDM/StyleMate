@@ -37,6 +37,8 @@ public class HomeViewModel extends AndroidViewModel {
 
     private final MutableLiveData<String> _selectedName = new MutableLiveData<>();
     public LiveData<String> selectedName = _selectedName;
+    private final MutableLiveData<String> _toastMessage = new MutableLiveData<>();
+    public LiveData<String> toastMessage = _toastMessage;
 
     /**
      * allOutfits — неизменяемый локальный кэш всей коллекции
@@ -285,4 +287,47 @@ public class HomeViewModel extends AndroidViewModel {
             public void onError(String error) {}
         });
     }
+
+    public void onCollectionRenamed(String newName) {
+        String collectionId = getCurrentCollectionId();
+        if (collectionId == null) return;
+
+        // 1. Обновляем в БД
+        repository.renameCollection(getApplication(), collectionId, newName);
+
+        // 2. Обновляем локальный список
+        List<String> currentList = new ArrayList<>(_collections.getValue());
+        String oldName = _selectedName.getValue();
+        int index = currentList.indexOf(oldName);
+
+        if (index != -1) {
+            currentList.set(index, newName);
+            // 3. ПУБЛИКУЕМ ОБНОВЛЕНИЕ — это заставит Fragment вызвать adapter.updateList()
+            _collections.setValue(currentList);
+            _selectedName.setValue(newName);
+        }
+        _toastMessage.setValue("Название подборки изменено");
+    }
+
+    public void onCollectionDeleted() {
+        String collectionId = getCurrentCollectionId();
+        if (collectionId == null) return;
+
+        repository.deleteCollection(getApplication(), collectionId);
+
+        // Удаляем из локального списка и шлем обновление
+        List<String> currentList = new ArrayList<>(_collections.getValue());
+        currentList.remove(_selectedName.getValue());
+
+        _collections.setValue(currentList); // Адаптер автоматически удалит строку
+
+        // Переключаемся на первую оставшуюся, если список не пуст
+        if (!currentList.isEmpty()) {
+            onCollectionSelected(currentList.get(0));
+        } else {
+            setEmptyState();
+        }
+        _toastMessage.setValue("Подборка удалена");
+    }
+
 }

@@ -48,28 +48,10 @@ public class CollectionDetailActivity extends AppCompatActivity {
 
     private void initViews() {
         ImageButton btnBack = findViewById(R.id.btnBack);
-        ImageButton btnEdit = findViewById(R.id.btnEdit);
-        ImageButton btnDelete = findViewById(R.id.btnDelete);
-
         tvTitle = findViewById(R.id.tvCollectionTitle);
         rvGrid = findViewById(R.id.rvOutfitsGrid);
 
         btnBack.setOnClickListener(v -> finish());
-
-        // Открытие BottomSheet для переименования текущей папки
-        btnEdit.setOnClickListener(v -> {
-            String currentTitle = viewModel.title.getValue();
-            EditCollectionBottomSheet bottomSheet = EditCollectionBottomSheet.newInstance(currentTitle);
-            bottomSheet.setListener(newTitle -> viewModel.onCollectionRenamed(newTitle));
-            bottomSheet.show(getSupportFragmentManager(), "EditCollectionTag");
-        });
-
-        // Открытие диалога подтверждения безвозвратного удаления всей коллекции
-        btnDelete.setOnClickListener(v -> {
-            DeleteCollectionDialog dialog = new DeleteCollectionDialog();
-            dialog.setListener(() -> viewModel.onCollectionDeleted());
-            dialog.show(getSupportFragmentManager(), "DeleteDialog");
-        });
     }
 
     /**

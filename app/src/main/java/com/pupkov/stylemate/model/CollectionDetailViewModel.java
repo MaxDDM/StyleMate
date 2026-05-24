@@ -110,23 +110,4 @@ public class CollectionDetailViewModel extends AndroidViewModel {
             }
         }
     }
-
-    /**
-     * Локальное переименование папки с последующим вызовом метода обновления структуры БД.
-     */
-    public void onCollectionRenamed(String newName) {
-        _title.setValue(newName);
-        _toastMessage.setValue("Название изменено");
-
-        repository.renameCollection(getApplication(), collectionId, newName);
-    }
-
-    /**
-     * Каскадное удаление коллекции из Firebase с последующим закрытием текущего экрана.
-     */
-    public void onCollectionDeleted() {
-        repository.deleteCollection(getApplication(), collectionId);
-        _toastMessage.setValue("Подборка удалена");
-        _closeScreenEvent.setValue(true);
-    }
 }

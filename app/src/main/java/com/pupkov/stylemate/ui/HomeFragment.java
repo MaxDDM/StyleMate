@@ -38,7 +38,6 @@ public class HomeFragment extends Fragment {
     private RecyclerView rvCollections;
     private RecyclerView rvGrid;
     private View vOverlay;
-    private View btnCreate;
     private View clEmptyState;
     private ImageButton btnContinueTest;
     private ImageButton btnLogout;
@@ -67,9 +66,10 @@ public class HomeFragment extends Fragment {
         // Инициализация компонентов интерфейса
         View btnList = view.findViewById(R.id.btnList);
         rvCollections = view.findViewById(R.id.rvCollections);
+        ImageButton btnEdit = view.findViewById(R.id.btnEdit);     // Новая кнопка
+        ImageButton btnDelete = view.findViewById(R.id.btnDelete);
         vOverlay = view.findViewById(R.id.vOverlay);
         rvGrid = view.findViewById(R.id.rvOutfitsGrid);
-        btnCreate = view.findViewById(R.id.btnCreate);
         clEmptyState = view.findViewById(R.id.clEmptyState);
         btnContinueTest = view.findViewById(R.id.btnContinueTest);
         btnLogout = view.findViewById(R.id.btnLogout);
@@ -80,11 +80,37 @@ public class HomeFragment extends Fragment {
 
         // Настройка выпадающего списка коллекций
         rvCollections.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new CollectionsNameAdapter(new ArrayList<>(), "Основная", clickedName -> {
-            if (clickedName == null) {
-                toggleListState();
-            } else {
-                viewModel.onCollectionSelected(clickedName);
+        adapter = new CollectionsNameAdapter(new ArrayList<>(), "Основная", new CollectionsNameAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(String clickedName) {
+                if (clickedName == null) {
+                    toggleListState();
+                } else {
+                    viewModel.onCollectionSelected(clickedName);
+                    // Автоматически сворачиваем список при выборе другой коллекции
+                    if (isListExpanded) {
+                        toggleListState();
+                    }
+                }
+            }
+
+            @Override
+            public void onCreateNewClick() {
+                // Сворачиваем список перед переходом
+                if (isListExpanded) {
+                    toggleListState();
+                }
+
+                if (isGuest) {
+                    Toast.makeText(getContext(), "Доступно только зарегистрированным пользователям", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Берем текущее имя напрямую из ViewModel без создания лишних observe
+                    String currentName = viewModel.selectedName.getValue();
+                    ActiveUserInfo.setDefaults("collectionName", currentName, requireContext());
+
+                    Intent intent = new Intent(requireContext(), NewSelectQ1Activity.class);
+                    startActivity(intent);
+                }
             }
         });
         rvCollections.setAdapter(adapter);
@@ -218,14 +244,24 @@ public class HomeFragment extends Fragment {
                 clEmptyState.setVisibility(View.VISIBLE);
                 rvGrid.setVisibility(View.GONE);
                 btnList.setVisibility(View.GONE);
-                btnCreate.setVisibility(View.GONE);
+                btnEdit.setVisibility(View.GONE);
+                btnDelete.setVisibility(View.GONE);
+                rvCollections.setVisibility(View.GONE);
                 if (bottomNav != null) bottomNav.setVisibility(View.GONE);
             } else {
                 clEmptyState.setVisibility(View.GONE);
                 rvGrid.setVisibility(View.VISIBLE);
                 btnList.setVisibility(View.VISIBLE);
-                btnCreate.setVisibility(View.VISIBLE);
+                btnEdit.setVisibility(View.VISIBLE);
+                btnDelete.setVisibility(View.VISIBLE);
+                rvCollections.setVisibility(View.VISIBLE);
                 if (bottomNav != null) bottomNav.setVisibility(View.VISIBLE);
+            }
+        });
+
+        viewModel.toastMessage.observe(getViewLifecycleOwner(), msg -> {
+            if (msg != null && !msg.isEmpty()) {
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -240,16 +276,17 @@ public class HomeFragment extends Fragment {
             filtersFragment.show(getParentFragmentManager(), "FiltersTag");
         });
 
-        btnCreate.setOnClickListener(v -> {
-            if (isGuest) {
-                Toast.makeText(getContext(), "Доступно только зарегистрированным пользователям", Toast.LENGTH_SHORT).show();
-            } else {
-                viewModel.selectedName.observe(getViewLifecycleOwner(), name -> {
-                    Intent intent = new Intent(requireContext(), NewSelectQ1Activity.class);
-                    ActiveUserInfo.setDefaults("collectionName", name, requireContext());
-                    startActivity(intent);
-                });
-            }
+        btnEdit.setOnClickListener(v -> {
+            String currentTitle = viewModel.selectedName.getValue();
+            EditCollectionBottomSheet bottomSheet = EditCollectionBottomSheet.newInstance(currentTitle);
+            bottomSheet.setListener(newTitle -> viewModel.onCollectionRenamed(newTitle));
+            bottomSheet.show(getParentFragmentManager(), "EditCollectionTag");
+        });
+
+        btnDelete.setOnClickListener(v -> {
+            DeleteCollectionDialog dialog = new DeleteCollectionDialog();
+            dialog.setListener(() -> viewModel.onCollectionDeleted());
+            dialog.show(getParentFragmentManager(), "DeleteDialog");
         });
 
         btnContinueTest.setOnClickListener(v -> {
