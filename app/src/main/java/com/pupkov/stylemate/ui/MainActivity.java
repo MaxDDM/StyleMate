@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.content.Intent;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -63,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
 
         updateIcons(true);
 
+        handleNavigationIntent(getIntent());
+
         btnHome.setOnClickListener(v -> {
             switchFragment(homeFragment);
             updateIcons(true);
@@ -106,5 +109,22 @@ public class MainActivity extends AppCompatActivity {
             iconProfile.setColorFilter(Color.parseColor("#3D5AFE"));
             bgProfileSelected.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void handleNavigationIntent(Intent intent) {
+        if (intent != null && "PROFILE".equals(intent.getStringExtra("OPEN_TAB"))) {
+            // Убираем анимацию перехода для этой Activity
+            overridePendingTransition(0, 0);
+
+            // Используем ваши готовые методы
+            switchFragment(profileFragment);
+            updateIcons(false);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleNavigationIntent(intent);
     }
 }

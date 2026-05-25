@@ -125,21 +125,39 @@ public class HomeFragment extends Fragment {
         gridAdapter = new OutfitAdapter(getContext(), new ArrayList<>(), new OutfitAdapter.OnOutfitClickListener() {
             @Override
             public void onHeartClick(Outfit outfit, int position) {
-                // Проверка прав доступа: ограничение функционала добавления в избранное для гостей
                 if (isGuest) {
                     Toast.makeText(getContext(), "Войдите или зарегистрируйтесь, чтобы сохранять", Toast.LENGTH_SHORT).show();
                 } else {
                     viewModel.toggleLike(outfit.getId());
 
-                    // Логика демонстрации диалога при первом добавлении в избранное
                     Context context = getContext();
-                    String isShown = ActiveUserInfo.getDefaults("IS_FIRST_LIKE_SHOWN", context);
+                    if (context != null && getView() != null) {
+                        // Получаем ID текущей подборки для формирования уникального ключа
+                        String collectionId = viewModel.getCurrentCollectionId();
+                        String prefKey = "IS_FIRST_LIKE_SHOWN_" + (collectionId != null ? collectionId : "default");
 
-                    if (!"true".equals(isShown)) {
-                        String text = "Вы поставили лайк образу\nТеперь он сохранен в папке в\nличном кабинете.";
-                        UniversalInfoDialog dialog = UniversalInfoDialog.newInstance(text, false);
-                        dialog.show(getParentFragmentManager(), "FirstLikeTag");
-                        ActiveUserInfo.setDefaults("IS_FIRST_LIKE_SHOWN", "true", context);
+                        String isShown = ActiveUserInfo.getDefaults(prefKey, context);
+
+                        if (!"true".equals(isShown)) {
+                            // Создаем Snackbar вместо старого диалога
+                            com.google.android.material.snackbar.Snackbar.make(
+                                            getView(),
+                                            "Образ добавлен в папку избранного в личном кабинете.",
+                                            com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                                    )
+                                    .setDuration(5000)
+                                    .setAction("Перейти", v -> {
+                                        // Находим кнопку профиля в разметке Activity и имитируем клик по ней
+                                        View btnProfile = requireActivity().findViewById(R.id.btnProfile);
+                                        if (btnProfile != null) {
+                                            btnProfile.performClick();
+                                        }
+                                    })
+                                    .show();
+
+                            // Сохраняем флаг конкретно для ЭТОЙ подборки
+                            ActiveUserInfo.setDefaults(prefKey, "true", context);
+                        }
                     }
                 }
             }

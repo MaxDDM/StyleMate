@@ -83,28 +83,40 @@ public class OutfitDetailActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
 
         btnLike.setOnClickListener(v -> {
-            // Запрет сохранения для неавторизованных пользователей (гостей)
             if (currentCollectionId == null) {
                 Toast.makeText(this, "Войдите или зарегистрируйтесь, чтобы сохранять образы", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             isLiked = !isLiked;
-            updateLikeButtonUI(); // Мгновенный отклик интерфейса до отправки сетевого запроса
+            updateLikeButtonUI();
 
             viewModel.toggleLike(currentCollectionId, currentOutfitId, isLiked);
 
             if (isLiked) {
-                Toast.makeText(this, "Добавлено в избранное", Toast.LENGTH_SHORT).show();
+                // Формируем динамический ключ для текущей подборки
+                String prefKey = "IS_FIRST_LIKE_SHOWN_" + currentCollectionId;
+                String isShown = ActiveUserInfo.getDefaults(prefKey, this);
 
-                // подсказка показывается только при самом первом лайке в приложении
-                String isShown = ActiveUserInfo.getDefaults("IS_FIRST_LIKE_SHOWN", this);
                 if (!"true".equals(isShown)) {
-                    String text = "Вы поставили лайк образу\nТеперь он сохранен в папке в\nличном кабинете.";
-                    UniversalInfoDialog dialog = UniversalInfoDialog.newInstance(text, false);
-                    dialog.show(getSupportFragmentManager(), "FirstLikeTag");
+                    com.google.android.material.snackbar.Snackbar.make(
+                                    findViewById(android.R.id.content),
+                                    "Образ добавлен в папку избранного в личном кабинете.",
+                                    com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                            )
+                            .setDuration(5000)
+                            .setAction("Перейти", s -> {
+                                // Маршрутизация на главный экран с инструкцией открыть ЛК
+                                Intent mainIntent = new Intent(this, MainActivity.class);
+                                mainIntent.putExtra("OPEN_TAB", "PROFILE");
+                                mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                                startActivity(mainIntent);
+                                overridePendingTransition(0, 0);
+                                finish();
+                            })
+                            .show();
 
-                    ActiveUserInfo.setDefaults("IS_FIRST_LIKE_SHOWN", "true", this);
+                    ActiveUserInfo.setDefaults(prefKey, "true", this);
                 }
             } else {
                 Toast.makeText(this, "Удалено из избранного", Toast.LENGTH_SHORT).show();
