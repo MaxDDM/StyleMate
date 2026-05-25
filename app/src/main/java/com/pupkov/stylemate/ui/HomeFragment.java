@@ -20,6 +20,7 @@ import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.model.HomeViewModel;
 import com.pupkov.stylemate.model.FilterState;
 import com.pupkov.stylemate.model.Outfit;
+import com.pupkov.stylemate.model.Story;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
 import com.pupkov.stylemate.ui.new_select_test.NewSelectQ1Activity;
@@ -36,6 +37,7 @@ public class HomeFragment extends Fragment {
 
     private final UserRepository repo = new UserRepository();
     private RecyclerView rvCollections;
+    private RecyclerView rvStories;
     private RecyclerView rvGrid;
     private View vOverlay;
     private View clEmptyState;
@@ -44,6 +46,7 @@ public class HomeFragment extends Fragment {
 
     private CollectionsNameAdapter adapter;
     private OutfitAdapter gridAdapter;
+    private StoryAdapter storyAdapter;
     private HomeViewModel viewModel;
 
     private boolean isListExpanded = false;
@@ -66,10 +69,11 @@ public class HomeFragment extends Fragment {
         // Инициализация компонентов интерфейса
         View btnList = view.findViewById(R.id.btnList);
         rvCollections = view.findViewById(R.id.rvCollections);
-        ImageButton btnEdit = view.findViewById(R.id.btnEdit);     // Новая кнопка
+        ImageButton btnEdit = view.findViewById(R.id.btnEdit);
         ImageButton btnDelete = view.findViewById(R.id.btnDelete);
         vOverlay = view.findViewById(R.id.vOverlay);
         rvGrid = view.findViewById(R.id.rvOutfitsGrid);
+        rvStories = view.findViewById(R.id.rvStories);
         clEmptyState = view.findViewById(R.id.clEmptyState);
         btnContinueTest = view.findViewById(R.id.btnContinueTest);
         btnLogout = view.findViewById(R.id.btnLogout);
@@ -114,6 +118,19 @@ public class HomeFragment extends Fragment {
             }
         });
         rvCollections.setAdapter(adapter);
+
+        rvStories.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        storyAdapter = new StoryAdapter(new ArrayList<>(), new StoryAdapter.OnStoryClickListener() {
+            @Override
+            public void onStoryClick(Story story) {
+                // Переход на экран просмотра истории
+                Intent intent = new Intent(getContext(), StoryViewActivity.class);
+                intent.putExtra("image_url", story.getImageUrl());
+                intent.putExtra("link", story.getLink());
+                startActivity(intent);
+            }
+        });
+        rvStories.setAdapter(storyAdapter);
 
         // Настройка сетки отображения образов
         StaggeredGridLayoutManager layoutManager =
@@ -221,6 +238,16 @@ public class HomeFragment extends Fragment {
 
         // Настройка наблюдателей LiveData
 
+        // Наблюдатель за списком историй
+        viewModel.stories.observe(getViewLifecycleOwner(), storiesList -> {
+            if (storiesList == null || storiesList.isEmpty()) {
+                rvStories.setVisibility(View.GONE); // Скрываем, если пусто, разметка схлопнется
+            } else {
+                rvStories.setVisibility(View.VISIBLE);
+                storyAdapter.updateStories(storiesList);
+            }
+        });
+
         // Наблюдатель за списком доступных коллекций пользователя
         viewModel.collections.observe(getViewLifecycleOwner(), list -> {
             adapter.updateList(list);
@@ -261,6 +288,7 @@ public class HomeFragment extends Fragment {
             if (isEmpty != null && isEmpty) {
                 clEmptyState.setVisibility(View.VISIBLE);
                 rvGrid.setVisibility(View.GONE);
+                rvStories.setVisibility(View.GONE);
                 btnList.setVisibility(View.GONE);
                 btnEdit.setVisibility(View.GONE);
                 btnDelete.setVisibility(View.GONE);
@@ -269,6 +297,9 @@ public class HomeFragment extends Fragment {
             } else {
                 clEmptyState.setVisibility(View.GONE);
                 rvGrid.setVisibility(View.VISIBLE);
+                if (storyAdapter.getItemCount() > 0) {
+                    rvStories.setVisibility(View.VISIBLE);
+                }
                 btnList.setVisibility(View.VISIBLE);
                 btnEdit.setVisibility(View.VISIBLE);
                 btnDelete.setVisibility(View.VISIBLE);

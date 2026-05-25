@@ -11,6 +11,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserCollectionsRepository;
 import com.pupkov.stylemate.repository.UserRepository;
+import com.pupkov.stylemate.repository.StoryRepository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ public class HomeViewModel extends AndroidViewModel {
 
     private final UserRepository repo = new UserRepository();
     private final UserCollectionsRepository repository;
+    private final StoryRepository storyRepository;
     private String currentCollectionId = null;
 
     // LiveData для инкапсуляции и передачи состояний в UI-слой
@@ -34,6 +36,9 @@ public class HomeViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Boolean> _isEmptyState = new MutableLiveData<>();
     public LiveData<Boolean> isEmptyState = _isEmptyState;
+
+    private final MutableLiveData<List<Story>> _stories = new MutableLiveData<>();
+    public LiveData<List<Story>> stories = _stories;
 
     private final MutableLiveData<String> _selectedName = new MutableLiveData<>();
     public LiveData<String> selectedName = _selectedName;
@@ -54,10 +59,27 @@ public class HomeViewModel extends AndroidViewModel {
     public HomeViewModel(@NonNull Application application) {
         super(application);
         repository = new UserCollectionsRepository();
+        storyRepository = new StoryRepository();
         loadCollectionsList();
+        loadStories(); // Загружаем истории при создании ViewModel
     }
 
     public String getCurrentCollectionId() { return currentCollectionId; }
+
+    // Метод загрузки историй ---
+    private void loadStories() {
+        storyRepository.getStories(new StoryRepository.StoryCallback() {
+            @Override
+            public void onStoriesLoaded(List<Story> data) {
+                _stories.setValue(data != null ? data : new ArrayList<>());
+            }
+
+            @Override
+            public void onError(String error) {
+                _toastMessage.setValue("Ошибка загрузки историй: " + error);
+            }
+        });
+    }
 
     /**
      * Загружает коллекции
@@ -262,6 +284,7 @@ public class HomeViewModel extends AndroidViewModel {
      * Актуализирует состояние папок и лайков
      */
     public void refreshData() {
+        loadStories();
         repository.getCollectionNames(getApplication(), new UserCollectionsRepository.DataCallback<List<String>>() {
             @Override
             public void onDataLoaded(List<String> data) {
