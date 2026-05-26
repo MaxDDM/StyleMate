@@ -1,7 +1,10 @@
 package com.pupkov.stylemate.repository;
 
+import static android.provider.Settings.System.getString;
 import static androidx.core.content.ContextCompat.startActivity;
 
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -12,10 +15,13 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.firebase.auth.ActionCodeSettings;
 import com.pupkov.stylemate.R;
 // Убедись, что FavouriteOutfits импортирован правильно.
 // Если он лежит просто в корне пакета com.pupkov.stylemate, импорт не нужен.
 // Если перенес в model - добавь import.
+import com.pupkov.stylemate.model.GoogleAuthHelper;
 import com.pupkov.stylemate.model.Resource;
 import com.pupkov.stylemate.ui.AuthActivity;
 import com.pupkov.stylemate.ui.FavouriteOutfits;
@@ -134,9 +140,79 @@ public class UserRepository {
         if (isLogged(context)) {
             FirebaseAuth mAuth = FirebaseAuth.getInstance();
             mAuth.signOut();
+
+            new GoogleAuthHelper((Activity) context).signOut(new GoogleAuthHelper.SignOutCallback() {
+                @Override
+                public void onSuccess() {
+
+                }
+
+                @Override
+                public void onError(String message) {
+
+                }
+            });
         }
 
         ActiveUserInfo.clearAllDefaults(context);
+    }
+
+    public LiveData<Resource<Boolean>> googleReg(String scenario, String name, String phone, String email, String birthDate, String avatarUrl, String password) {
+        MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
+        result.setValue(Resource.loading());
+
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        table.child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                UserProfile userPr = new UserProfile(name, phone, email, birthDate, "google", avatarUrl);
+                                String uid = mAuth.getCurrentUser().getUid();
+                                if (snapshot.child(uid).exists()){
+                                    result.setValue(Resource.error("Пользователь уже зарегистрирован"));
+                                } else {
+                                    table.child(uid).setValue(userPr);
+                                    result.setValue(Resource.success(true));
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+                                result.setValue(Resource.error("Ошибка Firebase Database: " + error.getMessage()));
+                            }
+                        });
+                    } else {
+                        Exception e = task.getException();
+                        if (e instanceof FirebaseAuthUserCollisionException) {
+                            if ("ERROR_EMAIL_ALREADY_IN_USE".equals(((FirebaseAuthUserCollisionException) e).getErrorCode())) {
+                                if (!Objects.equals(scenario, "reg")) {
+                                    mAuth.signInWithEmailAndPassword(email, password)
+                                            .addOnCompleteListener(signInTask -> {
+                                                if (signInTask.isSuccessful()) {
+                                                    FirebaseUser user = mAuth.getCurrentUser();
+                                                    if (user == null) {
+                                                        result.setValue(Resource.error("Не удалось получить пользователя после входа"));
+                                                        return;
+                                                    }
+
+                                                    result.setValue(Resource.success(true));
+                                                } else {
+                                                    result.setValue(Resource.error("Не удалось войти в существующий аккаунт"));
+                                                }
+                                            });
+                                } else {
+                                    result.setValue(Resource.error("Пользователь с таким email уже существует, авторизуйтесь"));
+                                }
+                            }
+                        } else {
+                            result.setValue(Resource.error("Нет связи с сервером"));
+                        }
+                        result.setValue(Resource.error("Возникла ошибка"));
+                    }
+                });
+        return result;
     }
 
     public LiveData<Resource<Boolean>> sendEmail(String email, String password) {
@@ -148,8 +224,17 @@ public class UserRepository {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
+                            ActionCodeSettings actionCodeSettings = ActionCodeSettings.newBuilder()
+                                    .setUrl("https://stylemate-fdd7b.firebaseapp.com")
+                                    .setHandleCodeInApp(false)
+                                    .setAndroidPackageName(
+                                            "com.pupkov.stylemate",
+                                            true,
+                                            "12"
+                                    )
+                                    .build();
                             // отправляем письмо для подтверждения
-                            user.sendEmailVerification()
+                            user.sendEmailVerification(actionCodeSettings)
                                     .addOnCompleteListener(verifyTask -> {
                                         if (verifyTask.isSuccessful()) {
                                             result.setValue(Resource.success(true));
@@ -359,5 +444,7 @@ public class UserRepository {
                     callback.onError("Ошибка загрузки фото: " + e.getMessage());
                 });
     }
+
+
 
 }

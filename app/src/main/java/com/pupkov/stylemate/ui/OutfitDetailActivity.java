@@ -3,6 +3,8 @@ package com.pupkov.stylemate.ui;
 import static com.pupkov.stylemate.analytics.avgOutfitTime.changeAvgTime;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.ImageButton;
@@ -10,23 +12,35 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide; // Не забудь добавить зависимость Glide в build.gradle, если нет
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.analytics.AnalyticsManager;
 import com.pupkov.stylemate.analytics.CR;
 import com.pupkov.stylemate.analytics.CTR;
+import com.pupkov.stylemate.model.Item;
 import com.pupkov.stylemate.model.Outfit;
 import com.pupkov.stylemate.model.OutfitDetailViewModel;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
+import com.pupkov.stylemate.repository.ItemsRepository;
 import com.pupkov.stylemate.ui.dialogs.UniversalInfoDialog;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class OutfitDetailActivity extends AppCompatActivity {
@@ -40,14 +54,17 @@ public class OutfitDetailActivity extends AppCompatActivity {
     private TextView tvTotalPrice; // "15 000 Р" (сумма)
     private RecyclerView rvProducts;
     private ImageButton btnLike; // Вынесли кнопку в поле класса
+    private ImageButton shareButton;
 
     // Поля для логики лайков
     private String currentCollectionId;
     private String currentOutfitId;
+    private String imageUrl;
     private boolean isLiked = false;
     // Цвета
     private final int COLOR_BLUE = android.graphics.Color.parseColor("#3D7DFF");
     private final int COLOR_GRAY = android.graphics.Color.parseColor("#5C5C5C");
+    private final ItemsRepository repository = new ItemsRepository();
 
 
     @Override
@@ -62,6 +79,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
         ivMain = findViewById(R.id.ivDetailImage);
         ImageButton btnBack = findViewById(R.id.btnBack);
         btnLike = findViewById(R.id.btnDetailLike);
+        shareButton = findViewById(R.id.shareButton);
 
         // ВАЖНО: Убедись, что в XML есть эти ID, или добавь их!
         tvTitle = findViewById(R.id.tvOutfitTitle);
@@ -89,6 +107,8 @@ public class OutfitDetailActivity extends AppCompatActivity {
 
         // 6. Кнопки
         btnBack.setOnClickListener(v -> finish());
+
+        shareButton.setOnClickListener(v -> share());
 
         // --- ЛОГИКА ЛАЙКА ---
         btnLike.setOnClickListener(v -> {
@@ -131,6 +151,18 @@ public class OutfitDetailActivity extends AppCompatActivity {
         });
     }
 
+    @NonNull
+    private static StringBuilder getMessage(List<Item> loadedItems) {
+        StringBuilder message = new StringBuilder("С вами поделились образом из приложения StyleMate\uD83C\uDD92\n\n");
+        for (int i = 0; i < loadedItems.size(); ++i) {
+            message.append("⚡️").append(loadedItems.get(i).getType()).append(" (").append(loadedItems.get(i).getPrice()).append("₽) – ").append(loadedItems.get(i).getLink()).append("\n");
+        }
+        message.append("\nЕсли хотите создать свою ленту рекомендаций, скачивайте наше приложение \uD83D\uDC47\uD83C\uDFFB\n\n");
+        message.append("Google Play Market: https://play.google.com/store/apps/details?id=com.pupkov.stylemate&hl=ru\n");
+        message.append("RuStore: https://www.rustore.ru/catalog/app/com.pupkov.stylemate");
+        return message;
+    }
+
     private void updateLikeButtonUI() {
         if (isLiked) {
             btnLike.setColorFilter(COLOR_BLUE);
@@ -159,7 +191,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
 
     private void loadDataFromIntent() {
         // Достаем простые типы данных
-        String imageUrl = getIntent().getStringExtra("image_url");
+        imageUrl = getIntent().getStringExtra("image_url");
         currentOutfitId = getIntent().getStringExtra("outfit_id"); // Сохраняем ID образа
         String style = getIntent().getStringExtra("style");
         String season = getIntent().getStringExtra("season");
@@ -225,5 +257,61 @@ public class OutfitDetailActivity extends AppCompatActivity {
         long end = System.nanoTime();
         changeAvgTime(Integer.parseInt(currentOutfitId), (end - start) / 1_000_000_000.0);
         super.finish(); // Закрываем экран
+    }
+
+    private void share() {
+        Glide.with(this)
+                .asBitmap()
+                .load(imageUrl)
+                .into(new CustomTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(@NonNull Bitmap bitmap, @Nullable Transition<? super Bitmap> transition) {
+                        File cachePath = new File(getCacheDir(), "images");
+                        cachePath.mkdirs();
+
+                        File file = new File(cachePath, "shared_image.png");
+                        FileOutputStream fos = null;
+                        try {
+                            fos = new FileOutputStream(file);
+                        } catch (FileNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                        try {
+                            fos.close();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        Uri contentUri = FileProvider.getUriForFile(
+                                OutfitDetailActivity.this,
+                                getPackageName() + ".fileprovider",
+                                file
+                        );
+
+                        ArrayList<String> itemIds = getIntent().getStringArrayListExtra("item_ids");
+                        repository.getItemsByIds(itemIds, new ItemsRepository.ItemsCallback() {
+                            @Override
+                            public void onItemsLoaded(List<Item> loadedItems) {
+                                StringBuilder message = getMessage(loadedItems);
+
+                                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                                shareIntent.setType("image/png");
+                                shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+                                shareIntent.putExtra(Intent.EXTRA_TEXT, message.toString());
+                                shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Образ из StyleMate");
+                                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                                startActivity(Intent.createChooser(shareIntent, "Поделиться через…"));
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                Toast.makeText(OutfitDetailActivity.this, "Возникла ошибка, скорее всего проблемы с соединением", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                    @Override public void onLoadCleared(@Nullable Drawable placeholder) {}
+                });
     }
 }

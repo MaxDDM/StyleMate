@@ -61,4 +61,10 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.credentials:credentials:1.3.0") // Используйте актуальную версию
+
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+// Google Identity (для опции Sign in with Google)
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 }

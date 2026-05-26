@@ -6,8 +6,10 @@ import static com.pupkov.stylemate.model.Resource.Status.ERROR;
 import static com.pupkov.stylemate.model.Resource.Status.LOADING;
 import static com.pupkov.stylemate.model.Resource.Status.SUCCESS;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -17,8 +19,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.pupkov.stylemate.R;
+import com.pupkov.stylemate.model.GoogleAuthHelper;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
+import com.pupkov.stylemate.ui.dialogs.DialogSuccessReg;
 import com.pupkov.stylemate.ui.dialogs.PrivacyConsentDialog;
 import com.pupkov.stylemate.ui.dialogs.SkipRegDialog;
 import com.pupkov.stylemate.ui.test.TestQ1Activity;
@@ -27,6 +31,8 @@ import org.apache.commons.validator.routines.EmailValidator;
 
 public class AuthActivity extends AppCompatActivity {
     UserRepository repo = new UserRepository();
+
+    private GoogleAuthHelper authHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,11 +54,43 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
+        authHelper = new GoogleAuthHelper(this);
+
         EditText email = findViewById(R.id.emailAuth);
         EditText password = findViewById(R.id.passwordAuth);
         ImageButton authButton = findViewById(R.id.enterAuthButton);
         ImageButton switchToRegButton = findViewById(R.id.switchToRegButton);
         ImageButton skipButton = findViewById(R.id.skipAuthButton);
+        Button googleAuthButton = findViewById(R.id.googleAuth);
+
+        googleAuthButton.setOnClickListener(v -> {
+            authHelper.signIn(new GoogleAuthHelper.AuthCallback() {
+                @Override
+                public void onSuccess(String idToken, String email, String displayName) {
+                    repo.googleReg("auth", displayName, "", email, "", "", idToken).observe(AuthActivity.this, resource -> {
+                        switch(resource.status) {
+                            case LOADING:
+                                Toast.makeText(AuthActivity.this, "Идёт процесс авторизации", Toast.LENGTH_SHORT).show();
+                                break;
+                            case SUCCESS:
+                                ActiveUserInfo.setDefaults("isRegistered", repo.getUID(), AuthActivity.this);
+
+                                Intent intent = new Intent(AuthActivity.this, MainActivity.class);
+                                startActivity(intent);
+                                break;
+                            case ERROR:
+                                Toast.makeText(AuthActivity.this, resource.message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(AuthActivity.this,
+                            "Ошибка: " + message, Toast.LENGTH_LONG).show();
+                }
+            });
+        });
 
         authButton.setOnClickListener(v -> {
             String emailStr = email.getText().toString();

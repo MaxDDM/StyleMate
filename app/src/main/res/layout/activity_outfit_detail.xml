@@ -98,6 +98,11 @@
             android:textSize="28sp"
             android:lineSpacingExtra="4dp"/>
 
+        <ImageButton
+            android:id="@+id/shareButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"/>
+
         <!-- 2. СПИСОК ТОВАРОВ (Горизонтальный скролл) -->
         <!-- Вместо кучи кода тут теперь одна строчка -->
         <androidx.recyclerview.widget.RecyclerView
