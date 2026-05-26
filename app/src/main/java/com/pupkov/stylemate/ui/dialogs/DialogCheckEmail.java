@@ -19,15 +19,6 @@ import com.pupkov.stylemate.repository.UserRepository;
 import com.pupkov.stylemate.ui.RegisterActivity;
 
 public class DialogCheckEmail extends DialogFragment  {
-    private SkipRegDialog.OnDeleteListener listener;
-
-    public interface OnDeleteListener {
-        void onConfirmDelete();
-    }
-
-    public void setListener(SkipRegDialog.OnDeleteListener listener) {
-        this.listener = listener;
-    }
 
     @Nullable
     @Override

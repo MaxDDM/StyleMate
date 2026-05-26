@@ -29,10 +29,7 @@ import com.pupkov.stylemate.ui.dialogs.UniversalInfoDialog;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-/**
- * Фрагмент главного экрана, отвечающий за отображение ленты образов,
- * управление коллекциями, фильтрацию и отображение контекстных подсказок.
- */
+
 public class HomeFragment extends Fragment {
 
     private final UserRepository repo = new UserRepository();
@@ -52,10 +49,8 @@ public class HomeFragment extends Fragment {
     private boolean isListExpanded = false;
     private boolean isGuest;
 
-    // Текущее состояние фильтрации (по умолчанию пустое)
     private FilterState currentFilterState = new FilterState(new HashSet<>(), new HashSet<>(), new HashSet<>());
 
-    // Настройки сессии фильтрации (временной интервал сброса — 30 минут)
     private long lastPauseTime = 0;
     private static final long SESSION_TIMEOUT = 30 * 60 * 1000;
 
@@ -66,7 +61,6 @@ public class HomeFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
-        // Инициализация компонентов интерфейса
         View btnList = view.findViewById(R.id.btnList);
         rvCollections = view.findViewById(R.id.rvCollections);
         ImageButton btnEdit = view.findViewById(R.id.btnEdit);
@@ -78,11 +72,9 @@ public class HomeFragment extends Fragment {
         btnContinueTest = view.findViewById(R.id.btnContinueTest);
         btnLogout = view.findViewById(R.id.btnLogout);
 
-        // Определение статуса авторизации пользователя
         String guestFlag = ActiveUserInfo.getDefaults("isRegistered", getContext());
         isGuest = guestFlag == null || guestFlag.isEmpty();
 
-        // Настройка выпадающего списка коллекций
         rvCollections.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new CollectionsNameAdapter(new ArrayList<>(), "Основная", new CollectionsNameAdapter.OnItemClickListener() {
             @Override
@@ -91,7 +83,6 @@ public class HomeFragment extends Fragment {
                     toggleListState();
                 } else {
                     viewModel.onCollectionSelected(clickedName);
-                    // Автоматически сворачиваем список при выборе другой коллекции
                     if (isListExpanded) {
                         toggleListState();
                     }
@@ -100,7 +91,6 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onCreateNewClick() {
-                // Сворачиваем список перед переходом
                 if (isListExpanded) {
                     toggleListState();
                 }
@@ -108,7 +98,6 @@ public class HomeFragment extends Fragment {
                 if (isGuest) {
                     Toast.makeText(getContext(), "Доступно только зарегистрированным пользователям", Toast.LENGTH_SHORT).show();
                 } else {
-                    // Берем текущее имя напрямую из ViewModel без создания лишних observe
                     String currentName = viewModel.selectedName.getValue();
                     ActiveUserInfo.setDefaults("collectionName", currentName, requireContext());
 
@@ -123,7 +112,6 @@ public class HomeFragment extends Fragment {
         storyAdapter = new StoryAdapter(new ArrayList<>(), new StoryAdapter.OnStoryClickListener() {
             @Override
             public void onStoryClick(Story story) {
-                // Переход на экран просмотра истории
                 Intent intent = new Intent(getContext(), StoryViewActivity.class);
                 intent.putExtra("image_url", story.getImageUrl());
                 intent.putExtra("link", story.getLink());
@@ -132,13 +120,11 @@ public class HomeFragment extends Fragment {
         });
         rvStories.setAdapter(storyAdapter);
 
-        // Настройка сетки отображения образов
         StaggeredGridLayoutManager layoutManager =
                 new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
         rvGrid.setLayoutManager(layoutManager);
 
-        // Инициализация адаптера ленты образов
         gridAdapter = new OutfitAdapter(getContext(), new ArrayList<>(), new OutfitAdapter.OnOutfitClickListener() {
             @Override
             public void onHeartClick(Outfit outfit, int position) {
@@ -149,14 +135,12 @@ public class HomeFragment extends Fragment {
 
                     Context context = getContext();
                     if (context != null && getView() != null) {
-                        // Получаем ID текущей подборки для формирования уникального ключа
                         String collectionId = viewModel.getCurrentCollectionId();
                         String prefKey = "IS_FIRST_LIKE_SHOWN_" + (collectionId != null ? collectionId : "default");
 
                         String isShown = ActiveUserInfo.getDefaults(prefKey, context);
 
                         if (!"true".equals(isShown)) {
-                            // Создаем Snackbar вместо старого диалога
                             com.google.android.material.snackbar.Snackbar.make(
                                             getView(),
                                             "Образ добавлен в папку избранного в личном кабинете.",
@@ -164,7 +148,6 @@ public class HomeFragment extends Fragment {
                                     )
                                     .setDuration(5000)
                                     .setAction("Перейти", v -> {
-                                        // Находим кнопку профиля в разметке Activity и имитируем клик по ней
                                         View btnProfile = requireActivity().findViewById(R.id.btnProfile);
                                         if (btnProfile != null) {
                                             btnProfile.performClick();
@@ -172,14 +155,12 @@ public class HomeFragment extends Fragment {
                                     })
                                     .show();
 
-                            // Сохраняем флаг конкретно для ЭТОЙ подборки
                             ActiveUserInfo.setDefaults(prefKey, "true", context);
                         }
                     }
                 }
             }
 
-            // Инициализация перехода к детальному просмотру образа с передачей параметров
             @Override
             public void onImageClick(Outfit outfit) {
                 Intent intent = new Intent(getContext(), OutfitDetailActivity.class);
@@ -193,7 +174,6 @@ public class HomeFragment extends Fragment {
                     intent.putExtra("collection_id", viewModel.getCurrentCollectionId());
                 }
 
-                // Конвертация структуры связей Map в массив для передачи идентификаторов вещей
                 if (outfit.getItems() != null) {
                     ArrayList<String> ids = new ArrayList<>(outfit.getItems().keySet());
                     intent.putStringArrayListExtra("item_ids", ids);
@@ -203,7 +183,6 @@ public class HomeFragment extends Fragment {
         });
         rvGrid.setAdapter(gridAdapter);
 
-        // Слушатель прокрутки сетки для фиксации достижения конца списка
         rvGrid.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -223,7 +202,6 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // Регистрация слушателя для получения состояния фильтров из шторки
         getParentFragmentManager().setFragmentResultListener(
                 FiltersBottomSheetFragment.REQUEST_KEY,
                 getViewLifecycleOwner(),
@@ -236,19 +214,15 @@ public class HomeFragment extends Fragment {
                 }
         );
 
-        // Настройка наблюдателей LiveData
-
-        // Наблюдатель за списком историй
         viewModel.stories.observe(getViewLifecycleOwner(), storiesList -> {
             if (storiesList == null || storiesList.isEmpty()) {
-                rvStories.setVisibility(View.GONE); // Скрываем, если пусто, разметка схлопнется
+                rvStories.setVisibility(View.GONE);
             } else {
                 rvStories.setVisibility(View.VISIBLE);
                 storyAdapter.updateStories(storiesList);
             }
         });
 
-        // Наблюдатель за списком доступных коллекций пользователя
         viewModel.collections.observe(getViewLifecycleOwner(), list -> {
             adapter.updateList(list);
 
@@ -274,7 +248,6 @@ public class HomeFragment extends Fragment {
 
         viewModel.outfits.observe(getViewLifecycleOwner(), outfits -> gridAdapter.updateList(outfits));
 
-        // Обработка события отсутствия результатов при фильтрации
         viewModel.filterEmptyEvent.observe(getViewLifecycleOwner(), isEmpty -> {
             if (isEmpty != null && isEmpty) {
                 Toast.makeText(getContext(), "С такими фильтрами ничего не найдено", Toast.LENGTH_SHORT).show();
@@ -282,7 +255,6 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // Наблюдатель за состоянием отображения заглушки пустого экрана (Empty State)
         viewModel.isEmptyState.observe(getViewLifecycleOwner(), isEmpty -> {
             View bottomNav = requireActivity().findViewById(R.id.bottomNavBar);
             if (isEmpty != null && isEmpty) {
@@ -313,8 +285,6 @@ public class HomeFragment extends Fragment {
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
             }
         });
-
-        // Настройка слушателей нажатий элементов
 
         vOverlay.setOnClickListener(v -> {
             if (isListExpanded) toggleListState();
@@ -353,9 +323,6 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    /**
-     * Изменяет состояние отображения выпадающего списка коллекций.
-     */
     private void toggleListState() {
         if (isListExpanded) {
             isListExpanded = false;
@@ -380,7 +347,6 @@ public class HomeFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        // Проверка времени нахождения фрагмента в фоне для сброса фильтров
         if (lastPauseTime > 0) {
             long diff = System.currentTimeMillis() - lastPauseTime;
             if (diff > SESSION_TIMEOUT) {
@@ -393,9 +359,6 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    /**
-     * Сбрасывает текущие фильтры при превышении лимита времени неактивности сессии.
-     */
     private void resetFiltersByTimeout() {
         currentFilterState = new FilterState(new HashSet<>(), new HashSet<>(), new HashSet<>());
         viewModel.applyFilters(currentFilterState);

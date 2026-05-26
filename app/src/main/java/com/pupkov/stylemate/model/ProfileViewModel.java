@@ -13,9 +13,6 @@ import com.pupkov.stylemate.repository.UserRepository;
 
 import java.util.List;
 
-/**
- * ViewModel для управления состоянием экрана профиля.
- */
 public class ProfileViewModel extends AndroidViewModel {
 
     private final UserRepository userRepository;
@@ -43,17 +40,11 @@ public class ProfileViewModel extends AndroidViewModel {
         refreshData();
     }
 
-    /**
-     * Интерфейс для принудительного обновления данных профиля и коллекций.
-     */
     public void refreshData() {
         loadProfileData();
         loadFavoritesData();
     }
 
-    /**
-     * Асинхронная загрузка параметров профиля (имя, аватар) с разделением на авторизованного юзера и гостя.
-     */
     private void loadProfileData() {
         userRepository.loadUserProfile(getApplication(), new UserRepository.ProfileCallback() {
             @Override
@@ -74,9 +65,6 @@ public class ProfileViewModel extends AndroidViewModel {
         });
     }
 
-    /**
-     * Загрузка списка папок с образами и превью-картинками.
-     */
     private void loadFavoritesData() {
         collectionsRepository.getUserCollectionsWithPreviews(getApplication(), new UserCollectionsRepository.DataCallback<List<FavouriteOutfits>>() {
             @Override
@@ -92,7 +80,6 @@ public class ProfileViewModel extends AndroidViewModel {
                 } else {
                     _navigateToHomeEvent.setValue(false);
 
-                    // Сканирование коллекций на наличие хотя бы одного реального лайка внутри
                     boolean hasLikes = false;
                     for (FavouriteOutfits f : data) {
                         if (f.hasLikes()) {

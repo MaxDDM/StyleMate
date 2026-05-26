@@ -38,20 +38,16 @@ public class UniversalInfoDialog extends DialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_universal_tutorial, container, false);
 
-        // Находим элементы
         TextView tvMessage = view.findViewById(R.id.tvMessage);
         ImageButton btnClose = view.findViewById(R.id.btnClose);
         ImageView ivArrow = view.findViewById(R.id.ivArrow);
 
-        // Получаем переданные данные
         if (getArguments() != null) {
             String text = getArguments().getString(ARG_TEXT, "");
             boolean showArrow = getArguments().getBoolean(ARG_SHOW_ARROW, false);
 
-            // Устанавливаем текст
             tvMessage.setText(text);
 
-            // Управляем стрелкой
             if (showArrow) {
                 ivArrow.setVisibility(View.VISIBLE);
             } else {
@@ -59,7 +55,6 @@ public class UniversalInfoDialog extends DialogFragment {
             }
         }
 
-        // Закрытие
         btnClose.setOnClickListener(v -> dismiss());
 
         return view;

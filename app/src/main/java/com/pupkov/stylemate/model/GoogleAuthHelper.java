@@ -32,9 +32,8 @@ public class GoogleAuthHelper {
     }
 
     public void signIn(AuthCallback callback) {
-        // Формируем запрос на получение Google ID Token
         GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false) // true — только уже залогиненные раньше
+                .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(WEB_CLIENT_ID)
                 .setAutoSelectEnabled(true)
                 .build();
@@ -76,7 +75,6 @@ public class GoogleAuthHelper {
             String email = googleCredential.getId();
             String displayName = googleCredential.getDisplayName();
 
-            // Дальше: отправляем idToken на ваш сервер ИЛИ в Firebase Auth
             activity.runOnUiThread(() -> callback.onSuccess(idToken, email, displayName));
         } else {
             activity.runOnUiThread(() -> callback.onError("Неизвестный тип Credential"));

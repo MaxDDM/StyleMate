@@ -24,10 +24,6 @@ import com.google.android.flexbox.FlexboxLayout;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Нижняя шторка для выбора фильтров.
- * Передает выбранное состояние назад в вызывающий фрагмент.
- */
 public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
     public static final String REQUEST_KEY = "request_filter";
     public static final String RESULT_KEY = "filter_result";
@@ -38,9 +34,6 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
     private FlexboxLayout gridColors;
     private FlexboxLayout gridSeasons;
 
-    /**
-     * Метод для создания шторки с передачей текущего (сохраненного) состояния фильтров.
-     */
     public static FiltersBottomSheetFragment newInstance(FilterState currentState) {
         FiltersBottomSheetFragment fragment = new FiltersBottomSheetFragment();
         Bundle args = new Bundle();
@@ -63,13 +56,11 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
         MaterialButton btnReset = view.findViewById(R.id.btnReset);
         MaterialButton btnApply = view.findViewById(R.id.btnApply);
 
-        // Восстановление состояния при первом запуске
         if (getArguments() != null && savedInstanceState == null) {
             FilterState state = (FilterState) getArguments().getSerializable(ARG_CURRENT_STATE);
             viewModel.setInitialState(state);
         }
 
-        // Подписка на списки доступных фильтров (динамически генерируются из ViewModel)
         viewModel.typesList.observe(getViewLifecycleOwner(), list ->
                 fillGrid(inflater, gridTypes, list, FilterCategory.TYPE));
 
@@ -80,7 +71,6 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
                 fillGrid(inflater, gridSeasons, list, FilterCategory.SEASON));
 
 
-        // Подписка на LiveData выбранных элементов для синхронизации checked-состояния кнопок
         viewModel.selectedTypes.observe(getViewLifecycleOwner(), set -> updateGrid(gridTypes, set));
         viewModel.selectedColors.observe(getViewLifecycleOwner(), set -> updateGrid(gridColors, set));
         viewModel.selectedSeasons.observe(getViewLifecycleOwner(), set -> updateGrid(gridSeasons, set));
@@ -93,7 +83,6 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
 
         btnApply.setOnClickListener(v -> viewModel.apply());
 
-        // Передача сформированного FilterState обратно в родительский фрагмент при нажатии "Применить"
         viewModel.applyEvent.observe(getViewLifecycleOwner(), filterState -> {
             if (filterState != null) {
                 android.util.Log.d("FILTER_DEBUG", "Шторка: Отправляю данные! Типов: " + filterState.getSelectedTypes().size());
@@ -108,9 +97,6 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
         return view;
     }
 
-    /**
-     * Актуализация визуального состояния кнопок (выделена/не выделена) внутри контейнера.
-     */
     private void updateGrid(FlexboxLayout grid, Set<String> selectedFilters) {
         if (grid == null) return;
         for (int i = 0; i < grid.getChildCount(); i++) {
@@ -127,9 +113,6 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
         }
     }
 
-    /**
-     * Динамическое заполнение контейнера кнопками с настройкой параметров адаптивной верстки.
-     */
     private void fillGrid(LayoutInflater inflater, FlexboxLayout grid, List<String> items, FilterCategory category) {
         grid.removeAllViews();
 
@@ -139,7 +122,6 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
             );
             button.setText(item);
 
-            // Настройка параметров для красивого распределения кнопок по ширине экрана
             FlexboxLayout.LayoutParams params = new FlexboxLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
@@ -156,9 +138,6 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
         }
     }
 
-    /**
-     * Перевод dp в пиксели для программного выставления отступов (margins).
-     */
     private int dpToPx(int dp) {
         return (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics()
@@ -168,7 +147,6 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-        // Принудительное программирование высоты шторки на 85% от экрана и запрет на полусвернутое состояние
         Dialog dialog = getDialog();
         if (dialog != null) {
             View bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
@@ -178,7 +156,7 @@ public class FiltersBottomSheetFragment extends BottomSheetDialogFragment {
 
             BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
             behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            behavior.setSkipCollapsed(true); // Исключает промежуточное сворачивание при жесте вниз
+            behavior.setSkipCollapsed(true);
         }
     }
 }

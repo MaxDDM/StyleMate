@@ -4,9 +4,6 @@ import com.google.firebase.database.PropertyName;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Сущностный класс модели образа для десериализации данных из Firebase
- */
 public class Outfit {
     private String id;
     private String style;
@@ -14,12 +11,10 @@ public class Outfit {
     private String filter_season;
     private String situation;
 
-    // Списки признаков и связей, представленные в NoSQL-формате
     private Map<String, Boolean> filter_colors = new HashMap<>();
     private Map<String, Boolean> filter_types = new HashMap<>();
     private Map<String, Boolean> items = new HashMap<>();
 
-    // Состояние пользовательского интерфейса
     private boolean isLiked = false;
 
     public Outfit() { }

@@ -56,22 +56,19 @@ public class UserRepository {
     FirebaseStorage storage = FirebaseStorage.getInstance();
     StorageReference storageRef = storage.getReference();
 
-    // --- НОВЫЙ ИНТЕРФЕЙС ДЛЯ CALLBACK ---
     public interface ProfileCallback {
         void onLoaded(UserProfile profile);
         void onError(String error);
     }
 
     public interface AvatarCallback {
-        void onSuccess(String downloadUrl);  // Фото загружено, вот ссылка
-        void onError(String error);          // Что-то пошло не так
+        void onSuccess(String downloadUrl);
+        void onError(String error);
     }
 
-    // --- НОВЫЙ МЕТОД ДЛЯ ПРОФИЛЯ (One-shot request) ---
     public void loadUserProfile(Context context, ProfileCallback callback) {
 
         if (!isLogged(context)) {
-            // Гость
             callback.onLoaded(null);
             return;
         }
@@ -143,14 +140,10 @@ public class UserRepository {
 
             new GoogleAuthHelper((Activity) context).signOut(new GoogleAuthHelper.SignOutCallback() {
                 @Override
-                public void onSuccess() {
-
-                }
+                public void onSuccess() { }
 
                 @Override
-                public void onError(String message) {
-
-                }
+                public void onError(String message) { }
             });
         }
 
@@ -233,7 +226,6 @@ public class UserRepository {
                                             "12"
                                     )
                                     .build();
-                            // отправляем письмо для подтверждения
                             user.sendEmailVerification(actionCodeSettings)
                                     .addOnCompleteListener(verifyTask -> {
                                         if (verifyTask.isSuccessful()) {
@@ -402,36 +394,27 @@ public class UserRepository {
 
     public void uploadAvatar(Context context, Uri imageUri, AvatarCallback callback) {
 
-        // 1. Проверяем, залогинен ли пользователь
         if (!isLogged(context)) {
             callback.onError("Смена аватарки доступна только после регистрации");
             return;
         }
 
-        // 2. Формируем путь в Storage: avatars/{uid}.jpg
-        //    Один файл на пользователя — при повторной загрузке просто перезаписывается
         String uid = getUID();
         StorageReference avatarRef = storageRef.child("avatars/" + uid + ".jpg");
 
-        // 3. Загружаем файл
         avatarRef.putFile(imageUri)
                 .addOnSuccessListener(taskSnapshot -> {
 
-                    // 4. Файл загружен — теперь получаем публичную ссылку на него
                     avatarRef.getDownloadUrl()
                             .addOnSuccessListener(downloadUri -> {
 
                                 String url = downloadUri.toString();
 
-                                // 5. Сохраняем ссылку в Realtime Database
-                                //    User/{uid}/avatarUrl = "https://firebasestorage.googleapis.com/..."
                                 table.child(uid).child("avatarUrl").setValue(url)
                                         .addOnSuccessListener(unused -> {
-                                            // Всё прошло успешно
                                             callback.onSuccess(url);
                                         })
                                         .addOnFailureListener(e -> {
-                                            // Фото загрузилось, но ссылку не удалось сохранить в БД
                                             callback.onError("Не удалось сохранить ссылку: " + e.getMessage());
                                         });
                             })
@@ -440,7 +423,6 @@ public class UserRepository {
                             });
                 })
                 .addOnFailureListener(e -> {
-                    // Файл не удалось загрузить в Storage
                     callback.onError("Ошибка загрузки фото: " + e.getMessage());
                 });
     }

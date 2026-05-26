@@ -44,15 +44,12 @@ public class SettingsActivity extends AppCompatActivity {
     private ImageView imgAvatar;
 
     private final UserRepository repo = new UserRepository();
-    // Uri временного файла для камеры
     private Uri cameraImageUri;
 
-    // Текущая ссылка на аватарку (чтобы показывать в диалоге)
     private String currentAvatarUrl;
 
     private boolean isLoadingData = false;
 
-    // Три лаунчера: галерея, камера, запрос разрешения на камеру
     private ActivityResultLauncher<String> galleryLauncher;
     private ActivityResultLauncher<Uri> cameraLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
@@ -62,7 +59,6 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        // 1. Подключаем ViewModel
         viewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
         registerLaunchers();
         initViews();
@@ -72,7 +68,6 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void registerLaunchers() {
 
-        // 1. ГАЛЕРЕЯ — запускается с типом "image/*", возвращает Uri выбранного фото
         galleryLauncher = registerForActivityResult(
                 new ActivityResultContracts.GetContent(),
                 uri -> {
@@ -82,7 +77,6 @@ public class SettingsActivity extends AppCompatActivity {
                 }
         );
 
-        // 2. КАМЕРА — запускается с Uri куда записать фото, возвращает true/false
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.TakePicture(),
                 success -> {
@@ -92,7 +86,6 @@ public class SettingsActivity extends AppCompatActivity {
                 }
         );
 
-        // 3. ЗАПРОС РАЗРЕШЕНИЯ НА КАМЕРУ — если пользователь разрешил, запускаем камеру
         cameraPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 granted -> {
@@ -114,11 +107,9 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        // Назад
         ImageView btnBack = findViewById(R.id.btnBack);
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
-        // Смена фото
         if (imgAvatar != null) {
             imgAvatar.setOnClickListener(v -> {
                 if (!repo.isLogged(this)) {
@@ -129,7 +120,6 @@ public class SettingsActivity extends AppCompatActivity {
             });
         }
 
-        // Смена пароля
         Button btnChangePassword = findViewById(R.id.btnChangePassword);
         if (btnChangePassword != null) {
             btnChangePassword.setOnClickListener(v -> {
@@ -138,7 +128,6 @@ public class SettingsActivity extends AppCompatActivity {
             });
         }
 
-        // === ВЫХОД ИЗ АККАУНТА ===
         Button btnLogout = findViewById(R.id.btnLogout);
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> showLogoutDialog());
@@ -199,7 +188,6 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void observeViewModel() {
-        // А. Заполняем поля данными
         viewModel.userProfile.observe(this, user -> {
             if (user != null) {
                 switch (user.status) {
@@ -236,7 +224,6 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
-        // Б. Следим за выходом
         viewModel.logoutEvent.observe(this, isLoggedOut -> {
             if (isLoggedOut) {
                 CustomToast.show(this, "Выход из аккаунта");
@@ -247,7 +234,6 @@ public class SettingsActivity extends AppCompatActivity {
         });
     }
 
-    // Диалог смены фото (твой старый код)
     private void showChangePhotoDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
@@ -274,21 +260,17 @@ public class SettingsActivity extends AppCompatActivity {
         Button btnCamera = dialogView.findViewById(R.id.btnCamera);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
-        // --- ГАЛЕРЕЯ ---
         btnGallery.setOnClickListener(v -> {
             dialog.dismiss();
             galleryLauncher.launch("image/*");
         });
 
-        // --- КАМЕРА (с проверкой разрешения) ---
         btnCamera.setOnClickListener(v -> {
             dialog.dismiss();
             if (checkSelfPermission(Manifest.permission.CAMERA)
                     == PackageManager.PERMISSION_GRANTED) {
-                // Разрешение уже есть — сразу запускаем
                 launchCamera();
             } else {
-                // Запрашиваем разрешение у пользователя
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
             }
         });
@@ -297,18 +279,15 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void launchCamera() {
-        // Создаём временный файл в кэше приложения
         File tempFile = new File(getCacheDir(),
                 "camera_avatar_" + System.currentTimeMillis() + ".jpg");
 
-        // Получаем безопасный content:// Uri через FileProvider
         cameraImageUri = FileProvider.getUriForFile(
                 this,
                 getApplicationContext().getPackageName() + ".fileprovider",
                 tempFile
         );
 
-        // Запускаем камеру — фото запишется по этому Uri
         cameraLauncher.launch(cameraImageUri);
     }
 
@@ -318,10 +297,8 @@ public class SettingsActivity extends AppCompatActivity {
         repo.uploadAvatar(this, uri, new UserRepository.AvatarCallback() {
             @Override
             public void onSuccess(String downloadUrl) {
-                // Запоминаем новый URL
                 currentAvatarUrl = downloadUrl;
 
-                // Обновляем аватарку на экране
                 if (imgAvatar != null) {
                     Glide.with(SettingsActivity.this)
                             .load(downloadUrl)
@@ -341,7 +318,6 @@ public class SettingsActivity extends AppCompatActivity {
         });
     }
 
-    // === НОВЫЙ ДИАЛОГ ВЫХОДА ===
     private void showLogoutDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_logout, null);
@@ -349,7 +325,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         AlertDialog dialog = builder.create();
 
-        // Прозрачный фон для скругления
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
@@ -361,7 +336,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         btnConfirm.setOnClickListener(v -> {
             dialog.dismiss();
-            // Мы не делаем логику тут, а зовем ViewModel
             viewModel.onLogoutConfirmed(SettingsActivity.this);
         });
 
@@ -372,10 +346,8 @@ public class SettingsActivity extends AppCompatActivity {
         if (s == null) return false;
         s = s.trim();
 
-        // допускаем +, цифры и разделители
         if (!s.matches("^\\+?[0-9()\\s-]{5,}$")) return false;
 
-        // считаем цифры (обычно 10–15 по E.164)
         String digits = s.replaceAll("\\D", "");
         return digits.length() >= 10 && digits.length() <= 15;
     }

@@ -21,15 +21,6 @@ import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.ui.test.TestQ1Activity;
 
 public class DialogSuccessReg extends DialogFragment {
-    private SkipRegDialog.OnDeleteListener listener;
-
-    public interface OnDeleteListener {
-        void onConfirmDelete();
-    }
-
-    public void setListener(SkipRegDialog.OnDeleteListener listener) {
-        this.listener = listener;
-    }
 
     @Nullable
     @Override

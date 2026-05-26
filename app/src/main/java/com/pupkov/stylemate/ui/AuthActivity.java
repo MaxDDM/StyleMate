@@ -97,15 +97,12 @@ public class AuthActivity extends AppCompatActivity {
             String passwordStr = password.getText().toString();
 
             if (isPrivacyAccepted()) {
-                // Если политика принята, сразу запускаем процесс авторизации
                 performLogin(emailStr, passwordStr);
             } else {
-                // Иначе показываем диалог
                 PrivacyConsentDialog dialog = new PrivacyConsentDialog();
                 dialog.setOnConsentListener(isGranted -> {
                     if (isGranted) {
-                        savePrivacyAccepted(); // Сохраняем согласие
-                        // Автоматически продолжаем авторизацию
+                        savePrivacyAccepted();
                         performLogin(emailStr, passwordStr);
                     } else {
                         Toast.makeText(AuthActivity.this, "Для авторизации необходимо принять соглашение", Toast.LENGTH_SHORT).show();

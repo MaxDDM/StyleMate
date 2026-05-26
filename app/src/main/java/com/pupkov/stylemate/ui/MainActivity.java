@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
     private View bgHomeSelected, bgProfileSelected;
     private ImageView iconHome, iconProfile;
 
-    // Однократная инициализация фрагментов для кэширования в памяти
     private final Fragment homeFragment = new HomeFragment();
     private final Fragment profileFragment = new ProfileFragment();
     private final UserRepository repo = new UserRepository();
@@ -35,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Логирование времени начала сессии авторизованного пользователя
         if (repo.isLogged(MainActivity.this)) {
             TimeAnalytics.saveDate(LocalDateTime.now(), repo.getUID());
         }
@@ -57,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
         iconHome = findViewById(R.id.iconHome);
         iconProfile = findViewById(R.id.iconProfile);
 
-        // Установка начального экрана
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.fragment_container, homeFragment, "HOME")
                 .commit();
@@ -77,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // Оптимизированное переключение фрагментов без пересоздания их жизненного цикла
     private void switchFragment(Fragment targetFragment) {
         if (activeFragment == targetFragment) return;
 
@@ -96,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
         activeFragment = targetFragment;
     }
 
-    // Управление визуальным состоянием навигационной панели
     private void updateIcons(boolean isHomeActive) {
         if (isHomeActive) {
             iconHome.setColorFilter(Color.parseColor("#3D5AFE"));
@@ -113,10 +108,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleNavigationIntent(Intent intent) {
         if (intent != null && "PROFILE".equals(intent.getStringExtra("OPEN_TAB"))) {
-            // Убираем анимацию перехода для этой Activity
             overridePendingTransition(0, 0);
 
-            // Используем ваши готовые методы
             switchFragment(profileFragment);
             updateIcons(false);
         }

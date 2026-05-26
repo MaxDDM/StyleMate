@@ -15,19 +15,12 @@ import com.pupkov.stylemate.R;
 
 import java.util.List;
 
-/**
- * Адаптер для отображения сетки сохраненных подборок в профиле.
- * Каждая ячейка представляет собой коллаж из 4-х изображений вещей и заголовка папки.
- */
 public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfitsAdapter.OutfitViewHolder> {
 
     private List<FavouriteOutfits> outfitList;
     private final OnItemClickListener listener;
     private final Context context;
 
-    /**
-     * Интерфейс для обработки кликов на контейнер коллекции.
-     */
     public interface OnItemClickListener {
         void onItemClick(FavouriteOutfits item);
     }
@@ -52,7 +45,6 @@ public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfits
 
         holder.tvTitle.setText(outfit.title);
 
-        // Параллельная загрузка четырех миниатюр для формирования коллажа-превью
         loadImage(holder.img1, outfit.photo1);
         loadImage(holder.img2, outfit.photo2);
         loadImage(holder.img3, outfit.photo3);
@@ -65,9 +57,6 @@ public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfits
         });
     }
 
-    /**
-     * Метод загрузки фото в ImageView.
-     */
     private void loadImage(ImageView imageView, String url) {
         if (url != null && !url.isEmpty()) {
             Glide.with(context)
@@ -86,9 +75,6 @@ public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfits
         return (outfitList == null) ? 0 : outfitList.size();
     }
 
-    /**
-     * Динамическое обновление набора данных адаптера.
-     */
     public void updateList(List<FavouriteOutfits> newList) {
         this.outfitList = newList;
         notifyDataSetChanged();

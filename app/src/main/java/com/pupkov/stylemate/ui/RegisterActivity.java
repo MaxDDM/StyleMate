@@ -104,15 +104,12 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         birth.setOnClickListener(v -> {
-            // 1. Создаем календарь
             MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                     .setTitleText("Выберите дату рождения")
                     .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                     .build();
 
-            // 2. Слушатель нажатия "OK"
             datePicker.addOnPositiveButtonClickListener(selection -> {
-                // Форматируем выбранную дату в твой формат ДД/ММ/ГГ
                 Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 calendar.setTimeInMillis(selection);
                 SimpleDateFormat format = new SimpleDateFormat("dd/MM/yy", Locale.getDefault());
@@ -230,10 +227,8 @@ public class RegisterActivity extends AppCompatActivity {
         });*/
 
         verifyButton.setOnClickListener(v -> {
-            // 1. Валидация
             if (!validateInputs()) return;
 
-            // 2. Проверка политики
             if (isPrivacyAccepted()) {
                 startVerificationChain();
             } else {
@@ -259,21 +254,18 @@ public class RegisterActivity extends AppCompatActivity {
         });*/
 
         backToAuth.setOnClickListener(v -> {
-            // Просто закрываем текущую активность, возвращаясь на AuthActivity
             finish();
         });
 
         skipRegButton.setOnClickListener(v -> {
             if (isPrivacyAccepted()) {
-                // Если уже принимал — сразу показываем диалог пропуска
                 showSkipDialog();
             } else {
-                // Если нет — просим согласиться
                 PrivacyConsentDialog dialog = new PrivacyConsentDialog();
                 dialog.setOnConsentListener(isGranted -> {
                     if (isGranted) {
-                        savePrivacyAccepted(); // Сохраняем выбор
-                        showSkipDialog();      // Открываем диалог пропуска
+                        savePrivacyAccepted();
+                        showSkipDialog();
                     } else {
                         Toast.makeText(RegisterActivity.this, "Для продолжения необходимо принять соглашение", Toast.LENGTH_SHORT).show();
                     }
@@ -310,10 +302,8 @@ public class RegisterActivity extends AppCompatActivity {
         String nameStr = ((EditText)findViewById(R.id.nameReg)).getText().toString();
         String dateStr = ((EditText)findViewById(R.id.birthDateReg)).getText().toString();
 
-        // 1. Отправляем письмо
         sendVerificationEmail(emailStr, passwordStr, this);
 
-        // 2. Показываем диалог VerifyEmailDialog (Инструкция)
         VerifyEmailDialog verifyDialog = new VerifyEmailDialog();
         Bundle args = new Bundle();
         args.putString("email", emailStr);
@@ -342,14 +332,12 @@ public class RegisterActivity extends AppCompatActivity {
                             break;
                         case SUCCESS:
                             if (resource.data) {
-                                // УСПЕХ: Почта подтверждена
                                 DialogSuccessReg dialog = new DialogSuccessReg();
                                 Bundle args = new Bundle();
                                 args.putString("uid", repo.getUID());
                                 dialog.setArguments(args);
                                 dialog.show(getSupportFragmentManager(), "SuccessDialog");
                             } else {
-                                // ОШИБКА: Посылка не подтверждена
                                 DialogCheckEmail dialog = new DialogCheckEmail();
                                 Bundle args = new Bundle();
                                 args.putString("email", emailStr);
@@ -387,7 +375,6 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void showSkipDialog() {
         SkipRegDialog dialog = new SkipRegDialog();
-        // При нажатии "Продолжить без регистрации" в диалоге — закрываем экран (finish)
         dialog.setListener(this::finish);
         dialog.show(getSupportFragmentManager(), "SkipDialog");
     }
@@ -414,19 +401,16 @@ public class RegisterActivity extends AppCompatActivity {
         if (data == null) return;
 
         String oobCode = data.getQueryParameter("oobCode");
-        String mode = data.getQueryParameter("mode"); // должно быть "verifyEmail"
+        String mode = data.getQueryParameter("mode");
         if (oobCode == null || !"verifyEmail".equals(mode)) return;
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
         auth.applyActionCode(oobCode)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        // Email теперь подтверждён на сервере.
-                        // Принудительно обновим токен пользователя:
                         FirebaseUser user = auth.getCurrentUser();
                         if (user != null) {
                             user.reload().addOnCompleteListener(r -> {
-                                // Восстанавливаем поля из ActiveUserInfo и финализируем
                                 email.setText(ActiveUserInfo.getDefaults("email", RegisterActivity.this));
                                 password.setText(ActiveUserInfo.getDefaults("password", RegisterActivity.this));
                                 name.setText(ActiveUserInfo.getDefaults("name", RegisterActivity.this));
@@ -440,7 +424,6 @@ public class RegisterActivity extends AppCompatActivity {
                                 checkUserStatusAndFinalize();
                             });
                         } else {
-                            // Сессия слетела — нужно залогиниться заново
                             String mail = ActiveUserInfo.getDefaults("email", this);
                             String pass  = ActiveUserInfo.getDefaults("password", this);
                             auth.signInWithEmailAndPassword(mail, pass)

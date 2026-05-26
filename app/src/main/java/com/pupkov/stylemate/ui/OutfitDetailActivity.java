@@ -111,7 +111,6 @@ public class OutfitDetailActivity extends AppCompatActivity {
             viewModel.toggleLike(currentCollectionId, currentOutfitId, isLiked);
 
             if (isLiked) {
-                // Формируем динамический ключ для текущей подборки
                 String prefKey = "IS_FIRST_LIKE_SHOWN_" + currentCollectionId;
                 String isShown = ActiveUserInfo.getDefaults(prefKey, this);
 
@@ -123,7 +122,6 @@ public class OutfitDetailActivity extends AppCompatActivity {
                             )
                             .setDuration(5000)
                             .setAction("Перейти", s -> {
-                                // Маршрутизация на главный экран с инструкцией открыть ЛК
                                 Intent mainIntent = new Intent(this, MainActivity.class);
                                 mainIntent.putExtra("OPEN_TAB", "PROFILE");
                                 mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -161,7 +159,6 @@ public class OutfitDetailActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         rvProducts.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 
-        // Открытие карточки товара во внешнем браузере с логированием клика в CR-аналитику
         adapter = new ItemAdapter(url -> {
             if (url != null && !url.isEmpty()) {
                 if (currentOutfitId != null && !currentOutfitId.isEmpty()) {
@@ -180,9 +177,8 @@ public class OutfitDetailActivity extends AppCompatActivity {
     }
 
     private void loadDataFromIntent() {
-        // Достаем простые типы данных
         imageUrl = getIntent().getStringExtra("image_url");
-        currentOutfitId = getIntent().getStringExtra("outfit_id"); // Сохраняем ID образа
+        currentOutfitId = getIntent().getStringExtra("outfit_id");
         String style = getIntent().getStringExtra("style");
         String season = getIntent().getStringExtra("season");
         currentCollectionId = getIntent().getStringExtra("collection_id");

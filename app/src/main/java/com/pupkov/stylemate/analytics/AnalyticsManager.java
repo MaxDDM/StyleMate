@@ -16,13 +16,9 @@ public class AnalyticsManager {
     private static final DatabaseReference usersRef = database.getReference("User");
     private static final DatabaseReference outfitsRef = database.getReference("outfits");
 
-    /**
-     * Вызывать в toggleLikeInFirebase, когда isLiked == true
-     */
     public static void trackFirstLookAddition(String userId) {
         DatabaseReference userRef = usersRef.child(userId);
 
-        // Достаем данные пользователя одним запросом
         userRef.get().addOnSuccessListener(snapshot -> {
             Boolean alreadyTracked = snapshot.child("hasAddedLook").getValue(Boolean.class);
             Long regTimestamp = snapshot.child("registrationTimestamp").getValue(Long.class);
@@ -30,16 +26,13 @@ public class AnalyticsManager {
             if (alreadyTracked == null || !alreadyTracked) {
                 long currentTime = System.currentTimeMillis();
 
-                // 1. Ставим флаг, чтобы больше не заходить в это условие
                 userRef.child("hasAddedLook").setValue(true);
 
-                // 2. Считаем время до первого добавления (в секундах)
                 if (regTimestamp != null && regTimestamp > 0) {
                     long diffInSeconds = (currentTime - regTimestamp) / 1000;
                     userRef.child("timeToFirstLike").setValue(diffInSeconds);
                 }
 
-                // 3. Инкрементируем глобальный счетчик активации
                 incrementActiveUsersCounter();
             }
         });
@@ -62,14 +55,10 @@ public class AnalyticsManager {
     public static void trackTimeRegistration(String userId) {
         long timestamp = System.currentTimeMillis();
 
-        // 1. Записываем время регистрации в профиль пользователя
         usersRef.child(userId).child("registrationTimestamp").setValue(timestamp);
         incrementCounter(analyticsRef.child("RegisterCount"), 1);
     }
 
-    /**
-     * Увеличивает счетчик лайков конкретного образа
-     */
     public static void trackOutfitFavorite(String outfitId) {
         DatabaseReference outfitRef = outfitsRef.child(outfitId);
 
@@ -89,16 +78,13 @@ public class AnalyticsManager {
         });
     }
 
-    /**
-     * Считает FR для конкретного образа: (лайки / просмотры) * 100
-     */
+
     public static void calculateOutfitFavoriteRate(String outfitId) {
         DatabaseReference outfitRef = outfitsRef.child(outfitId);
 
         outfitRef.get().addOnSuccessListener(snapshot -> {
             Integer favorites = snapshot.child("countFavorites").getValue(Integer.class);
 
-            // Если у тебя поле называется countShows, достаем его
             Integer shows = snapshot.child("countShows").getValue(Integer.class);
 
             if (favorites != null && shows != null && shows > 0) {
@@ -111,7 +97,7 @@ public class AnalyticsManager {
     public static void trackCollectionCountChange(String userId) {
         DatabaseReference userRef = usersRef.child(userId);
         userRef.runTransaction(new Transaction.Handler() {
-            int globalAction = 0; // 1: встал в "две коллекции", 2: перешел в "три+"
+            int globalAction = 0;
 
             @NonNull @Override
             public Transaction.Result doTransaction(@NonNull MutableData currentData) {
@@ -145,16 +131,11 @@ public class AnalyticsManager {
         });
     }
 
-    /**
-     * Вызывать при удалении коллекции.
-     * 1. Уменьшает счетчик коллекций.
-     * 2. Фиксирует факт удаления для юзера (если впервые).
-     */
     public static void trackCollectionDeletion(String userId) {
         DatabaseReference userRef = usersRef.child(userId);
         userRef.runTransaction(new Transaction.Handler() {
             boolean shouldIncrementDeletedGlobal = false;
-            int globalAction = 0; // 1: из 3 в 2, 2: из 2 в 1
+            int globalAction = 0;
 
             @NonNull @Override
             public Transaction.Result doTransaction(@NonNull MutableData currentData) {
@@ -163,11 +144,9 @@ public class AnalyticsManager {
                 int newCount = Math.max(0, count - 1);
                 currentData.child("collectionsCount").setValue(newCount);
 
-                // Логика перемещения между группами статки
                 if (count == 3) globalAction = 1;
                 else if (count == 2) globalAction = 2;
 
-                // Логика первого удаления
                 Boolean alreadyDeleted = currentData.child("hasDeletedCollection").getValue(Boolean.class);
                 if (alreadyDeleted == null || !alreadyDeleted) {
                     currentData.child("hasDeletedCollection").setValue(true);
@@ -195,9 +174,7 @@ public class AnalyticsManager {
         });
     }
 
-    // Вспомогательный метод для изменения глобальных цифр
     private static void incrementCounter(DatabaseReference ref, int value) {
-        // Используем атомарный инкремент на стороне сервера
         ref.setValue(ServerValue.increment(value));
     }
 
@@ -214,9 +191,6 @@ public class AnalyticsManager {
         });
     }
 
-    /**
-     * Метод для расчета среднего времени до первого добавления образа
-     */
     public static void calculateAverageTimeToFirstLike() {
         usersRef.get().addOnSuccessListener(snapshot -> {
             long totalSeconds = 0;
@@ -239,17 +213,12 @@ public class AnalyticsManager {
         });
     }
 
-    /**
-     * Считает среднее кол-во добавленных образов на всех зарегистрированных пользователей
-     */
     public static void calculateAverageLikesPerUser() {
-        // 1. Сначала берем общее кол-во юзеров
         analyticsRef.child("RegisterCount").get().addOnSuccessListener(regSnapshot -> {
             Integer totalUsers = regSnapshot.getValue(Integer.class);
 
             if (totalUsers != null && totalUsers > 0) {
 
-                // 2. Затем считаем сумму всех лайков в items
                 outfitsRef.get().addOnSuccessListener(itemsSnapshot -> {
                     long totalLikes = 0;
 
@@ -260,7 +229,6 @@ public class AnalyticsManager {
                         }
                     }
 
-                    // 3. Считаем среднее и сохраняем
                     double average = (double) totalLikes / totalUsers;
                     analyticsRef.child("averageLooksPerUser").setValue(average);
                 });
@@ -268,10 +236,6 @@ public class AnalyticsManager {
         });
     }
 
-    /**
-     * Проходит по всей таблице outfits и сбрасывает аналитические поля в дефолтные значения.
-     * Если нужно полностью УДАЛИТЬ поле из БД, замените setValue(0) на setValue(null).
-     */
     public static void resetOutfitAnalyticsFields() {
         outfitsRef.get().addOnSuccessListener(snapshot -> {
             if (!snapshot.exists()) return;

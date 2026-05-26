@@ -13,12 +13,8 @@ import android.widget.ImageView;
 
 import com.pupkov.stylemate.R;
 
-/**
- * Выпадающий адаптер-список для переключения активной коллекции
- */
 public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    // Определяем константы для типов ячеек
     private static final int TYPE_ITEM = 0;
     private static final int TYPE_CREATE_BUTTON = 1;
     private List<String> collectionNames;
@@ -30,9 +26,6 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private final int COLOR_BLUE = Color.parseColor("#3D7DFF");
     private final int COLOR_GRAY = Color.parseColor("#595959");
 
-    /**
-     * Слушатель кликов. Передает имя выбранной коллекции, либо null, если требуется просто изменить состояние раскрытия.
-     */
     public interface OnItemClickListener {
         void onItemClick(String name);
         void onCreateNewClick();
@@ -44,17 +37,11 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         this.listener = listener;
     }
 
-    /**
-     * Переключение режима отображения (Свернут / Развернут).
-     */
     public void setExpanded(boolean expanded) {
         this.isExpanded = expanded;
         notifyDataSetChanged();
     }
 
-    /**
-     * Смена текущего выбранного элемента с обновлением UI.
-     */
     public void setSelectedName(String name) {
         this.selectedName = name;
         notifyDataSetChanged();
@@ -62,7 +49,6 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     @Override
     public int getItemViewType(int position) {
-        // Если список раскрыт и мы дошли до последнего элемента
         if (isExpanded && position == collectionNames.size()) {
             return TYPE_CREATE_BUTTON;
         }
@@ -94,24 +80,20 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (holder.getItemViewType() == TYPE_CREATE_BUTTON) {
-            // Логика для кнопки "Создать подборку"
             CreateButtonViewHolder createHolder = (CreateButtonViewHolder) holder;
             createHolder.itemView.setOnClickListener(v -> listener.onCreateNewClick());
         }
         else {
-            // Логика для обычной подборки
             ItemViewHolder itemHolder = (ItemViewHolder) holder;
             String currentItemName;
 
             if (!isExpanded) {
-                // Закрытое состояние
                 currentItemName = selectedName;
                 itemHolder.tvCollectionName.setTextColor(COLOR_GRAY);
                 itemHolder.arrowContainer.setVisibility(View.VISIBLE);
                 itemHolder.ivArrow.setColorFilter(COLOR_GRAY);
-                itemHolder.ivArrow.setRotation(0f); // Стрелка вниз
+                itemHolder.ivArrow.setRotation(0f);
             } else {
-                // Открытое состояние
                 currentItemName = collectionNames.get(position);
 
                 if (currentItemName.equals(selectedName)) {
@@ -120,7 +102,6 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                     itemHolder.tvCollectionName.setTextColor(COLOR_GRAY);
                 }
 
-                // Стрелка вверх только у первого элемента
                 if (position == 0) {
                     itemHolder.arrowContainer.setVisibility(View.VISIBLE);
                     itemHolder.ivArrow.setColorFilter(COLOR_BLUE);
@@ -132,12 +113,11 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
             itemHolder.tvCollectionName.setText(currentItemName);
 
-            // Клики по тексту
             itemHolder.itemView.setOnClickListener(v -> {
                 if (!isExpanded) {
-                    listener.onItemClick(null); // Просто раскрываем
+                    listener.onItemClick(null);
                 } else {
-                    listener.onItemClick(currentItemName); // Выбираем подборку
+                    listener.onItemClick(currentItemName);
                 }
             });
 
@@ -149,7 +129,6 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         notifyDataSetChanged();
     }
 
-    // 1. Холдер для обычного текста подборки
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView tvCollectionName;
         FrameLayout arrowContainer;
@@ -163,7 +142,6 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
     }
 
-    // 2. Холдер для кнопки "Создать подборку"
     public static class CreateButtonViewHolder extends RecyclerView.ViewHolder {
         public CreateButtonViewHolder(@NonNull View itemView) {
             super(itemView);

@@ -13,9 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Репозиторий для работы с вещами в Firebase.
- */
 public class ItemsRepository {
 
     private final DatabaseReference dbRef;
@@ -25,20 +22,12 @@ public class ItemsRepository {
                 .getReference("items");
     }
 
-    /**
-     * Интерфейс обратного вызова для асинхронной передачи результата загрузки вещей.
-     */
     public interface ItemsCallback {
         void onItemsLoaded(List<Item> items);
         void onError(String error);
     }
 
-    /**
-     * Загрузка вещей по списку их идентификаторов.
-     * Запускает параллельные асинхронные запросы к Firebase для каждого ID.
-     */
     public void getItemsByIds(List<String> itemIds, ItemsCallback callback) {
-        // Использование потокобезопасной обертки, так как колбэки Firebase могут возвращаться в разных потоках
         List<Item> loadedItems = Collections.synchronizedList(new ArrayList<>());
 
         if (itemIds == null || itemIds.isEmpty()) {
@@ -46,7 +35,6 @@ public class ItemsRepository {
             return;
         }
 
-        // счетчики и флаги для координации параллельных сетевых запросов
         final int totalToLoad = itemIds.size();
         final int[] loadedCount = {0};
         final boolean[] hasError = {false};
@@ -69,18 +57,13 @@ public class ItemsRepository {
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
                     if (hasError[0]) return;
-                    hasError[0] = true; // Блокировка отправки последующих успешных ответов при сбое
+                    hasError[0] = true;
                     callback.onError(error.getMessage());
                 }
 
-                /**
-                 * Синхронизированный барьер завершения.
-                 * Гарантирует, что callback сработает строго после того, как завершится последний сетевой запрос.
-                 */
                 private synchronized void checkCompletion() {
                     loadedCount[0]++;
                     if (loadedCount[0] == totalToLoad) {
-                        // Создание копии списка для предотвращения ConcurrentModificationException в UI-потоке
                         callback.onItemsLoaded(new ArrayList<>(loadedItems));
                     }
                 }

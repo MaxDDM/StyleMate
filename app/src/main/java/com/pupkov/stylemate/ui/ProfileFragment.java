@@ -20,10 +20,6 @@ import com.pupkov.stylemate.model.ProfileViewModel;
 
 import java.util.ArrayList;
 
-/**
- * Фрагмент личного кабинета пользователя.
- * Отображает информацию о профиле, аватарку и сетку сохраненных образов одежды по подборкам.
- */
 public class ProfileFragment extends Fragment {
 
     private ProfileViewModel viewModel;
@@ -56,15 +52,11 @@ public class ProfileFragment extends Fragment {
         observeViewModel();
     }
 
-    /**
-     * Обработка переключения вкладок.
-     * Позволяет обновлять данные профиля в репозитории без полного пересоздания View.
-     */
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
         if (!hidden && viewModel != null) {
-            viewModel.refreshData(); // Актуализация данных при возврате на вкладку
+            viewModel.refreshData();
         }
     }
 
@@ -72,7 +64,7 @@ public class ProfileFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (viewModel != null) {
-            viewModel.refreshData(); // Синхронизация состояния при возвращении на экран из других Activity
+            viewModel.refreshData();
         }
     }
 
@@ -84,9 +76,6 @@ public class ProfileFragment extends Fragment {
         tvUserName = view.findViewById(R.id.tvUserName);
     }
 
-    /**
-     * Конфигурация сетки для отображения обложек коллекций.
-     */
     private void setupRecyclerView() {
         GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 2);
         rvFavorites.setLayoutManager(layoutManager);
@@ -111,15 +100,11 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    /**
-     * Подписка на LiveData состояния профиля (имя, аватар, списки коллекций и флаги видимости).
-     */
     private void observeViewModel() {
         viewModel.userName.observe(getViewLifecycleOwner(), name -> {
             if (name != null) tvUserName.setText(name);
         });
 
-        // Асинхронная загрузка и скругление изображения профиля через Glide с обработкой плейсхолдеров
         viewModel.userAvatarUrl.observe(getViewLifecycleOwner(), url -> {
             if (imgAvatar != null) {
                 if (url != null && !url.isEmpty()) {
@@ -141,14 +126,12 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        // Триггер автоматического редиректа на главный экран, при удалении последней папки в Firebase
         viewModel.navigateToHomeEvent.observe(getViewLifecycleOwner(), shouldNavigate -> {
             if (shouldNavigate != null && shouldNavigate) {
                 navigateToHome();
             }
         });
 
-        // Динамическое переключение видимости контейнеров при отсутствии или наличии избранного
         viewModel.isEmptyState.observe(getViewLifecycleOwner(), isEmpty -> {
             if (isEmpty != null && isEmpty) {
                 tvEmptyState.setVisibility(View.VISIBLE);

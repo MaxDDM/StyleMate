@@ -36,18 +36,15 @@ public class StoryViewActivity extends AppCompatActivity {
         android.view.View btnStoryLink = findViewById(R.id.btnStoryLink);
         View storyContainer = findViewById(R.id.storyContainer);
 
-        // Получаем данные из Intent
         String imageUrl = getIntent().getStringExtra("image_url");
         String link = getIntent().getStringExtra("link");
 
-        // Загружаем полноэкранную картинку через Glide
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(this)
                     .load(imageUrl)
                     .into(ivFullStory);
         }
 
-        // Проверяем наличие ссылки и настраиваем кнопку
         if (link != null && !link.trim().isEmpty()) {
             btnStoryLink.setVisibility(View.VISIBLE);
             btnStoryLink.setOnClickListener(v -> {
@@ -63,7 +60,6 @@ public class StoryViewActivity extends AppCompatActivity {
         }
 
 
-        // Логика Swipe-to-Dismiss (свайп вниз для закрытия)
         storyContainer.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
@@ -73,7 +69,6 @@ public class StoryViewActivity extends AppCompatActivity {
 
                 case MotionEvent.ACTION_MOVE:
                     float deltaY = event.getRawY() - initialY;
-                    // Разрешаем движение только вниз
                     if (deltaY > 0) {
                         v.setTranslationY(initialTranslationY + deltaY);
                     }
@@ -81,11 +76,9 @@ public class StoryViewActivity extends AppCompatActivity {
 
                 case MotionEvent.ACTION_UP:
                     float currentDeltaY = event.getRawY() - initialY;
-                    // Если смахнули вниз больше чем на 1/4 экрана — закрываем
                     if (currentDeltaY > v.getHeight() / 4f) {
                         closeWithAnimation();
                     } else {
-                        // Иначе возвращаем экран на место с легкой анимацией
                         v.animate()
                                 .translationY(0)
                                 .setDuration(200)
@@ -99,7 +92,6 @@ public class StoryViewActivity extends AppCompatActivity {
 
     private void closeWithAnimation() {
         finish();
-        // Плавное затухание при закрытии
         overridePendingTransition(0, android.R.anim.fade_out);
     }
 }
