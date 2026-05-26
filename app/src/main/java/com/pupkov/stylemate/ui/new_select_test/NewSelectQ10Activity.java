@@ -7,18 +7,13 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.pupkov.stylemate.R;
-import com.pupkov.stylemate.model.TestViewModel;
-import com.pupkov.stylemate.repository.ActiveUserInfo;
-import com.pupkov.stylemate.repository.SituationsRepository;
-import com.pupkov.stylemate.ui.AuthActivity;
 import com.pupkov.stylemate.ui.MainActivity;
-import com.pupkov.stylemate.ui.RegisterActivity;
 import com.pupkov.stylemate.ui.SetSelectionNameActivity;
 
 public class NewSelectQ10Activity extends AppCompatActivity {
+    // Индекс выбранной конкретной ситуации внутри подкатегории
     int ans = -1;
 
     @Override
@@ -33,38 +28,34 @@ public class NewSelectQ10Activity extends AppCompatActivity {
         ImageButton nextButton = findViewById(R.id.btnNextQuestSelTest10);
         ImageButton skipButton = findViewById(R.id.btnSkipQuestSelTest10);
 
-
         test1Button.setOnClickListener(v -> {
             ans = 1;
-
-            test1Button.setBackgroundResource(R.drawable.ic_pic6);
-            test2Button.setBackgroundResource(R.drawable.ic_pic5);
-            test3Button.setBackgroundResource(R.drawable.ic_pic5);
+            setRadioSelection(test1Button, test2Button, test3Button);
         });
 
         test2Button.setOnClickListener(v -> {
             ans = 2;
-
-            test1Button.setBackgroundResource(R.drawable.ic_pic5);
-            test2Button.setBackgroundResource(R.drawable.ic_pic6);
-            test3Button.setBackgroundResource(R.drawable.ic_pic5);
+            setRadioSelection(test2Button, test1Button, test3Button);
         });
 
         test3Button.setOnClickListener(v -> {
             ans = 3;
-
-            test1Button.setBackgroundResource(R.drawable.ic_pic5);
-            test2Button.setBackgroundResource(R.drawable.ic_pic5);
-            test3Button.setBackgroundResource(R.drawable.ic_pic6);
+            setRadioSelection(test3Button, test1Button, test2Button);
         });
 
+        // Финализация ветки: эта активность завершает опрос для текущего сценария
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
                 int situation_id = ans;
 
+                // Переходим к экрану ввода названия создаваемой подборки
                 Intent intent = new Intent(NewSelectQ10Activity.this, SetSelectionNameActivity.class);
+
+                // testNumber = 2 означает, что подборка генерируется по ситуации, а не по общему стилю
                 intent.putExtra("testNumber", 2);
                 intent.putExtra("situation_id", situation_id);
+
+                // Очищаем стек, чтобы пользователь не вернулся назад в тест кнопкой системы
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
@@ -77,5 +68,13 @@ public class NewSelectQ10Activity extends AppCompatActivity {
             Intent intent = new Intent(NewSelectQ10Activity.this, MainActivity.class);
             startActivity(intent);
         });
+    }
+
+    // Вспомогательный метод для визуального переключения состояния кнопок выбора
+    private void setRadioSelection(ImageButton selected, ImageButton... others) {
+        selected.setBackgroundResource(R.drawable.ic_pic6);
+        for (ImageButton other : others) {
+            other.setBackgroundResource(R.drawable.ic_pic5);
+        }
     }
 }

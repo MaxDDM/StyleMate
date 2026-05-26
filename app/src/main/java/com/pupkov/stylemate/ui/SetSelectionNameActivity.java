@@ -8,18 +8,12 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.model.TestViewModel;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.SituationsRepository;
-import com.pupkov.stylemate.ui.new_select_test.NewSelectQ10Activity;
-import com.pupkov.stylemate.ui.new_select_test.NewSelectQ11Activity;
-import com.pupkov.stylemate.ui.test.TestQ5Activity;
 
 public class SetSelectionNameActivity extends AppCompatActivity {
 
@@ -35,18 +29,23 @@ public class SetSelectionNameActivity extends AppCompatActivity {
         ImageButton continueButton = findViewById(R.id.continueSelectionName);
 
         continueButton.setOnClickListener(v -> {
-            if (selectionName.getText().toString().isEmpty()) {
-                Toast.makeText(SetSelectionNameActivity.this,"Вы не ввели название", Toast.LENGTH_LONG).show();
-            } else if (selectionName.getText().toString().length() > 10) {
-                Toast.makeText(SetSelectionNameActivity.this,"Название не может содержать более 10 символов", Toast.LENGTH_LONG).show();
-            } else {
-                int testNumber = getIntent().getIntExtra("testNumber", 1);
+            String enteredName = selectionName.getText().toString().trim();
 
+            // Валидация введенного названия подборки
+            if (enteredName.isEmpty()) {
+                Toast.makeText(SetSelectionNameActivity.this, "Вы не ввели название", Toast.LENGTH_LONG).show();
+            } else if (enteredName.length() > 10) {
+                Toast.makeText(SetSelectionNameActivity.this, "Название не может содержать более 10 символов", Toast.LENGTH_LONG).show();
+            } else {
+                // Извлекаем маркер теста: 1 — по общему стилю, 2 — по ситуациям
+                int testNumber = getIntent().getIntExtra("testNumber", 1);
                 viewModel = new ViewModelProvider(this).get(TestViewModel.class);
 
                 if (testNumber == 1) {
+                    // Финализация теста общего стиля
                     int ans = getIntent().getIntExtra("ans", 0);
 
+                    // Наблюдаем за состоянием сессии (если истекла за 30 мин, отправляем авторизоваться)
                     viewModel.getSessionValidState().observe(this, isValid -> {
                         if (!isValid) {
                             Toast.makeText(this, "Время сессии истекло. Пожалуйста, зарегистрируйтесь.", Toast.LENGTH_LONG).show();
@@ -56,39 +55,46 @@ public class SetSelectionNameActivity extends AppCompatActivity {
                         }
                     });
 
+                    // Ожидаем успешный подсчет результата во ViewModel и сохранение в БД/локально
                     viewModel.getWinnerStyle().observe(this, winnerStyleIndex -> {
-                        // Этот код сработает, когда ViewModel закончит считать
-
                         Toast.makeText(this, "Тест завершен! Победил стиль №: " + winnerStyleIndex, Toast.LENGTH_LONG).show();
 
-                        // Переход на главную
+                        // Переходим на главный экран и полностью очищаем стек активностей
                         Intent intent = new Intent(SetSelectionNameActivity.this, MainActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
                         finish();
                     });
 
+                    // Запускаем проверку таймера сессии
                     viewModel.checkSession();
 
+                    // Если 5-й вопрос не был пропущен, добавляем балл за последний ответ
                     int skip = getIntent().getIntExtra("notSkip", 0);
                     if (skip == 1) {
                         viewModel.processAnswer(5, ans);
                     }
 
-                    viewModel.calculateResult(selectionName.getText().toString());
-                } else {
-                    int situation_id = getIntent().getIntExtra("situation_id", 0);
+                    // Передаем название во ViewModel для вычисления итогового стиля и сохранения подборки
+                    viewModel.calculateResult(enteredName);
 
-                    String name = selectionName.getText().toString();
+                } else {
+                    // Финализация теста по ситуациям
+                    int situation_id = getIntent().getIntExtra("situation_id", 0);
                     String isReg = ActiveUserInfo.getDefaults("isRegistered", SetSelectionNameActivity.this);
+
                     if (isReg != null && !isReg.isEmpty()) {
-                        viewModel.createSituationCollection(name, SituationsRepository.getSituations(situation_id));
+                        // Для авторизованных отправляем сформированную по ID коллекцию в Firebase
+                        viewModel.createSituationCollection(enteredName, SituationsRepository.getSituations(situation_id));
                     } else {
+                        // Для гостей сохраняем выбранный набор ситуаций локально в SharedPreferences
                         viewModel.saveSituation(SituationsRepository.getSituations(situation_id));
                     }
 
+                    // Возвращаемся на главный экран
                     Intent intent = new Intent(SetSelectionNameActivity.this, MainActivity.class);
                     startActivity(intent);
+                    finish();
                 }
             }
         });

@@ -29,4 +29,3 @@
     android:stateListAnimator="@null"
 
     app:backgroundTint="@color/selector_filter_btn"/>
-    <!-- ^^^ ВОТ ЗДЕСЬ МАГИЯ ЦВЕТА -->

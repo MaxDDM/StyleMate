@@ -91,6 +91,9 @@
             android:name=".ui.OutfitDetailActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.StoryViewActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.AuthActivity"
             android:exported="true">
             <intent-filter>

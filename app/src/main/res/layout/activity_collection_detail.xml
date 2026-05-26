@@ -8,7 +8,6 @@
     android:background="@android:color/white"
     android:padding="16dp">
 
-    <!-- Кнопка НАЗАД -->
     <ImageButton
         android:id="@+id/btnBack"
         android:layout_width="48dp"
@@ -19,9 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="#000000" />
-    <!-- Примечание: убедитесь, что у вас есть иконка ic_back_arrow или замените на системную -->
 
-    <!-- ЗАГОЛОВОК (На спорте) -->
     <TextView
         android:id="@+id/tvCollectionTitle"
         android:layout_width="0dp"
@@ -33,38 +30,10 @@
         android:textColor="#000000"
         android:textSize="22sp"
         app:layout_constraintBottom_toBottomOf="@+id/btnBack"
-        app:layout_constraintEnd_toStartOf="@+id/btnEdit"
         app:layout_constraintStart_toEndOf="@+id/btnBack"
-        app:layout_constraintTop_toTopOf="@+id/btnBack" />
+        app:layout_constraintTop_toTopOf="@+id/btnBack"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Кнопка УДАЛИТЬ (Крайняя справа) -->
-    <ImageButton
-        android:id="@+id/btnDelete"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/bg_glass_circle"
-        android:contentDescription="Удалить"
-        android:src="@drawable/ic_delete"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="#555555" />
-    <!-- Примечание: нужна иконка ic_trash (корзина) -->
-
-    <!-- Кнопка РЕДАКТИРОВАТЬ (Слева от урны) -->
-    <ImageButton
-        android:id="@+id/btnEdit"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginEnd="12dp"
-        android:background="@drawable/bg_glass_circle"
-        android:contentDescription="Редактировать"
-        android:src="@drawable/ic_edit_small"
-        app:layout_constraintEnd_toStartOf="@+id/btnDelete"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="#555555" />
-    <!-- Примечание: нужна иконка ic_edit_pencil (карандаш) -->
-
-    <!-- Плейсхолдер для будущей сетки (StaggeredGrid) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOutfitsGrid"
         android:layout_width="match_parent"

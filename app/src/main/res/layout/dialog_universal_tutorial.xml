@@ -5,7 +5,6 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <!-- Стрелка (Опциональная) -->
     <ImageView
         android:id="@+id/ivArrow"
         android:layout_width="53dp"
@@ -28,7 +27,6 @@
 
         android:layout_marginBottom="4dp" />
 
-    <!-- Белая карточка -->
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
         android:layout_width="300dp"
@@ -46,7 +44,6 @@
             android:layout_height="wrap_content"
             android:minHeight="230dp">
 
-            <!-- Кнопка ЗАКРЫТЬ -->
             <ImageButton
                 android:id="@+id/btnClose"
                 android:layout_width="70dp"
@@ -59,7 +56,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- Текст сообщения -->
             <TextView
                 android:id="@+id/tvMessage"
                 android:layout_width="0dp"

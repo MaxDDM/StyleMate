@@ -9,7 +9,6 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.pupkov.stylemate.R;
-import com.pupkov.stylemate.repository.ActiveUserInfo;
 
 public class NewSelectQ13Activity extends AppCompatActivity {
     int ans = -1;

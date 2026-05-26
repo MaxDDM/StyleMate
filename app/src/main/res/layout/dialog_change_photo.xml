@@ -14,7 +14,6 @@
         android:gravity="center_horizontal"
         android:padding="24dp">
 
-        <!-- Заголовок -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -23,7 +22,6 @@
             android:textSize="20sp"
             android:fontFamily="@font/ttcommons_regular"/>
 
-        <!-- Аватарка (текущая) -->
         <androidx.cardview.widget.CardView
             android:layout_width="110dp"
             android:layout_height="110dp"
@@ -37,10 +35,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_edit_avatar" /> <!-- Твоя картинка -->
+                android:src="@drawable/ic_edit_avatar" />
         </androidx.cardview.widget.CardView>
 
-        <!-- Кнопка Галерея -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnGallery"
             android:layout_width="match_parent"
@@ -51,7 +48,6 @@
             android:textColor="#000000"
             android:layout_marginBottom="12dp"/>
 
-        <!-- Кнопка Камера -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnCamera"
             android:layout_width="match_parent"
@@ -62,7 +58,6 @@
             android:textColor="#000000"
             android:layout_marginBottom="12dp"/>
 
-        <!-- Кнопка Отмена -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnCancel"
             android:layout_width="match_parent"

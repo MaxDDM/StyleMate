@@ -9,8 +9,6 @@
     android:background="#FFFFFF"
     tools:context=".ui.MainActivity">
 
-    <!-- КОНТЕЙНЕР ДЛЯ ФРАГМЕНТОВ -->
-    <!-- Сюда программно будут вставляться HomeFragment или ProfileFragment -->
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
@@ -21,8 +19,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- НИЖНЯЯ ПАНЕЛЬ (НАВИГАЦИЯ) -->
-    <!-- Она лежит ПОВЕРХ контейнера -->
     <androidx.cardview.widget.CardView
         android:id="@+id/bottomNavBar"
         android:layout_width="174dp"
@@ -42,7 +38,6 @@
             android:weightSum="2"
             android:layout_margin="1dp">
 
-            <!-- HOME -->
             <FrameLayout
                 android:id="@+id/btnHome"
                 android:layout_width="0dp"
@@ -52,7 +47,6 @@
                 android:focusable="true"
                 android:background="?attr/selectableItemBackgroundBorderless">
 
-                <!-- Фон выделения (пока спрятан - GONE) -->
                 <View
                     android:id="@+id/bgHomeSelected"
                     android:layout_width="match_parent"
@@ -69,7 +63,6 @@
                     app:tint="#505050" />
             </FrameLayout>
 
-            <!-- PROFILE -->
             <FrameLayout
                 android:id="@+id/btnProfile"
                 android:layout_width="0dp"
@@ -79,7 +72,6 @@
                 android:focusable="true"
                 android:background="?attr/selectableItemBackgroundBorderless">
 
-                <!-- Фон выделения (пока спрятан - GONE) -->
                 <View
                     android:id="@+id/bgProfileSelected"
                     android:layout_width="match_parent"

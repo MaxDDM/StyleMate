@@ -8,74 +8,70 @@
     android:background="#FFFFFF"
     android:paddingTop="16dp">
 
-    <!-- 1. ЛЕВАЯ КНОПКА (МЕНЮ) -->
-    <FrameLayout
+    <ImageButton
         android:id="@+id/btnList"
-        android:layout_width="50dp"
-        android:layout_height="35dp"
-        android:layout_marginStart="20dp"
-        android:background="@drawable/bg_pill_dark"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_glass_circle"
+        android:src="@drawable/filter_icon"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"/>
 
-        <ImageView
-            android:layout_width="30dp"
-            android:layout_height="25dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_list"
-            app:tint="#FFFFFF" />
-    </FrameLayout>
+    <ImageButton
+        android:id="@+id/btnDelete"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_glass_circle"
+        android:contentDescription="Удалить"
+        android:src="@drawable/ic_delete"
+        app:layout_constraintBottom_toBottomOf="@+id/btnList"
+        app:layout_constraintEnd_toStartOf="@+id/btnEdit"
+        app:layout_constraintTop_toTopOf="@+id/btnList"
+        app:tint="#555555" />
 
-
-    <!-- 2. ПРАВАЯ КНОПКА (СОЗДАТЬ) -->
-    <LinearLayout
-        android:id="@+id/btnCreate"
-        android:layout_width="wrap_content"
-        android:layout_height="30dp"
-        android:layout_marginEnd="20dp"
-        android:background="@drawable/bg_pill_dark"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="15dp"
+    <ImageButton
+        android:id="@+id/btnEdit"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/bg_glass_circle"
+        android:contentDescription="Редактировать"
+        android:src="@drawable/ic_edit_small"
         app:layout_constraintBottom_toBottomOf="@+id/btnList"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="@+id/btnList"
+        app:tint="#555555" />
 
-        <ImageView
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:layout_marginEnd="8dp"
-            android:src="@drawable/ic_add"
-            app:tint="#FFFFFF" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvStories"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:paddingHorizontal="8dp"
+        android:orientation="horizontal"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintTop_toBottomOf="@+id/btnList"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_story" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/ttcommons_regular"
-            android:text="Создать подборку"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <!-- 3. ЛЕНТА ТОВАРОВ (СЕТКА) -->
-    <!-- ВАЖНО: Она идет ДО vOverlay, чтобы быть на заднем плане -->
-    <!-- clipToPadding="false" нужен, чтобы контент не обрезался при скролле снизу -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOutfitsGrid"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="5dp"
         android:paddingHorizontal="12dp"
         android:paddingBottom="80dp"
         android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnList"
+        app:layout_constraintTop_toBottomOf="@+id/rvStories"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-    <!-- paddingBottom нужен, чтобы нижнее меню (домик) не перекрывало контент -->
 
 
-    <!-- ШТОРКА (Overlay) -->
     <View
         android:id="@+id/vOverlay"
         android:layout_width="0dp"
@@ -90,33 +86,6 @@
         app:layout_constraintTop_toTopOf="parent" />
 
 
-    <!-- 3. СПИСОК (ТЕПЕРЬ ОН ГЛАВНЫЙ) -->
-    <!-- Он стоит там, где раньше был заголовок -->
-    <!-- constrainedWidth ограничивает ширину до кнопки Создать -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvCollections"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:layout_marginStart="14dp"
-        android:layout_marginEnd="0dp"
-        android:background="@android:color/transparent"
-
-        android:minWidth="100dp"
-        android:overScrollMode="never"
-
-        app:layout_constrainedWidth="true"
-        app:layout_constraintBottom_toBottomOf="@id/btnList"
-        app:layout_constraintEnd_toStartOf="@id/btnCreate"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@id/btnList"
-        app:layout_constraintTop_toTopOf="@id/btnList"
-        app:layout_constraintVertical_bias="0.0"
-
-        tools:itemCount="1"
-        tools:listitem="@layout/item_collection_name_list" />
-
-    <!-- ЭКРАН-ЗАГЛУШКА (Если удалили все подборки) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clEmptyState"
         android:layout_width="match_parent"
@@ -133,7 +102,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Текст: Вы удалили все подборки -->
         <TextView
             android:id="@+id/tvEmptyMessage"
             android:layout_width="0dp"
@@ -151,7 +119,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.5" />
 
-        <!-- Кнопка: ПРОДОЛЖИТЬ (Темная) -->
         <ImageButton
             android:id="@+id/btnContinueTest"
             android:layout_width="344dp"
@@ -167,7 +134,6 @@
             app:layout_constraintStart_toStartOf="parent" />
 
 
-        <!-- Кнопка: ВЫЙТИ (Прозрачная/Светлая) -->
         <ImageButton
             android:id="@+id/btnLogout"
             android:layout_width="344dp"
@@ -182,5 +148,22 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvCollections"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:clipToOutline="true"
+        android:elevation="12dp"
+        android:background="@android:color/transparent"
+        android:overScrollMode="never"
+        app:layout_constraintEnd_toStartOf="@+id/btnDelete"
+        app:layout_constraintStart_toEndOf="@+id/btnList"
+        app:layout_constraintTop_toTopOf="@+id/btnList"
+        tools:itemCount="1"
+        tools:listitem="@layout/item_collection_name_list" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

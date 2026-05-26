@@ -13,21 +13,29 @@ import android.widget.ImageView;
 
 import com.pupkov.stylemate.R;
 
-public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsNameAdapter.ViewHolder> {
+/**
+ * Выпадающий адаптер-список для переключения активной коллекции
+ */
+public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    // Определяем константы для типов ячеек
+    private static final int TYPE_ITEM = 0;
+    private static final int TYPE_CREATE_BUTTON = 1;
     private List<String> collectionNames;
     private final OnItemClickListener listener;
 
-    // --- СОСТОЯНИЕ ---
-    private boolean isExpanded = false; // Развернут список или нет
-    private String selectedName;        // Текущее выбранное имя
+    private boolean isExpanded = false;
+    private String selectedName;
 
-    // Цвета
     private final int COLOR_BLUE = Color.parseColor("#3D7DFF");
     private final int COLOR_GRAY = Color.parseColor("#595959");
 
+    /**
+     * Слушатель кликов. Передает имя выбранной коллекции, либо null, если требуется просто изменить состояние раскрытия.
+     */
     public interface OnItemClickListener {
         void onItemClick(String name);
+        void onCreateNewClick();
     }
 
     public CollectionsNameAdapter(List<String> collectionNames, String initialName, OnItemClickListener listener) {
@@ -36,132 +44,129 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<CollectionsName
         this.listener = listener;
     }
 
-    // Метод для переключения режима (Свернут/Развернут)
+    /**
+     * Переключение режима отображения (Свернут / Развернут).
+     */
     public void setExpanded(boolean expanded) {
         this.isExpanded = expanded;
-        notifyDataSetChanged(); // Полная перерисовка
+        notifyDataSetChanged();
     }
 
-    // Обновляем выбранный элемент
+    /**
+     * Смена текущего выбранного элемента с обновлением UI.
+     */
     public void setSelectedName(String name) {
         this.selectedName = name;
         notifyDataSetChanged();
     }
 
-    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_collection_name_list, parent, false);
-        return new ViewHolder(view);
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // ЛОГИКА ОТОБРАЖЕНИЯ ДАННЫХ
-        String currentItemName;
-
-        // 2. ОБРАБОТКА "ПРИЗРАЧНОГО" ВТОРОГО ЭЛЕМЕНТА
-        // Проверяем: если список развернут, в нем 1 элемент, а мы сейчас рисуем позицию №1 (вторую строку)
-        if (isExpanded && collectionNames.size() == 1 && position == 1) {
-            // Настраиваем пустышку
-            holder.tvCollectionName.setText(" "); // Пробел, чтобы сохранилась высота строки
-            holder.arrowContainer.setVisibility(View.GONE); // Скрываем стрелку
-            holder.lineSeparator.setVisibility(View.GONE);
-            holder.itemView.setOnClickListener(null); // Убираем клик
-            holder.itemView.setClickable(false);      // Отключаем нажатие
-            return; // Выходим из метода, чтобы не выполнялся код ниже
+    public int getItemViewType(int position) {
+        // Если список раскрыт и мы дошли до последнего элемента
+        if (isExpanded && position == collectionNames.size()) {
+            return TYPE_CREATE_BUTTON;
         }
-
-        if (!isExpanded) {
-            // РЕЖИМ 1: СВЕРНУТО
-            // Показываем ВСЕГДА только выбранное имя (оно будет единственным элементом)
-            currentItemName = selectedName;
-
-            // Вид: Серый (неактивный), так как список закрыт
-            holder.tvCollectionName.setTextColor(COLOR_GRAY);
-            holder.lineSeparator.setBackgroundColor(COLOR_GRAY);
-            holder.arrowContainer.setVisibility(View.VISIBLE);
-            holder.ivArrow.setColorFilter(COLOR_GRAY);
-            holder.ivArrow.setRotation(0f);
-
-        } else {
-            // РЕЖИМ 2: РАЗВЕРНУТО
-            // Берем реальное имя из списка по позиции
-            currentItemName = collectionNames.get(position);
-
-            // Вид: Если это выбранный элемент -> Синий, иначе -> Серый
-            if (currentItemName.equals(selectedName)) {
-                holder.tvCollectionName.setTextColor(COLOR_BLUE);
-                holder.lineSeparator.setBackgroundColor(COLOR_BLUE);
-            } else {
-                holder.tvCollectionName.setTextColor(COLOR_GRAY);
-                holder.lineSeparator.setBackgroundColor(COLOR_GRAY);
-            }
-
-            if (position == 0) {
-                // У первого элемента: Стрелка есть, Синий цвет, Смотрит вверх
-                holder.arrowContainer.setVisibility(View.VISIBLE);
-                holder.ivArrow.setColorFilter(COLOR_BLUE);
-                holder.ivArrow.setRotation(180f);
-            } else {
-                // У остальных: Стрелки нет
-                holder.arrowContainer.setVisibility(View.GONE);
-            }
-        }
-
-        holder.tvCollectionName.setText(currentItemName);
-
-        // ОБРАБОТКА КЛИКА
-        holder.itemView.setOnClickListener(v -> {
-            if (!isExpanded) {
-                // Если нажали на свернутый элемент -> просим Фрагмент открыть список
-                listener.onItemClick(null); // null означает "просто открой"
-            } else {
-                // Если нажали в открытом списке -> выбираем элемент
-                listener.onItemClick(currentItemName);
-            }
-        });
-
-        // Клик по стрелке (она маленькая, лучше вешать клик на контейнер)
-        holder.arrowContainer.setOnClickListener(v -> {
-            // Клик по стрелке всегда работает как переключатель (открыть/закрыть)
-            // В данном контексте можно просто передать null, фрагмент поймет
-            listener.onItemClick(null);
-        });
+        return TYPE_ITEM;
     }
 
     @Override
     public int getItemCount() {
         if (!isExpanded) {
-            return 1; // Свернуто -> всегда 1 (заголовок)
+            return 1;
         }
+        return collectionNames.size() + 1;
+    }
 
-        // Развернуто:
-        if (collectionNames.size() == 1) {
-            return 2; // ХИТРОСТЬ: Если реальный элемент один, говорим, что их два
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        if (viewType == TYPE_CREATE_BUTTON) {
+            View view = inflater.inflate(R.layout.item_collection_create, parent, false);
+            return new CreateButtonViewHolder(view);
+        } else {
+            View view = inflater.inflate(R.layout.item_collection_name_list, parent, false);
+            return new ItemViewHolder(view);
         }
+    }
 
-        return collectionNames.size();
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder.getItemViewType() == TYPE_CREATE_BUTTON) {
+            // Логика для кнопки "Создать подборку"
+            CreateButtonViewHolder createHolder = (CreateButtonViewHolder) holder;
+            createHolder.itemView.setOnClickListener(v -> listener.onCreateNewClick());
+        }
+        else {
+            // Логика для обычной подборки
+            ItemViewHolder itemHolder = (ItemViewHolder) holder;
+            String currentItemName;
+
+            if (!isExpanded) {
+                // Закрытое состояние
+                currentItemName = selectedName;
+                itemHolder.tvCollectionName.setTextColor(COLOR_GRAY);
+                itemHolder.arrowContainer.setVisibility(View.VISIBLE);
+                itemHolder.ivArrow.setColorFilter(COLOR_GRAY);
+                itemHolder.ivArrow.setRotation(0f); // Стрелка вниз
+            } else {
+                // Открытое состояние
+                currentItemName = collectionNames.get(position);
+
+                if (currentItemName.equals(selectedName)) {
+                    itemHolder.tvCollectionName.setTextColor(COLOR_BLUE);
+                } else {
+                    itemHolder.tvCollectionName.setTextColor(COLOR_GRAY);
+                }
+
+                // Стрелка вверх только у первого элемента
+                if (position == 0) {
+                    itemHolder.arrowContainer.setVisibility(View.VISIBLE);
+                    itemHolder.ivArrow.setColorFilter(COLOR_BLUE);
+                    itemHolder.ivArrow.setRotation(180f);
+                } else {
+                    itemHolder.arrowContainer.setVisibility(View.GONE);
+                }
+            }
+
+            itemHolder.tvCollectionName.setText(currentItemName);
+
+            // Клики по тексту
+            itemHolder.itemView.setOnClickListener(v -> {
+                if (!isExpanded) {
+                    listener.onItemClick(null); // Просто раскрываем
+                } else {
+                    listener.onItemClick(currentItemName); // Выбираем подборку
+                }
+            });
+
+        }
     }
 
     public void updateList(List<String> newList) {
-        this.collectionNames = newList; // Обновляем данные внутри адаптера
-        notifyDataSetChanged(); // Перерисовываем
+        this.collectionNames = newList;
+        notifyDataSetChanged();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    // 1. Холдер для обычного текста подборки
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView tvCollectionName;
-        View lineSeparator;
-        FrameLayout arrowContainer; // Наш кружок
-        ImageView ivArrow;          // Сама картинка
+        FrameLayout arrowContainer;
+        ImageView ivArrow;
 
-        public ViewHolder(@NonNull View itemView) {
+        public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
             tvCollectionName = itemView.findViewById(R.id.tvCollectionName);
-            lineSeparator = itemView.findViewById(R.id.lineSeparator);
             arrowContainer = itemView.findViewById(R.id.flArrowContainer);
             ivArrow = itemView.findViewById(R.id.ivItemArrow);
+        }
+    }
+
+    // 2. Холдер для кнопки "Создать подборку"
+    public static class CreateButtonViewHolder extends RecyclerView.ViewHolder {
+        public CreateButtonViewHolder(@NonNull View itemView) {
+            super(itemView);
         }
     }
 }

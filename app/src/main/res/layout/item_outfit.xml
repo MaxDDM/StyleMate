@@ -13,8 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- КАРТИНКА -->
-        <!-- adjustViewBounds=true + wrap_content по высоте = РАЗНАЯ ВЫСОТА КАРТИНОК -->
         <ImageView
             android:id="@+id/ivOutfitImage"
             android:layout_width="match_parent"
@@ -29,7 +27,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <!-- СЕРДЕЧКО (Поверх картинки справа сверху) -->
         <ImageButton
             android:id="@+id/btnLike"
             android:layout_width="32dp"
@@ -42,8 +39,6 @@
             android:scaleType="fitCenter"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
-        <!-- circle_background_transparent - это shape drawable,
-             кружок с полупрозрачным черным/белым фоном, как на скрине -->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

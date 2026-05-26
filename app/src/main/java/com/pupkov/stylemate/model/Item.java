@@ -1,15 +1,14 @@
 package com.pupkov.stylemate.model;
 
 public class Item {
-    private String id;        // ID (ключ из базы)
-    private String type;      // "Худи"
-    private String brand;     // "Sela"
-    private String price;     // "2399 Р"
-    private String material;  // "хлопок"
-    private String imageUrl;  // Ссылка на фото
+    private String id;
+    private String type;
+    private String brand;
+    private String price;
+    private String material;
+    private String imageUrl;
     private String link;
 
-    // Пустой конструктор для Firebase
     public Item() { }
 
     public Item(String id, String type, String brand, String price, String material, String imageUrl, String link) {
@@ -22,7 +21,6 @@ public class Item {
         this.link = link;
     }
 
-    // Геттеры и сеттеры
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

@@ -17,17 +17,18 @@ import com.pupkov.stylemate.model.TestViewModel;
 public class TestQ1Activity extends AppCompatActivity {
     private TestViewModel viewModel;
 
+    // Индекс выбранного ответа (-1, если ничего не выбрано)
     int ans = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Фиксируем в локальных настройках старт тестирования
         ActiveUserInfo.setDefaults("isTest1", "yes", TestQ1Activity.this);
 
         viewModel = new ViewModelProvider(this).get(TestViewModel.class);
         super.onCreate(savedInstanceState);
 
-        // 2. ПОДПИСКА НА ДАННЫЕ (СНИЗУ ВВЕРХ)
-        // Следим за статусом сессии. Если ViewModel скажет "false", уходим.
+        // Проверка валидности сессии в Firebase: если она истекла, выбрасываем на авторизацию
         viewModel.getSessionValidState().observe(this, isValid -> {
             if (!isValid) {
                 Toast.makeText(this, "Время сессии истекло. Пожалуйста, зарегистрируйтесь.", Toast.LENGTH_LONG).show();
@@ -37,7 +38,6 @@ public class TestQ1Activity extends AppCompatActivity {
             }
         });
 
-        // Запускаем проверку сессии (событие сверху вниз)
         viewModel.checkSession();
 
         EdgeToEdge.enable(this);
@@ -51,7 +51,6 @@ public class TestQ1Activity extends AppCompatActivity {
         ImageButton nextButton = findViewById(R.id.btnNextQuestTest1);
         ImageButton skipButton = findViewById(R.id.btnSkipQuestTest1);
 
-        // Логика переключения кнопок (визуал) остается без изменений
         test1Button.setOnClickListener(v -> {
             ans = 1;
             test1Button.setBackgroundResource(R.drawable.ic_pic6);
@@ -97,14 +96,11 @@ public class TestQ1Activity extends AppCompatActivity {
             test5Button.setBackgroundResource(R.drawable.ic_pic6);
         });
 
-        // 2. ЛОГИКА КНОПКИ "ДАЛЕЕ"
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
-                // А. Сообщаем ViewModel о выборе (1 - номер вопроса)
-                // Внутри ViewModel сама вызовет репозиторий и сохранит прогресс
+                // Передаем ответ в ViewModel для последующего сохранения в репозиторий
                 viewModel.processAnswer(1, ans);
 
-                // В. Переходим дальше
                 Intent intent = new Intent(TestQ1Activity.this, TestQ2Activity.class);
                 startActivity(intent);
             } else {
@@ -112,11 +108,8 @@ public class TestQ1Activity extends AppCompatActivity {
             }
         });
 
-        // 3. ЛОГИКА КНОПКИ "ПРОПУСТИТЬ"
         skipButton.setOnClickListener(v -> {
-            // Баллы НЕ начисляем (ans нас не интересует)
-
-            // Сохраняем только время активности
+            // Пропуск вопроса: сохраняем только временную метку прогресса без начисления баллов
             viewModel.saveProgressOnly();
 
             Intent intent = new Intent(TestQ1Activity.this, TestQ2Activity.class);

@@ -23,7 +23,6 @@
             android:layout_marginTop="0dp"
             android:layout_marginStart="250dp"/>
 
-        <!-- Текст вопроса -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="168dp"
@@ -37,7 +36,6 @@
             android:textSize="19sp"
             android:textStyle="bold" />
 
-        <!-- Кнопка ОТМЕНИТЬ (Темная) -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnRepeatVerifyAgain"
             android:layout_width="match_parent"

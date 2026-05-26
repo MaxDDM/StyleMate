@@ -8,7 +8,6 @@
     android:background="#FFFFFF"
     tools:context=".ui.ProfileFragment">
 
-    <!-- 1. ШАПКА -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/headerGuide"
         android:layout_width="wrap_content"
@@ -36,7 +35,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- КНОПКА НАСТРОЕК -->
     <FrameLayout
         android:id="@+id/btnSettings"
         android:layout_width="52dp"
@@ -55,7 +53,6 @@
             app:tint="#5C5C5C" />
     </FrameLayout>
 
-    <!-- 2. АВАТАРКА -->
     <androidx.cardview.widget.CardView
         android:id="@+id/avatarContainer"
         android:layout_width="110dp"
@@ -93,7 +90,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- ТЕКСТЫ И СПИСОК -->
     <TextView
         android:id="@+id/tvEmptyState"
         android:layout_width="wrap_content"
@@ -135,6 +131,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- НИЖНЕЙ ПАНЕЛИ ТУТ БОЛЬШЕ НЕТ -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

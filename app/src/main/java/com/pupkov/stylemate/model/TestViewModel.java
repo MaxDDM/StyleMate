@@ -21,13 +21,10 @@ import java.util.Map;
 public class TestViewModel extends AndroidViewModel {
 
     private final StyleTestRepository repository;
-
     private final UserRepository repo = new UserRepository();
 
-    // 1. STATE (Состояние идет СНИЗУ ВВЕРХ)
-    // LiveData для статуса сессии
+    // LiveData для передачи во View состояния сессии и индекса итогового стиля
     private final MutableLiveData<Boolean> isSessionValid = new MutableLiveData<>();
-    // LiveData для результата победителя (Integer)
     private final MutableLiveData<Integer> winnerStyle = new MutableLiveData<>();
 
     public TestViewModel(@NonNull Application application) {
@@ -35,7 +32,6 @@ public class TestViewModel extends AndroidViewModel {
         repository = StyleTestRepository.getInstance();
     }
 
-    // --- Getters для наблюдения (чтобы Activity могла подписаться) ---
     public LiveData<Boolean> getSessionValidState() {
         return isSessionValid;
     }
@@ -44,15 +40,13 @@ public class TestViewModel extends AndroidViewModel {
         return winnerStyle;
     }
 
-
-    // 2. EVENTS (Действия идут СВЕРХУ ВНИЗ)
-
+    // Проверка валидности текущей сессии
     public void checkSession() {
         boolean valid = repository.restoreStateOrExpire(getApplication());
-        // Отправляем данные наверх (во View)
         isSessionValid.setValue(valid);
     }
 
+    // Распределение ответов по номерам вопросов и сохранение промежуточного состояния
     public void processAnswer(int questionNumber, int answerId) {
         switch (questionNumber) {
             case 1: repository.processQuestion1(answerId); break;
@@ -64,15 +58,15 @@ public class TestViewModel extends AndroidViewModel {
         repository.saveState(getApplication());
     }
 
+    // Сохранение текущего прогресса без изменения очков (при пропуске вопроса)
     public void saveProgressOnly() {
         repository.saveState(getApplication());
     }
 
-    // Activity просто говорит "Посчитай!", но не требует ответа мгновенно
-    // --- ФИНАЛИЗАЦИЯ ТЕСТА ---
+    // Подсчет результатов и определение способа сохранения (бд или локально)
     public void calculateResult(String selectionName) {
         int winnerIndex = repository.calculateWinner();
-        String styleName = repository.getStyleName(winnerIndex); // "casual"
+        String styleName = repository.getStyleName(winnerIndex);
 
         if (repo.isLogged(getApplication())) {
             saveToFirebase(selectionName, styleName, winnerIndex);
@@ -81,58 +75,52 @@ public class TestViewModel extends AndroidViewModel {
         }
     }
 
+    // Сохранение подборки по стилю в Firebase Realtime Database для авторизованных пользователей
     private void saveToFirebase(String selectionName, String styleName, int winnerIndex) {
         DatabaseReference dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
 
-        // user_collections -> ivan@mail|ru -> PUSH_ID
+        // Формируем уникальный узел подборки внутри user_collections -> UID пользователя
         DatabaseReference newCollectionRef = dbRef
                 .child("user_collections")
                 .child(repo.getUID())
                 .push();
 
-        // СТРОГО ПО ТВОЕЙ СТРУКТУРЕ
         Map<String, Object> collectionData = new HashMap<>();
         collectionData.put("name", selectionName);
         collectionData.put("style", styleName);
-        // Поля "season", "situation" и "favorites" не добавляем, они необязательные/пустые
 
         newCollectionRef.setValue(collectionData)
                 .addOnSuccessListener(aVoid -> {
-                    // Успех
                     repository.clearState(getApplication());
                     AnalyticsManager.trackCollectionCountChange(repo.getUID());
-                    // Ставим флаг, что это не гость (на всякий случай для UI)
                     ActiveUserInfo.setDefaults("is_guest", "false", getApplication());
-                    // Переходим
-                    winnerStyle.setValue(winnerIndex);
+                    winnerStyle.setValue(winnerIndex); // Оповещаем View об успешном завершении
                 })
                 .addOnFailureListener(e -> {
-                    // Ошибка сети - все равно пускаем, но данные в облако не ушли
+                    // При ошибке сети также пропускаем пользователя к результату
                     repository.clearState(getApplication());
                     winnerStyle.setValue(winnerIndex);
                 });
     }
 
+    // Создание и отправка в Firebase подборки на основе выбранных ситуаций
     public void createSituationCollection(String name, ArrayList<String> situations) {
         String uid = repo.getUID();
         if (uid == null) return;
 
         DatabaseReference dbRef = FirebaseDatabase.getInstance("https://stylemate-fdd7b-default-rtdb.europe-west1.firebasedatabase.app/").getReference();
-
-        // 1. Создаем уникальный ID
         DatabaseReference newCollectionRef = dbRef.child("user_collections").child(uid).push();
 
         Map<String, Object> collectionData = new HashMap<>();
         collectionData.put("name", name);
         collectionData.put("situation", situationsToString(situations));
-        // Стиль намеренно не пишем (он будет null), чтобы сработал поиск по ситуации
 
         newCollectionRef.setValue(collectionData);
         AnalyticsManager.trackCollectionCountChange(repo.getUID());
     }
 
+    // Локальное сохранение результатов теста в SharedPreferences для неавторизованных (гостей)
     private void saveToLocal(String selectionName, String styleName, int winnerIndex) {
-        // Для гостя сохраняем локально, чтобы HomeFragment знал, что показывать
         ActiveUserInfo.setDefaults("guest_selection_name", selectionName, getApplication());
         ActiveUserInfo.setDefaults("guest_style_name", styleName, getApplication());
 
@@ -140,11 +128,13 @@ public class TestViewModel extends AndroidViewModel {
         winnerStyle.setValue(winnerIndex);
     }
 
+    // Сохранение выбранных ситуаций в локальные настройки
     public void saveSituation(ArrayList<String> situations) {
         String situation = situationsToString(situations);
         ActiveUserInfo.setDefaults(situation, situation, getApplication());
     }
 
+    // Преобразование списка ситуаций в строку через запятую для записи в базу данных
     private String situationsToString(ArrayList<String> situations) {
         StringBuilder situation = new StringBuilder();
         for (int i = 0; i < situations.size(); ++i) {

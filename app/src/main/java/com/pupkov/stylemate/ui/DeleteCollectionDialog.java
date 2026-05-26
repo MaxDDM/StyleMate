@@ -15,11 +15,14 @@ import androidx.fragment.app.DialogFragment;
 
 import com.pupkov.stylemate.R;
 
+/**
+ * Окно подтверждения удаления коллекции.
+ */
 public class DeleteCollectionDialog extends DialogFragment {
 
     private OnDeleteListener listener;
 
-    // Интерфейс для связи с Activity
+    // Интерфейс, чтобы сказать Activity, что кнопку удаления нажали
     public interface OnDeleteListener {
         void onConfirmDelete();
     }
@@ -37,12 +40,12 @@ public class DeleteCollectionDialog extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-        // Настраиваем внешний вид окна (Прозрачный фон + ширина)
+
         if (getDialog() != null && getDialog().getWindow() != null) {
             Window window = getDialog().getWindow();
+
             window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-            // Ширина 85% от экрана, чтобы были отступы по бокам
             int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
             window.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
@@ -55,10 +58,10 @@ public class DeleteCollectionDialog extends DialogFragment {
         Button btnConfirm = view.findViewById(R.id.btnConfirmDelete);
         Button btnCancel = view.findViewById(R.id.btnCancelDelete);
 
-        // Кнопка ОТМЕНА - просто закрываем
+        // Кнопка "Отмена" — просто закрываем диалог, ничего не удаляя
         btnCancel.setOnClickListener(v -> dismiss());
 
-        // Кнопка УДАЛИТЬ - сообщаем Activity и закрываем
+        // Кнопка "Удалить" — запускаем удаление в Activity и закрываем окошко
         btnConfirm.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onConfirmDelete();

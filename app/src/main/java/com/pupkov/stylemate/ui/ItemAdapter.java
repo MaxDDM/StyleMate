@@ -13,12 +13,17 @@ import com.pupkov.stylemate.model.Item;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Адаптер для горизонтального списка товаров (вещей), входящих в выбранный образ.
+ */
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
 
     private List<Item> items = new ArrayList<>();
     private final OnItemClickListener listener;
 
-    // Интерфейс для клика
+    /**
+     * Интерфейс для обратного вызова при клике на товар
+     */
     public interface OnItemClickListener {
         void onItemClick(String url);
     }
@@ -27,9 +32,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         this.listener = listener;
     }
 
+    /**
+     * Обновление данных в адаптере
+     */
     public void updateList(List<Item> newItems) {
         this.items = newItems;
-        notifyDataSetChanged();
+        notifyDataSetChanged(); // Полная перерисовка списка при изменении данных
     }
 
     @NonNull
@@ -44,12 +52,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
         Item item = items.get(position);
 
-        holder.tvName.setText(item.getType());      // "Футболка"
-        holder.tvBrand.setText(item.getBrand());    // "Sela"
-        holder.tvPrice.setText(item.getPrice());    // "2399 Р"
-        holder.tvMaterial.setText(item.getMaterial()); // "хлопок"
+        holder.tvName.setText(item.getType());
+        holder.tvBrand.setText(item.getBrand());
+        holder.tvPrice.setText(item.getPrice());
+        holder.tvMaterial.setText(item.getMaterial());
 
-        // Обработка клика по всему элементу (или можно только по скрепке)
+        // Передача ссылки во внешний обработчик при клике на карточку товара
         holder.itemView.setOnClickListener(v -> {
             if (listener != null && item.getLink() != null && !item.getLink().isEmpty()) {
                 listener.onItemClick(item.getLink());
@@ -62,9 +70,11 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         return items.size();
     }
 
+    /**
+     * Кэш для View-компонентов отдельной карточки товара, снижающий нагрузку при скролле
+     */
     static class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvPrice, tvBrand, tvMaterial;
-        // ImageView ivLink; // Если хочешь кликать именно по скрепке, найди её здесь
 
         public ItemViewHolder(@NonNull View itemView) {
             super(itemView);

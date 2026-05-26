@@ -35,7 +35,6 @@ public class PrivacyConsentDialog extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Убираем стандартный фон диалога, чтобы видеть наши закругления
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
@@ -49,9 +48,8 @@ public class PrivacyConsentDialog extends DialogFragment {
         if (view instanceof ViewGroup) {
             View contentContainer = ((ViewGroup) view).getChildAt(0);
 
-            // Настройка программного фона
             GradientDrawable shape = new GradientDrawable();
-            shape.setCornerRadius(80f); // Настройте радиус под ваш дизайн
+            shape.setCornerRadius(80f);
             shape.setColor(Color.WHITE);
             contentContainer.setBackground(shape);
         }
@@ -85,7 +83,7 @@ public class PrivacyConsentDialog extends DialogFragment {
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(@NonNull View widget) {
-                String url = "https://stylemate.tilda.ws/privacy-policy"; // Замените на вашу ссылку
+                String url = "https://stylemate.tilda.ws/privacy-policy";
                 android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
                 intent.setData(android.net.Uri.parse(url));
                 startActivity(intent);
@@ -94,8 +92,8 @@ public class PrivacyConsentDialog extends DialogFragment {
             @Override
             public void updateDrawState(@NonNull TextPaint ds) {
                 super.updateDrawState(ds);
-                ds.setColor(Color.parseColor("#1A73E8")); // Синий цвет
-                ds.setUnderlineText(true); // Убираем подчеркивание, если нужно как на макете
+                ds.setColor(Color.parseColor("#1A73E8"));
+                ds.setUnderlineText(true);
             }
         };
 

@@ -13,7 +13,6 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- Текст вопроса -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,7 +26,6 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- Кнопка УДАЛИТЬ (Светлая) -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnConfirmDelete"
             android:layout_width="match_parent"
@@ -39,7 +37,6 @@
             android:textColor="#000000"
             android:textSize="18sp" />
 
-        <!-- Кнопка ОТМЕНИТЬ (Темная) -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnCancelDelete"
             android:layout_width="match_parent"

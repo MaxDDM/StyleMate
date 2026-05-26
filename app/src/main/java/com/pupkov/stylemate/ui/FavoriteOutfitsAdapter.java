@@ -15,17 +15,23 @@ import com.pupkov.stylemate.R;
 
 import java.util.List;
 
+/**
+ * Адаптер для отображения сетки сохраненных подборок в профиле.
+ * Каждая ячейка представляет собой коллаж из 4-х изображений вещей и заголовка папки.
+ */
 public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfitsAdapter.OutfitViewHolder> {
 
     private List<FavouriteOutfits> outfitList;
-    private OnItemClickListener listener;
-    private Context context; // НУЖНО ДЛЯ GLIDE
+    private final OnItemClickListener listener;
+    private final Context context;
 
+    /**
+     * Интерфейс для обработки кликов на контейнер коллекции.
+     */
     public interface OnItemClickListener {
         void onItemClick(FavouriteOutfits item);
     }
 
-    // Обновленный конструктор: просим Context
     public FavoriteOutfitsAdapter(Context context, List<FavouriteOutfits> outfitList, OnItemClickListener listener) {
         this.context = context;
         this.outfitList = outfitList;
@@ -46,7 +52,7 @@ public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfits
 
         holder.tvTitle.setText(outfit.title);
 
-        // Загружаем 4 картинки через хелпер-метод (см. ниже)
+        // Параллельная загрузка четырех миниатюр для формирования коллажа-превью
         loadImage(holder.img1, outfit.photo1);
         loadImage(holder.img2, outfit.photo2);
         loadImage(holder.img3, outfit.photo3);
@@ -59,16 +65,17 @@ public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfits
         });
     }
 
-    // Вспомогательный метод для загрузки
+    /**
+     * Метод загрузки фото в ImageView.
+     */
     private void loadImage(ImageView imageView, String url) {
         if (url != null && !url.isEmpty()) {
             Glide.with(context)
                     .load(url)
-                    .placeholder(android.R.color.darker_gray) // Создай цвет в colors.xml или используй android.R.color.darker_gray
+                    .placeholder(android.R.color.darker_gray)
                     .error(android.R.color.transparent)
                     .into(imageView);
         } else {
-            // Если ссылки нет - очищаем картинку (будет пустой серый квадрат, если фон задан в XML)
             Glide.with(context).clear(imageView);
             imageView.setImageDrawable(null);
         }
@@ -79,6 +86,9 @@ public class FavoriteOutfitsAdapter extends RecyclerView.Adapter<FavoriteOutfits
         return (outfitList == null) ? 0 : outfitList.size();
     }
 
+    /**
+     * Динамическое обновление набора данных адаптера.
+     */
     public void updateList(List<FavouriteOutfits> newList) {
         this.outfitList = newList;
         notifyDataSetChanged();

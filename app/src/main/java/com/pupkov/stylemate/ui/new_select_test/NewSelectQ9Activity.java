@@ -9,10 +9,10 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.pupkov.stylemate.R;
-import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.ui.MainActivity;
 
 public class NewSelectQ9Activity extends AppCompatActivity {
+    // Индекс выбранной категории ситуаций
     int ans = -1;
 
     @Override
@@ -28,47 +28,30 @@ public class NewSelectQ9Activity extends AppCompatActivity {
         ImageButton nextButton = findViewById(R.id.btnNextQuestSelTest9);
         ImageButton skipButton = findViewById(R.id.btnSkipQuestSelTest9);
 
-
         test1Button.setOnClickListener(v -> {
             ans = 1;
-
-            test1Button.setBackgroundResource(R.drawable.ic_pic6);
-            test2Button.setBackgroundResource(R.drawable.ic_pic5);
-            test3Button.setBackgroundResource(R.drawable.ic_pic5);
-            test4Button.setBackgroundResource(R.drawable.ic_pic5);
+            setRadioSelection(test1Button, test2Button, test3Button, test4Button);
         });
 
         test2Button.setOnClickListener(v -> {
             ans = 2;
-
-            test1Button.setBackgroundResource(R.drawable.ic_pic5);
-            test2Button.setBackgroundResource(R.drawable.ic_pic6);
-            test3Button.setBackgroundResource(R.drawable.ic_pic5);
-            test4Button.setBackgroundResource(R.drawable.ic_pic5);
+            setRadioSelection(test2Button, test1Button, test3Button, test4Button);
         });
 
         test3Button.setOnClickListener(v -> {
             ans = 3;
-
-            test1Button.setBackgroundResource(R.drawable.ic_pic5);
-            test2Button.setBackgroundResource(R.drawable.ic_pic5);
-            test3Button.setBackgroundResource(R.drawable.ic_pic6);
-            test4Button.setBackgroundResource(R.drawable.ic_pic5);
+            setRadioSelection(test3Button, test1Button, test2Button, test4Button);
         });
 
         test4Button.setOnClickListener(v -> {
             ans = 4;
-
-            test1Button.setBackgroundResource(R.drawable.ic_pic5);
-            test2Button.setBackgroundResource(R.drawable.ic_pic5);
-            test3Button.setBackgroundResource(R.drawable.ic_pic5);
-            test4Button.setBackgroundResource(R.drawable.ic_pic6);
+            setRadioSelection(test4Button, test1Button, test2Button, test3Button);
         });
 
+        // Динамическое ветвление: перенаправляем на разные активности подкатегорий
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
                 Intent intent;
-
                 switch(ans) {
                     case 1:
                         intent = new Intent(NewSelectQ9Activity.this, NewSelectQ10Activity.class);
@@ -92,9 +75,18 @@ public class NewSelectQ9Activity extends AppCompatActivity {
             }
         });
 
+        // При отказе от выбора ситуации возвращаем пользователя на главный экран приложения
         skipButton.setOnClickListener(v -> {
             Intent intent = new Intent(NewSelectQ9Activity.this, MainActivity.class);
             startActivity(intent);
         });
+    }
+
+    // Вспомогательный метод для имитации RadioGroup на ImageButton
+    private void setRadioSelection(ImageButton selected, ImageButton... others) {
+        selected.setBackgroundResource(R.drawable.ic_pic6);
+        for (ImageButton other : others) {
+            other.setBackgroundResource(R.drawable.ic_pic5);
+        }
     }
 }

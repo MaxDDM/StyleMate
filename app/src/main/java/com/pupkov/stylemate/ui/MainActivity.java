@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.content.Intent;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,9 +16,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.pupkov.stylemate.R;
-import com.pupkov.stylemate.analytics.CR;
-import com.pupkov.stylemate.analytics.CTR;
-import com.pupkov.stylemate.analytics.TestCompleteCount;
 import com.pupkov.stylemate.analytics.TimeAnalytics;
 import com.pupkov.stylemate.repository.UserRepository;
 
@@ -28,18 +26,16 @@ public class MainActivity extends AppCompatActivity {
     private View bgHomeSelected, bgProfileSelected;
     private ImageView iconHome, iconProfile;
 
-    // СОЗДАЕМ ПЕРЕМЕННЫЕ ДЛЯ ФРАГМЕНТОВ
-    // Мы создаем их один раз здесь и будем использовать всю жизнь
+    // Однократная инициализация фрагментов для кэширования в памяти
     private final Fragment homeFragment = new HomeFragment();
     private final Fragment profileFragment = new ProfileFragment();
-
     private final UserRepository repo = new UserRepository();
 
-    // Запоминаем, какой фрагмент сейчас активен
     private Fragment activeFragment = homeFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Логирование времени начала сессии авторизованного пользователя
         if (repo.isLogged(MainActivity.this)) {
             TimeAnalytics.saveDate(LocalDateTime.now(), repo.getUID());
         }
@@ -54,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        // 1. НАХОДИМ ЭЛЕМЕНТЫ
         View btnHome = findViewById(R.id.btnHome);
         View btnProfile = findViewById(R.id.btnProfile);
         bgHomeSelected = findViewById(R.id.bgHomeSelected);
@@ -62,56 +57,46 @@ public class MainActivity extends AppCompatActivity {
         iconHome = findViewById(R.id.iconHome);
         iconProfile = findViewById(R.id.iconProfile);
 
-        // 2. ИНИЦИАЛИЗАЦИЯ (ВАЖНЫЙ МОМЕНТ)
-        // Мы сразу добавляем HomeFragment на экран
+        // Установка начального экрана
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.fragment_container, homeFragment, "HOME")
                 .commit();
 
-        // Красим кнопки под Home
         updateIcons(true);
 
-        // 3. НАСТРАИВАЕМ КЛИКИ
+        handleNavigationIntent(getIntent());
+
         btnHome.setOnClickListener(v -> {
-            // Если нажали Home, переключаемся на homeFragment
             switchFragment(homeFragment);
-            updateIcons(true); // true = мы дома
+            updateIcons(true);
         });
 
         btnProfile.setOnClickListener(v -> {
-            // Если нажали Profile, переключаемся на profileFragment
             switchFragment(profileFragment);
-            updateIcons(false); // false = мы в профиле
+            updateIcons(false);
         });
     }
 
-    // --- НОВАЯ ЛОГИКА ПЕРЕКЛЮЧЕНИЯ (Hide / Show) ---
+    // Оптимизированное переключение фрагментов без пересоздания их жизненного цикла
     private void switchFragment(Fragment targetFragment) {
-        // Если мы уже на этом экране - ничего не делать
         if (activeFragment == targetFragment) return;
 
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction transaction = fm.beginTransaction();
 
-        // 1. Прячем текущий активный фрагмент (он не умирает, просто исчезает)
         transaction.hide(activeFragment);
 
-        // 2. Показываем целевой фрагмент
         if (!targetFragment.isAdded()) {
-            // Если фрагмент открывается ПЕРВЫЙ раз в жизни - добавляем его (.add)
             transaction.add(R.id.fragment_container, targetFragment);
         } else {
-            // Если он уже был открыт раньше - просто показываем (.show)
             transaction.show(targetFragment);
         }
 
         transaction.commit();
-
-        // Запоминаем, что теперь активен новый фрагмент
         activeFragment = targetFragment;
     }
 
-    // Метод просто для перекраски иконок (чтобы не дублировать код)
+    // Управление визуальным состоянием навигационной панели
     private void updateIcons(boolean isHomeActive) {
         if (isHomeActive) {
             iconHome.setColorFilter(Color.parseColor("#3D5AFE"));
@@ -124,5 +109,22 @@ public class MainActivity extends AppCompatActivity {
             iconProfile.setColorFilter(Color.parseColor("#3D5AFE"));
             bgProfileSelected.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void handleNavigationIntent(Intent intent) {
+        if (intent != null && "PROFILE".equals(intent.getStringExtra("OPEN_TAB"))) {
+            // Убираем анимацию перехода для этой Activity
+            overridePendingTransition(0, 0);
+
+            // Используем ваши готовые методы
+            switchFragment(profileFragment);
+            updateIcons(false);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleNavigationIntent(intent);
     }
 }

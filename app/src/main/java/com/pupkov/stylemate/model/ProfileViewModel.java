@@ -1,6 +1,6 @@
 package com.pupkov.stylemate.model;
 
-import android.app.Application; // Важно: нужен Application для Context
+import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
@@ -13,20 +13,20 @@ import com.pupkov.stylemate.repository.UserRepository;
 
 import java.util.List;
 
-// Меняем ViewModel на AndroidViewModel, чтобы иметь доступ к Context (Application)
+/**
+ * ViewModel для управления состоянием экрана профиля.
+ */
 public class ProfileViewModel extends AndroidViewModel {
 
     private final UserRepository userRepository;
     private final UserCollectionsRepository collectionsRepository;
 
-    // Данные профиля
     private final MutableLiveData<String> _userName = new MutableLiveData<>();
     public LiveData<String> userName = _userName;
 
     private final MutableLiveData<String> _userAvatarUrl = new MutableLiveData<>();
     public LiveData<String> userAvatarUrl = _userAvatarUrl;
 
-    // Данные коллекций
     private final MutableLiveData<List<FavouriteOutfits>> _favorites = new MutableLiveData<>();
     public LiveData<List<FavouriteOutfits>> favorites = _favorites;
 
@@ -43,22 +43,25 @@ public class ProfileViewModel extends AndroidViewModel {
         refreshData();
     }
 
-    // Добавляем публичный метод для обновления, который вызывает приватный loadData
+    /**
+     * Интерфейс для принудительного обновления данных профиля и коллекций.
+     */
     public void refreshData() {
         loadProfileData();
         loadFavoritesData();
     }
 
+    /**
+     * Асинхронная загрузка параметров профиля (имя, аватар) с разделением на авторизованного юзера и гостя.
+     */
     private void loadProfileData() {
-        // Используем НОВЫЙ метод с колбэком
         userRepository.loadUserProfile(getApplication(), new UserRepository.ProfileCallback() {
             @Override
             public void onLoaded(UserProfile profile) {
                 if (profile != null) {
                     _userName.setValue(profile.name != null ? profile.name : "Пользователь");
-                    _userAvatarUrl.setValue(profile.avatarUrl); // Может быть null
+                    _userAvatarUrl.setValue(profile.avatarUrl);
                 } else {
-                    // Гость
                     _userName.setValue("Гость");
                     _userAvatarUrl.setValue(null);
                 }
@@ -71,24 +74,36 @@ public class ProfileViewModel extends AndroidViewModel {
         });
     }
 
+    /**
+     * Загрузка списка папок с образами и превью-картинками.
+     */
     private void loadFavoritesData() {
         collectionsRepository.getUserCollectionsWithPreviews(getApplication(), new UserCollectionsRepository.DataCallback<List<FavouriteOutfits>>() {
             @Override
             public void onDataLoaded(List<FavouriteOutfits> data) {
                 _favorites.setValue(data);
+
                 if (data == null || data.isEmpty()) {
                     if (ActiveUserInfo.getDefaults("guest_selection_name", getApplication()) == null ||
-                    ActiveUserInfo.getDefaults("guest_selection_name", getApplication()).isEmpty()) {
+                            ActiveUserInfo.getDefaults("guest_selection_name", getApplication()).isEmpty()) {
                         _navigateToHomeEvent.setValue(true);
                         _isEmptyState.setValue(false);
                     }
                 } else {
                     _navigateToHomeEvent.setValue(false);
+
+                    // Сканирование коллекций на наличие хотя бы одного реального лайка внутри
                     boolean hasLikes = false;
-                    for(FavouriteOutfits f : data) if(f.hasLikes()) { hasLikes = true; break; }
+                    for (FavouriteOutfits f : data) {
+                        if (f.hasLikes()) {
+                            hasLikes = true;
+                            break;
+                        }
+                    }
                     _isEmptyState.setValue(!hasLikes);
                 }
             }
+
             @Override
             public void onError(String error) { }
         });
