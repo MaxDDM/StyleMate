@@ -73,6 +73,18 @@
                     android:src="@drawable/ic_heart_outline"
                     android:padding="10dp"
                     android:scaleType="fitCenter"/>
+
+                <ImageButton
+                    android:id="@+id/shareButton"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@drawable/bg_glass_circle"
+                    android:src="@drawable/share"
+                    android:padding="10dp"
+                    android:layout_gravity="bottom|end"
+                    android:scaleType="fitCenter"/>
             </FrameLayout>
         </androidx.cardview.widget.CardView>
 
@@ -87,11 +99,6 @@
             android:textColor="@color/black"
             android:textSize="28sp"
             android:lineSpacingExtra="4dp"/>
-
-        <ImageButton
-            android:id="@+id/shareButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvProducts"

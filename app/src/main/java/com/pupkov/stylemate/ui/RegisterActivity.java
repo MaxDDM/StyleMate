@@ -65,7 +65,7 @@ public class RegisterActivity extends AppCompatActivity {
         name = findViewById(R.id.nameReg);
         birth = findViewById(R.id.birthDateReg);
 
-        Button google = findViewById(R.id.google);
+        ImageButton google = findViewById(R.id.google);
 
         ImageButton backToAuth = findViewById(R.id.backToAuth);
 

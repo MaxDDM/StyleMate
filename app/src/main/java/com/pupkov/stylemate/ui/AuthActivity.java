@@ -61,7 +61,7 @@ public class AuthActivity extends AppCompatActivity {
         ImageButton authButton = findViewById(R.id.enterAuthButton);
         ImageButton switchToRegButton = findViewById(R.id.switchToRegButton);
         ImageButton skipButton = findViewById(R.id.skipAuthButton);
-        Button googleAuthButton = findViewById(R.id.googleAuth);
+        ImageButton googleAuthButton = findViewById(R.id.googleAuth);
 
         googleAuthButton.setOnClickListener(v -> {
             authHelper.signIn(new GoogleAuthHelper.AuthCallback() {
