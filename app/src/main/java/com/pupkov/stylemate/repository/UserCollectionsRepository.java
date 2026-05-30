@@ -74,7 +74,7 @@ public class UserCollectionsRepository {
             // Логика для гостя: загружаем дефолтный стиль, лайков и ID коллекции нет
             String guestStyle = ActiveUserInfo.getDefaults("guest_style_name", context);
             String targetStyle = (guestStyle != null) ? guestStyle : "casual";
-            loadOutfitsFromDbFiltered(targetStyle, null, null, (outfits) -> {
+            loadOutfitsFromDbFiltered(targetStyle, null, null, null, (outfits) -> {
                 callback.onDataLoaded(outfits, null);
             });
 
@@ -99,15 +99,23 @@ public class UserCollectionsRepository {
                                         }
                                     }
 
-                                    // Грузим вещи с учетом фильтров и мапы лайков
-                                    loadOutfitsFromDbFiltered(style, situation, favorites, (outfits) -> {
+                                    // ЧИТАЕМ ДИЗЛАЙКИ ИЗ Firebase
+                                    Map<String, Boolean> dislikes = new HashMap<>();
+                                    if (match.child("dislikes").exists()) {
+                                        for (DataSnapshot dis : match.child("dislikes").getChildren()) {
+                                            dislikes.put(dis.getKey(), true);
+                                        }
+                                    }
+
+                                    // Передаем dislikes в метод фильтрации
+                                    loadOutfitsFromDbFiltered(style, situation, favorites, dislikes, (outfits) -> {
                                         callback.onDataLoaded(outfits, collectionId);
                                     });
                                     return;
                                 }
                             } else {
                                 // Если коллекция не найдена — отдаем дефолтный casual
-                                loadOutfitsFromDbFiltered("casual", null, null, (outfits) -> callback.onDataLoaded(outfits, null));
+                                loadOutfitsFromDbFiltered("casual", null, null, null, (outfits) -> callback.onDataLoaded(outfits, null));
                             }
                         }
                         @Override
@@ -122,7 +130,7 @@ public class UserCollectionsRepository {
     private interface InternalLoadCallback { void onLoad(List<Outfit> list); }
 
     // метод фильтрации по стилю и пересечению ситуаций
-    private void loadOutfitsFromDbFiltered(String style, String collectionSituation, Map<String, Boolean> userFavorites, InternalLoadCallback callback) {
+    private void loadOutfitsFromDbFiltered(String style, String collectionSituation, Map<String, Boolean> userFavorites, Map<String, Boolean> userDislikes, InternalLoadCallback callback) {
         Query query;
 
         // Выбираем стратегию выборки из Firebase
@@ -151,6 +159,11 @@ public class UserCollectionsRepository {
 
                     String outfitId = item.getKey();
                     outfit.setId(outfitId);
+
+                    // ПРОВЕРКА НА ДИЗЛАЙК: Если этот образ скрыт пользователем, сразу пропускаем его
+                    if (userDislikes != null && userDislikes.containsKey(outfitId)) {
+                        continue;
+                    }
 
                     // Проверяем, лайкнута ли вещь пользователем
                     if (userFavorites != null && userFavorites.containsKey(outfitId)) {
@@ -380,6 +393,36 @@ public class UserCollectionsRepository {
                 });
     }
 
+    /**
+     * Метод получения чистого списка ID дизлайков (скрытых образов) без выгрузки самих вещей
+     */
+    public void getDislikedIdsOnly(Context context, String collectionId, DataCallback<List<String>> callback) {
+        if (!repo.isLogged(context)) {
+            callback.onDataLoaded(new ArrayList<>());
+            return;
+        }
+
+        dbRef.child("user_collections")
+                .child(repo.getUID())
+                .child(collectionId)
+                .child("dislikes") // Стучимся в узел скрытых образов
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        List<String> ids = new ArrayList<>();
+                        for (DataSnapshot item : snapshot.getChildren()) {
+                            ids.add(item.getKey());
+                        }
+                        callback.onDataLoaded(ids);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        callback.onError(error.getMessage());
+                    }
+                });
+    }
+
     // Переименование существующей коллекции пользователя
     public void renameCollection(Context context, String collectionId, String newName) {
         if (!repo.isLogged(context)) return;
@@ -400,5 +443,16 @@ public class UserCollectionsRepository {
                 .child(repo.getUID())
                 .child(collectionId)
                 .removeValue();
+    }
+
+    public void dislikeOutfitInFirebase(Context context, String collectionId, String outfitId) {
+        if (!repo.isLogged(context)) return;
+
+        dbRef.child("user_collections")
+                .child(repo.getUID())
+                .child(collectionId)
+                .child("dislikes")
+                .child(outfitId)
+                .setValue(true);
     }
 }

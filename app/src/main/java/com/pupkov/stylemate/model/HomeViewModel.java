@@ -280,6 +280,46 @@ public class HomeViewModel extends AndroidViewModel {
         });
     }
 
+    // метод легковесного обновления дизлайков
+    private void refreshDislikesOnly() {
+        if (currentCollectionId == null) return;
+
+        // Запрашиваем из Firebase только список ID скрытых образов
+        repository.getDislikedIdsOnly(getApplication(), currentCollectionId, new UserCollectionsRepository.DataCallback<List<String>>() {
+            @Override
+            public void onDataLoaded(List<String> dislikedIds) {
+                if (allOutfits == null || dislikedIds == null || dislikedIds.isEmpty()) return;
+
+                boolean changed = false;
+
+                // Удаляем скрытые образы из базового кэша allOutfits
+                for (int i = allOutfits.size() - 1; i >= 0; i--) {
+                    if (dislikedIds.contains(allOutfits.get(i).getId())) {
+                        allOutfits.remove(i);
+                        changed = true;
+                    }
+                }
+
+                // Если кэш изменился, убираем эти элементы и из текущего UI-списка outfits
+                if (changed) {
+                    List<Outfit> currentList = _outfits.getValue();
+                    if (currentList != null) {
+                        List<Outfit> updatedList = new ArrayList<>(currentList);
+                        for (int i = updatedList.size() - 1; i >= 0; i--) {
+                            if (dislikedIds.contains(updatedList.get(i).getId())) {
+                                updatedList.remove(i);
+                            }
+                        }
+                        _outfits.setValue(updatedList);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String error) {}
+        });
+    }
+
     /**
      * Актуализирует состояние папок и лайков
      */
@@ -301,6 +341,7 @@ public class HomeViewModel extends AndroidViewModel {
                 String currentName = _selectedName.getValue();
                 if (currentName != null && data.contains(currentName)) {
                     refreshLikesOnly(); // Папка существует -> запускаем точечную синхронизацию лайков
+                    refreshDislikesOnly();
                 } else {
                     onCollectionSelected(data.get(0)); // Папка удалена -> переключаемся на первую доступную
                 }
@@ -351,6 +392,36 @@ public class HomeViewModel extends AndroidViewModel {
             setEmptyState();
         }
         _toastMessage.setValue("Подборка удалена");
+    }
+
+    public void dislikeOutfit(String outfitId) {
+        if (currentCollectionId == null) return;
+
+        // Удаляем образ из текущего отображаемого списка (для UI)
+        List<Outfit> currentList = _outfits.getValue();
+        if (currentList != null) {
+            List<Outfit> updatedList = new ArrayList<>(currentList);
+            for (Outfit o : updatedList) {
+                if (o.getId().equals(outfitId)) {
+                    updatedList.remove(o);
+                    break;
+                }
+            }
+            _outfits.setValue(updatedList);
+        }
+
+        // Удаляем образ из базового полного кэша allOutfits (чтобы при сбросе фильтров он не вернулся)
+        if (allOutfits != null) {
+            for (int i = 0; i < allOutfits.size(); i++) {
+                if (allOutfits.get(i).getId().equals(outfitId)) {
+                    allOutfits.remove(i);
+                    break;
+                }
+            }
+        }
+
+        // Асинхронная запись скрытия в Firebase
+        repository.dislikeOutfitInFirebase(getApplication(), currentCollectionId, outfitId);
     }
 
 }

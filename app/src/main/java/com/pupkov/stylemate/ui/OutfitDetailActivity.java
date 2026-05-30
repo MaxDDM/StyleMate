@@ -49,6 +49,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
     private String currentCollectionId;
     private String currentOutfitId;
     private boolean isLiked = false;
+    private boolean isDisliked = false;
 
     private final int COLOR_BLUE = android.graphics.Color.parseColor("#3D7DFF");
     private final int COLOR_GRAY = android.graphics.Color.parseColor("#5C5C5C");
@@ -95,9 +96,11 @@ public class OutfitDetailActivity extends AppCompatActivity {
                 dialog.setListener(new ConfirmDislikeDialog.OnConfirmDislikeListener() {
                     @Override
                     public void onConfirmHide() {
-                        // Заглушка для Firebase
-                        Toast.makeText(OutfitDetailActivity.this, "Образ скрыт (заглушка)", Toast.LENGTH_SHORT).show();
-                        finish(); // Закрываем экран деталей после скрытия
+                        // Вызываем метод скрытия во ViewModel экрана деталей
+                        viewModel.dislikeOutfit(currentCollectionId, currentOutfitId);
+                        isDisliked = true;
+                        ActiveUserInfo.setDefaults("SHOW_DISLIKE_SNACKBAR", "true", OutfitDetailActivity.this);
+                        finish(); // Закрываем экран деталей
                     }
                     @Override
                     public void onCancelHide() {
@@ -247,6 +250,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
         Intent resultIntent = new Intent();
         resultIntent.putExtra("outfit_id", currentOutfitId);
         resultIntent.putExtra("is_liked", isLiked);
+        resultIntent.putExtra("is_disliked", isDisliked);
         setResult(RESULT_OK, resultIntent);
 
         // Расчет чистой дельты времени сессии просмотра экрана и отправка в аналитику удержания

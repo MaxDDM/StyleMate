@@ -208,11 +208,18 @@ public class HomeFragment extends Fragment {
                 dialog.setListener(new ConfirmDislikeDialog.OnConfirmDislikeListener() {
                     @Override
                     public void onConfirmHide() {
-                        // Заглушка для Firebase
-                        Toast.makeText(getContext(), "Заглушка Firebase для образа: " + outfit.getId(), Toast.LENGTH_SHORT).show();
+                        // Firebase
+                        viewModel.dislikeOutfit(outfit.getId());
                         if (gridAdapter != null) {
                             gridAdapter.resetEditMode();
                         }
+                        com.google.android.material.snackbar.Snackbar.make(
+                                        getView(),
+                                        "Этот образ больше не будет отображаться в текущей подборке",
+                                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                                )
+                                .setDuration(5000)
+                                .show();
                     }
                     @Override
                     public void onCancelHide() {
@@ -414,6 +421,22 @@ public class HomeFragment extends Fragment {
 
         if (viewModel != null) {
             viewModel.refreshData();
+        }
+
+        if (getContext() != null && getView() != null) {
+            String showSnackbar = ActiveUserInfo.getDefaults("SHOW_DISLIKE_SNACKBAR", getContext());
+
+            if ("true".equals(showSnackbar)) {
+                // Показываем Снэкбар на главном экране
+                com.google.android.material.snackbar.Snackbar.make(
+                        getView(),
+                        "Этот образ больше не будет отображаться в текущей подборке",
+                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                ).setDuration(5000).show();
+
+                // Сбрасываем флаг, чтобы Снэкбар не вылетал при каждом последующем открытии приложения
+                ActiveUserInfo.setDefaults("SHOW_DISLIKE_SNACKBAR", "false", getContext());
+            }
         }
     }
 

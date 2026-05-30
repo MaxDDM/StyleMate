@@ -121,4 +121,9 @@ public class OutfitDetailViewModel extends AndroidViewModel {
             default: return styleKey;
         }
     }
+
+    public void dislikeOutfit(String collectionId, String outfitId) {
+        if (collectionId == null || outfitId == null) return;
+        collectionsRepository.dislikeOutfitInFirebase(getApplication(), collectionId, outfitId);
+    }
 }
