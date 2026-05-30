@@ -25,6 +25,11 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
     private final OnOutfitClickListener listener;
     private final Context context;
 
+    // Хранит позицию элемента в режиме редактирования (-1 означает обычный режим)
+    private int editPosition = -1;
+    // Флаг для включения/отключения режима редактирования по лонг-прессу (по умолчанию включен)
+    private boolean isLongClickEnabled = true;
+
     private final int COLOR_BLUE = Color.parseColor("#3D7DFF");
     private final int COLOR_GRAY = Color.parseColor("#5C5C5C");
 
@@ -34,12 +39,21 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
     public interface OnOutfitClickListener {
         void onHeartClick(Outfit outfit, int position);
         void onImageClick(Outfit outfit);
+        default void onDislikeClick(Outfit outfit, int position) {}
     }
 
     public OutfitAdapter(Context context, List<Outfit> items, OnOutfitClickListener listener) {
         this.context = context;
         this.items = items;
         this.listener = listener;
+    }
+
+    /**
+     * Метод для принудительного сброса режима редактирования из фрагмента
+     */
+    public void resetEditMode() {
+        this.editPosition = -1;
+        notifyDataSetChanged();
     }
 
     /**
@@ -56,6 +70,10 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_outfit, parent, false);
         return new OutfitViewHolder(view);
+    }
+
+    public void setLongClickEnabled(boolean enabled) {
+        this.isLongClickEnabled = enabled;
     }
 
     @Override
@@ -76,9 +94,65 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
             holder.btnLike.setColorFilter(COLOR_GRAY);
         }
 
-        // Делегирование обработки событий нажатия внешнему слушателю интерфейса
-        holder.btnLike.setOnClickListener(v -> listener.onHeartClick(item, position));
-        holder.itemView.setOnClickListener(v -> listener.onImageClick(item));
+        // Логика отображения режима редактирования
+        if (editPosition == -1) {
+            // Обычный режим: все карточки яркие, дизлайки скрыты
+            holder.itemView.setAlpha(1.0f);
+            holder.btnDislike.setVisibility(View.GONE);
+        } else {
+            if (position == editPosition) {
+                // Карточка выбрана лонг-прессом: ВСЕГДА оставляем её яркой (alpha 1.0)
+                holder.itemView.setAlpha(1.0f);
+
+                // Проверяем: если лайк стоит, дизлайк НЕ показываем. Если лайка нет — показываем
+                if (item.isLiked()) {
+                    holder.btnDislike.setVisibility(View.GONE);
+                } else {
+                    holder.btnDislike.setVisibility(View.VISIBLE);
+                }
+            } else {
+                // Все остальные невыбранные карточки затеняются/забеляются
+                holder.itemView.setAlpha(0.4f);
+                holder.btnDislike.setVisibility(View.GONE);
+            }
+        }
+
+        // Привязка LongClick к корневому элементу карточки
+        holder.itemView.setOnLongClickListener(v -> {
+            if (!isLongClickEnabled) {
+                return false; // false означает, что клик не обработан, лонг-пресс не сработает
+            }
+            int curPos = holder.getAdapterPosition();
+            if (curPos != RecyclerView.NO_POSITION) {
+                editPosition = curPos;
+                notifyDataSetChanged();
+            }
+            return true;
+        });
+
+        // Обработка обычных кликов с учетом текущего режима
+        holder.itemView.setOnClickListener(v -> {
+            if (editPosition != -1) {
+                resetEditMode();
+            } else {
+                listener.onImageClick(item);
+            }
+        });
+
+        holder.btnLike.setOnClickListener(v -> {
+            int curPos = holder.getBindingAdapterPosition();
+            if (curPos != RecyclerView.NO_POSITION) {
+                Outfit currentItem = items.get(curPos);
+                listener.onHeartClick(currentItem, curPos);
+            }
+        });
+
+        // Обработка обычного клика на дизлайк
+        holder.btnDislike.setOnClickListener(v -> {
+            if (editPosition == position) {
+                listener.onDislikeClick(item, position);
+            }
+        });
     }
 
     @Override
@@ -89,11 +163,13 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
     static class OutfitViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
         ImageButton btnLike;
+        ImageButton btnDislike;
 
         public OutfitViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.ivOutfitImage);
             btnLike = itemView.findViewById(R.id.btnLike);
+            btnDislike = itemView.findViewById(R.id.btnDislike);
         }
     }
 }

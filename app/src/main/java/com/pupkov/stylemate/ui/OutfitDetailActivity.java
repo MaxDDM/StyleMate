@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,7 +24,7 @@ import com.pupkov.stylemate.analytics.CTR;
 import com.pupkov.stylemate.model.Outfit;
 import com.pupkov.stylemate.model.OutfitDetailViewModel;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
-import com.pupkov.stylemate.ui.dialogs.UniversalInfoDialog;
+import com.pupkov.stylemate.ui.dialogs.ConfirmDislikeDialog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
     private TextView tvTotalPrice;
     private RecyclerView rvProducts;
     private ImageButton btnLike;
+    private ImageButton btnDislike;
 
     private String currentCollectionId;
     private String currentOutfitId;
@@ -60,6 +62,7 @@ public class OutfitDetailActivity extends AppCompatActivity {
         ivMain = findViewById(R.id.ivDetailImage);
         ImageButton btnBack = findViewById(R.id.btnBack);
         btnLike = findViewById(R.id.btnDetailLike);
+        btnDislike = findViewById(R.id.btnDetailDislike);
         tvTitle = findViewById(R.id.tvOutfitTitle);
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
         rvProducts = findViewById(R.id.rvProducts);
@@ -81,6 +84,29 @@ public class OutfitDetailActivity extends AppCompatActivity {
         }
 
         btnBack.setOnClickListener(v -> finish());
+
+        if (btnDislike != null) {
+            if (currentCollectionId == null) {
+                Toast.makeText(this, "Войдите или зарегистрируйтесь, чтобы скрывать образы", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            btnDislike.setOnClickListener(v -> {
+                ConfirmDislikeDialog dialog = new ConfirmDislikeDialog();
+                dialog.setListener(new ConfirmDislikeDialog.OnConfirmDislikeListener() {
+                    @Override
+                    public void onConfirmHide() {
+                        // Заглушка для Firebase
+                        Toast.makeText(OutfitDetailActivity.this, "Образ скрыт (заглушка)", Toast.LENGTH_SHORT).show();
+                        finish(); // Закрываем экран деталей после скрытия
+                    }
+                    @Override
+                    public void onCancelHide() {
+                        // Ничего делать не нужно, диалог просто закроется сам
+                    }
+                });
+                dialog.show(getSupportFragmentManager(), "ConfirmDislikeDialog");
+            });
+        }
 
         btnLike.setOnClickListener(v -> {
             if (currentCollectionId == null) {
@@ -130,6 +156,13 @@ public class OutfitDetailActivity extends AppCompatActivity {
     private void updateLikeButtonUI() {
         btnLike.setColorFilter(isLiked ? COLOR_BLUE : COLOR_GRAY);
         btnLike.setImageResource(R.drawable.ic_heart_outline);
+        if (btnDislike != null) {
+            if (isLiked) {
+                btnDislike.setVisibility(View.GONE);
+            } else {
+                btnDislike.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     /**

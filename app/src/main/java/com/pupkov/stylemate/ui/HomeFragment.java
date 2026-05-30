@@ -25,6 +25,7 @@ import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
 import com.pupkov.stylemate.ui.new_select_test.NewSelectQ1Activity;
 import com.pupkov.stylemate.ui.dialogs.UniversalInfoDialog;
+import com.pupkov.stylemate.ui.dialogs.ConfirmDislikeDialog;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -199,6 +200,29 @@ public class HomeFragment extends Fragment {
                     intent.putStringArrayListExtra("item_ids", ids);
                 }
                 startActivity(intent);
+            }
+            // Получение ID образа и вызов диалога подтверждения
+            @Override
+            public void onDislikeClick(Outfit outfit, int position) {
+                ConfirmDislikeDialog dialog = new ConfirmDislikeDialog();
+                dialog.setListener(new ConfirmDislikeDialog.OnConfirmDislikeListener() {
+                    @Override
+                    public void onConfirmHide() {
+                        // Заглушка для Firebase
+                        Toast.makeText(getContext(), "Заглушка Firebase для образа: " + outfit.getId(), Toast.LENGTH_SHORT).show();
+                        if (gridAdapter != null) {
+                            gridAdapter.resetEditMode();
+                        }
+                    }
+                    @Override
+                    public void onCancelHide() {
+                        if (gridAdapter != null) {
+                            gridAdapter.resetEditMode(); // Возвращаем сетку в исходное яркое состояние
+                        }
+                    }
+                });
+                // Если вызываешь из Фрагмента — используй getParentFragmentManager(), если из Activity — getSupportFragmentManager()
+                dialog.show(getParentFragmentManager(), "ConfirmDislikeDialog");
             }
         });
         rvGrid.setAdapter(gridAdapter);

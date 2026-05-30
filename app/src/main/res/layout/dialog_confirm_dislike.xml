@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="24dp"
+    android:background="@android:color/white">
+
+    <TextView
+        android:id="@+id/tvConfirmMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Вы уверены, что хотите\nскрыть этот образ?"
+        android:gravity="center"
+        android:textColor="#000000"
+        android:textSize="18sp"
+        android:fontFamily="@font/ttcommons_regular"
+        android:layout_marginBottom="24dp"/>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnConfirmHide"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Скрыть"
+        android:textColor="#000000"
+        android:textAllCaps="false"
+        android:fontFamily="@font/ttcommons_regular"
+        android:textSize="16sp"
+        android:background="@drawable/bg_button_oval_light"
+        android:layout_marginBottom="12dp"/>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnCancelHide"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Отменить"
+        android:textColor="#FFFFFF"
+        android:textAllCaps="false"
+        android:fontFamily="@font/ttcommons_regular"
+        android:textSize="16sp"
+        android:background="@drawable/bg_button_oval_dark"/>
+
+</LinearLayout>

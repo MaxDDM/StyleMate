@@ -92,7 +92,7 @@ public class CollectionDetailActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
+        adapter.setLongClickEnabled(false);
         rvGrid.setAdapter(adapter);
     }
 
