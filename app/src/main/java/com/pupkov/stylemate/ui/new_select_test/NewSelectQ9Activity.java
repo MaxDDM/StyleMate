@@ -12,7 +12,6 @@ import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.ui.MainActivity;
 
 public class NewSelectQ9Activity extends AppCompatActivity {
-    // Индекс выбранной категории ситуаций
     int ans = -1;
 
     @Override
@@ -48,7 +47,6 @@ public class NewSelectQ9Activity extends AppCompatActivity {
             setRadioSelection(test4Button, test1Button, test2Button, test3Button);
         });
 
-        // Динамическое ветвление: перенаправляем на разные активности подкатегорий
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
                 Intent intent;
@@ -75,14 +73,12 @@ public class NewSelectQ9Activity extends AppCompatActivity {
             }
         });
 
-        // При отказе от выбора ситуации возвращаем пользователя на главный экран приложения
         skipButton.setOnClickListener(v -> {
             Intent intent = new Intent(NewSelectQ9Activity.this, MainActivity.class);
             startActivity(intent);
         });
     }
 
-    // Вспомогательный метод для имитации RadioGroup на ImageButton
     private void setRadioSelection(ImageButton selected, ImageButton... others) {
         selected.setBackgroundResource(R.drawable.ic_pic6);
         for (ImageButton other : others) {

@@ -13,7 +13,6 @@ import com.pupkov.stylemate.ui.MainActivity;
 import com.pupkov.stylemate.ui.SetSelectionNameActivity;
 
 public class NewSelectQ10Activity extends AppCompatActivity {
-    // Индекс выбранной конкретной ситуации внутри подкатегории
     int ans = -1;
 
     @Override
@@ -43,19 +42,15 @@ public class NewSelectQ10Activity extends AppCompatActivity {
             setRadioSelection(test3Button, test1Button, test2Button);
         });
 
-        // Финализация ветки: эта активность завершает опрос для текущего сценария
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
                 int situation_id = ans;
 
-                // Переходим к экрану ввода названия создаваемой подборки
                 Intent intent = new Intent(NewSelectQ10Activity.this, SetSelectionNameActivity.class);
 
-                // testNumber = 2 означает, что подборка генерируется по ситуации, а не по общему стилю
                 intent.putExtra("testNumber", 2);
                 intent.putExtra("situation_id", situation_id);
 
-                // Очищаем стек, чтобы пользователь не вернулся назад в тест кнопкой системы
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
@@ -70,7 +65,6 @@ public class NewSelectQ10Activity extends AppCompatActivity {
         });
     }
 
-    // Вспомогательный метод для визуального переключения состояния кнопок выбора
     private void setRadioSelection(ImageButton selected, ImageButton... others) {
         selected.setBackgroundResource(R.drawable.ic_pic6);
         for (ImageButton other : others) {

@@ -17,9 +17,6 @@ import com.pupkov.stylemate.model.Outfit;
 
 import java.util.ArrayList;
 
-/**
- * Экран содержимого конкретной папки с сохраненными образами.
- */
 public class CollectionDetailActivity extends AppCompatActivity {
 
     private CollectionDetailViewModel viewModel;
@@ -54,33 +51,27 @@ public class CollectionDetailActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
     }
 
-    /**
-     * Настройка сетки (2 колонки с разной высотой элементов).
-     */
     private void setupRecyclerView() {
         StaggeredGridLayoutManager layoutManager =
                 new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
 
-        // Стратегия минимизации разрывов и пропусков при динамической перерисовке картинок разной высоты
         layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
         rvGrid.setLayoutManager(layoutManager);
 
         adapter = new OutfitAdapter(this, new ArrayList<>(), new OutfitAdapter.OnOutfitClickListener() {
             @Override
             public void onHeartClick(Outfit outfit, int position) {
-                // Мгновенное удаление образа из этой подборки (снятие лайка)
                 viewModel.removeOutfit(outfit.getId());
             }
 
             @Override
             public void onImageClick(Outfit outfit) {
-                // Формирование Intent для перехода на экран детального просмотра с передачей плоского списка ID вещей
                 Intent intent = new Intent(CollectionDetailActivity.this, OutfitDetailActivity.class);
                 intent.putExtra("outfit_id", outfit.getId());
                 intent.putExtra("image_url", outfit.getImageUrl());
                 intent.putExtra("style", outfit.getStyle());
                 intent.putExtra("season", outfit.getFilter_season());
-                intent.putExtra("is_liked", true); // Внутри папки избранного образ по определению лайкнут
+                intent.putExtra("is_liked", true);
 
                 String currentCollectionId = getIntent().getStringExtra("COLLECTION_ID");
                 intent.putExtra("collection_id", currentCollectionId);
@@ -96,9 +87,6 @@ public class CollectionDetailActivity extends AppCompatActivity {
         rvGrid.setAdapter(adapter);
     }
 
-    /**
-     * Подписка на LiveData состояния коллекции (динамический заголовок, массив образов).
-     */
     private void observeViewModel() {
         viewModel.title.observe(this, newTitle -> tvTitle.setText(newTitle));
 
@@ -112,7 +100,6 @@ public class CollectionDetailActivity extends AppCompatActivity {
             if (msg != null) Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
         });
 
-        // Наблюдатель за событием удаления папки: закрывает экран, если репозиторий подтвердил удаление
         viewModel.closeScreenEvent.observe(this, shouldClose -> {
             if (shouldClose) finish();
         });
@@ -121,7 +108,6 @@ public class CollectionDetailActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Принудительный перезапрос данных из Firebase при возврате на экран (для синхронизации лайков)
         if (viewModel != null) {
             viewModel.refresh();
         }

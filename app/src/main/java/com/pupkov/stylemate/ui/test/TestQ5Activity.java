@@ -57,21 +57,18 @@ public class TestQ5Activity extends AppCompatActivity {
         });
 
         test6Button.setOnClickListener(v -> {
-            ans = 6; // Вариант "Не определился"
+            ans = 6;
             setSelections(test6Button, test1Button, test2Button, test3Button, test4Button, test5Button);
         });
 
         nextButton.setOnClickListener(v -> {
-            // Тест завершен: очищаем локальный статус прохождения первого теста
             ActiveUserInfo.setDefaults("isTest1", "", TestQ5Activity.this);
 
             if (ans != -1) {
                 Intent intent = new Intent(TestQ5Activity.this, SetSelectionNameActivity.class);
 
-                // Очищаем стек активностей, чтобы нельзя было вернуться назад к вопросам теста
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                // Передаем маркер теста, выбранный ответ и флаг того, что вопрос НЕ пропущен
                 intent.putExtra("testNumber", 1);
                 intent.putExtra("ans", ans);
                 intent.putExtra("notSkip", 1);
@@ -84,12 +81,10 @@ public class TestQ5Activity extends AppCompatActivity {
         });
 
         skipButton.setOnClickListener(v -> {
-            // При пропуске также сбрасываем локальный статус прохождения теста
             ActiveUserInfo.setDefaults("isTest1", "", TestQ5Activity.this);
 
             Intent intent = new Intent(TestQ5Activity.this, SetSelectionNameActivity.class);
 
-            // Очищаем стек и передаем флаг пропуска (notSkip = 0) без передачи индекса ответа
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.putExtra("testNumber", 1);
             intent.putExtra("notSkip", 0);
@@ -99,7 +94,6 @@ public class TestQ5Activity extends AppCompatActivity {
         });
     }
 
-    // Вспомогательный метод для изменения графического состояния выбранной кнопки и сброса остальных
     private void setSelections(ImageButton selected, ImageButton... others) {
         selected.setBackgroundResource(R.drawable.ic_pic6);
         for (ImageButton other : others) {

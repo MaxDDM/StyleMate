@@ -1,17 +1,28 @@
 package com.pupkov.stylemate.ui;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
+import static com.pupkov.stylemate.model.Resource.Status.ERROR;
+import static com.pupkov.stylemate.model.Resource.Status.LOADING;
+import static com.pupkov.stylemate.model.Resource.Status.SUCCESS;
+
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.pupkov.stylemate.R;
+import com.pupkov.stylemate.model.GoogleAuthHelper;
 import com.pupkov.stylemate.repository.ActiveUserInfo;
 import com.pupkov.stylemate.repository.UserRepository;
+import com.pupkov.stylemate.ui.dialogs.DialogSuccessReg;
 import com.pupkov.stylemate.ui.dialogs.PrivacyConsentDialog;
 import com.pupkov.stylemate.ui.dialogs.SkipRegDialog;
 import com.pupkov.stylemate.ui.test.TestQ1Activity;
@@ -21,13 +32,14 @@ import org.apache.commons.validator.routines.EmailValidator;
 public class AuthActivity extends AppCompatActivity {
     UserRepository repo = new UserRepository();
 
+    private GoogleAuthHelper authHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.auth);
 
-        // Проверка состояния приложения: если не пройден первый тест — сразу перенаправляем на первый вопрос
         String isTest1 = ActiveUserInfo.getDefaults("isTest1", this);
         if (isTest1 != null && !isTest1.isEmpty()) {
             Intent intent = new Intent(AuthActivity.this, TestQ1Activity.class);
@@ -35,7 +47,6 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
-        // Проверка авторизации: если сессия активна, переходим на главный экран
         String isAuthorized = ActiveUserInfo.getDefaults("isRegistered", this);
         if (isAuthorized != null) {
             Intent intent = new Intent(AuthActivity.this, MainActivity.class);
@@ -43,13 +54,44 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
+        authHelper = new GoogleAuthHelper(this);
+
         EditText email = findViewById(R.id.emailAuth);
         EditText password = findViewById(R.id.passwordAuth);
         ImageButton authButton = findViewById(R.id.enterAuthButton);
         ImageButton switchToRegButton = findViewById(R.id.switchToRegButton);
         ImageButton skipButton = findViewById(R.id.skipAuthButton);
+        ImageButton googleAuthButton = findViewById(R.id.googleAuth);
 
-        // Попытка авторизации с предварительной проверкой соглашения политики
+        googleAuthButton.setOnClickListener(v -> {
+            authHelper.signIn(new GoogleAuthHelper.AuthCallback() {
+                @Override
+                public void onSuccess(String idToken, String email, String displayName) {
+                    repo.googleReg("auth", displayName, "", email, "", "", idToken).observe(AuthActivity.this, resource -> {
+                        switch(resource.status) {
+                            case LOADING:
+                                Toast.makeText(AuthActivity.this, "Идёт процесс авторизации", Toast.LENGTH_SHORT).show();
+                                break;
+                            case SUCCESS:
+                                ActiveUserInfo.setDefaults("isRegistered", repo.getUID(), AuthActivity.this);
+
+                                Intent intent = new Intent(AuthActivity.this, MainActivity.class);
+                                startActivity(intent);
+                                break;
+                            case ERROR:
+                                Toast.makeText(AuthActivity.this, resource.message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(AuthActivity.this,
+                            "Ошибка: " + message, Toast.LENGTH_LONG).show();
+                }
+            });
+        });
+
         authButton.setOnClickListener(v -> {
             String emailStr = email.getText().toString();
             String passwordStr = password.getText().toString();
@@ -70,13 +112,11 @@ public class AuthActivity extends AppCompatActivity {
             }
         });
 
-        // Переход на экран регистрации
         switchToRegButton.setOnClickListener(v -> {
             Intent intent = new Intent(AuthActivity.this, RegisterActivity.class);
             startActivity(intent);
         });
 
-        // Гостевой вход (пропуск авторизации) с проверкой соглашения политики конфиденциальности
         skipButton.setOnClickListener(v -> {
             if (isPrivacyAccepted()) {
                 SkipRegDialog dialog = new SkipRegDialog();
@@ -100,7 +140,6 @@ public class AuthActivity extends AppCompatActivity {
 
     }
 
-    // Процедура авторизации пользователя через Firebase репозиторий
     private void performLogin(String emailStr, String passwordStr) {
         EmailValidator validator = EmailValidator.getInstance();
 

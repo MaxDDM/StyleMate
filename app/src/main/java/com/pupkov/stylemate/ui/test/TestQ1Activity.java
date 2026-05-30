@@ -17,18 +17,15 @@ import com.pupkov.stylemate.model.TestViewModel;
 public class TestQ1Activity extends AppCompatActivity {
     private TestViewModel viewModel;
 
-    // Индекс выбранного ответа (-1, если ничего не выбрано)
     int ans = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Фиксируем в локальных настройках старт тестирования
         ActiveUserInfo.setDefaults("isTest1", "yes", TestQ1Activity.this);
 
         viewModel = new ViewModelProvider(this).get(TestViewModel.class);
         super.onCreate(savedInstanceState);
 
-        // Проверка валидности сессии в Firebase: если она истекла, выбрасываем на авторизацию
         viewModel.getSessionValidState().observe(this, isValid -> {
             if (!isValid) {
                 Toast.makeText(this, "Время сессии истекло. Пожалуйста, зарегистрируйтесь.", Toast.LENGTH_LONG).show();
@@ -98,7 +95,6 @@ public class TestQ1Activity extends AppCompatActivity {
 
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
-                // Передаем ответ в ViewModel для последующего сохранения в репозиторий
                 viewModel.processAnswer(1, ans);
 
                 Intent intent = new Intent(TestQ1Activity.this, TestQ2Activity.class);
@@ -109,7 +105,6 @@ public class TestQ1Activity extends AppCompatActivity {
         });
 
         skipButton.setOnClickListener(v -> {
-            // Пропуск вопроса: сохраняем только временную метку прогресса без начисления баллов
             viewModel.saveProgressOnly();
 
             Intent intent = new Intent(TestQ1Activity.this, TestQ2Activity.class);

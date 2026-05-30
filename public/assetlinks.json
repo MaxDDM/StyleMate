@@ -1,0 +1,13 @@
+[
+  {
+    "relation": [ "delegate_permission/common.handle_all_urls" ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.pupkov.stylemate",
+      "sha256_cert_fingerprints": [
+        "6E:0C:16:65:94:CF:E8:48:7C:2C:40:FF:82:8A:F5:E9:9B:A6:26:2D:9E:AC:53:5B:DA:F7:3B:26:3C:32:F8:4D",
+        "6E:0C:16:65:94:CF:E8:48:7C:2C:40:FF:82:8A:F5:E9:9B:A6:26:2D:9E:AC:53:5B:DA:F7:3B:26:3C:32:F8:4D"
+      ]
+    }
+  }
+]

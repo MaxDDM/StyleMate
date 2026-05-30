@@ -12,9 +12,6 @@ import com.pupkov.stylemate.repository.UserCollectionsRepository;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ViewModel для управления состоянием экрана лайкнутых образов конкретной коллекции.
- */
 public class CollectionDetailViewModel extends AndroidViewModel {
 
     private final UserCollectionsRepository repository;
@@ -37,9 +34,6 @@ public class CollectionDetailViewModel extends AndroidViewModel {
         repository = new UserCollectionsRepository();
     }
 
-    /**
-     * Инициализация идентификаторов и первичная загрузка сохраненных образов.
-     */
     public void init(String id, String initialTitle) {
         this.collectionId = id;
 
@@ -50,16 +44,10 @@ public class CollectionDetailViewModel extends AndroidViewModel {
         loadOutfits();
     }
 
-    /**
-     * Принудительное обновление контента при возврате на экран.
-     */
     public void refresh() {
         loadOutfits();
     }
 
-    /**
-     * Асинхронный запрос списка избранных образов, привязанных к данной коллекции.
-     */
     private void loadOutfits() {
         if (collectionId == null) return;
 
@@ -67,7 +55,6 @@ public class CollectionDetailViewModel extends AndroidViewModel {
             @Override
             public void onDataLoaded(List<Outfit> data) {
                 _outfits.setValue(data);
-                // Автоматическое закрытие экрана, если в папке не осталось элементов
                 if (data == null || data.isEmpty()) {
                     _closeScreenEvent.setValue(true);
                 }
@@ -80,9 +67,6 @@ public class CollectionDetailViewModel extends AndroidViewModel {
         });
     }
 
-    /**
-     * Удаление образа из коллекции
-     */
     public void removeOutfit(String outfitId) {
         List<Outfit> currentList = _outfits.getValue();
         if (currentList == null) return;
@@ -101,10 +85,8 @@ public class CollectionDetailViewModel extends AndroidViewModel {
         if (removed) {
             _outfits.setValue(updatedList);
 
-            // Синхронизация с Firebase
             repository.toggleLikeInFirebase(getApplication(), collectionId, outfitId, false);
 
-            // Если коллекция опустела в результате удаления, генерируется ивент на закрытие Activity
             if (updatedList.isEmpty()) {
                 _closeScreenEvent.setValue(true);
             }

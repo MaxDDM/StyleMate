@@ -13,10 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * ViewModel для управления состоянием экрана деталей образа.
- * Отвечает за загрузку вещей, генерацию заголовков и расчет стоимости.
- */
 public class OutfitDetailViewModel extends AndroidViewModel {
 
     private final ItemsRepository repository;
@@ -37,9 +33,6 @@ public class OutfitDetailViewModel extends AndroidViewModel {
         collectionsRepository = new UserCollectionsRepository();
     }
 
-    /**
-     * Первичная инициализация состояния экрана на основе данных, полученных из Intent.
-     */
     public void init(Outfit outfit) {
         if (outfit == null) return;
 
@@ -47,32 +40,22 @@ public class OutfitDetailViewModel extends AndroidViewModel {
         loadItems(outfit.getItems());
     }
 
-    /**
-     * Синхронизация статуса лайка с удаленным репозиторием Firebase.
-     */
     public void toggleLike(String collectionId, String outfitId, boolean isLiked) {
         collectionsRepository.toggleLikeInFirebase(getApplication(), collectionId, outfitId, isLiked);
     }
 
-    /**
-     * Формирование читаемого заголовка образа с локализацией стиля на русский язык.
-     */
     private void generateTitle(String season, String style) {
         String styleRu = convertStyle(style);
         String result = "Образ " + season + " в " + styleRu + " стиле";
         _title.setValue(result);
     }
 
-    /**
-     * Асинхронный запрос списка вещей из Firebase по их уникальным идентификаторам.
-     */
     private void loadItems(Map<String, Boolean> itemsMap) {
         if (itemsMap == null || itemsMap.isEmpty()) {
             _items.setValue(new ArrayList<>());
             return;
         }
 
-        // Извлечение ID вещей из Map структуры Firebase для передачи плоского списка в репозиторий
         List<String> ids = new ArrayList<>(itemsMap.keySet());
 
         repository.getItemsByIds(ids, new ItemsRepository.ItemsCallback() {
@@ -88,14 +71,10 @@ public class OutfitDetailViewModel extends AndroidViewModel {
         });
     }
 
-    /**
-     * Вычисление суммарной стоимости всех вещей в образе.
-     */
     private void calculateTotalPrice(List<Item> items) {
         int total = 0;
         for (Item item : items) {
             if (item.getPrice() != null) {
-                // Регулярное выражение удаляет всё, кроме цифр, для безопасного парсинга (например, "2 399 Р" -> "2399")
                 String cleanPrice = item.getPrice().replaceAll("[^0-9]", "");
                 try {
                     total += Integer.parseInt(cleanPrice);
@@ -107,9 +86,6 @@ public class OutfitDetailViewModel extends AndroidViewModel {
         _totalPrice.setValue(total + " Р");
     }
 
-    /**
-     * Маппинг строковых ключей стилей из базы данных в склоняемые русскоязычные эквиваленты.
-     */
     private String convertStyle(String styleKey) {
         if (styleKey == null) return "любом";
         switch (styleKey.toLowerCase()) {

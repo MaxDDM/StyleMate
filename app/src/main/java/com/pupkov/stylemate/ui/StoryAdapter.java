@@ -18,7 +18,6 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHol
     private final List<Story> stories;
     private final OnStoryClickListener clickListener;
 
-    // Интерфейс для обработки кликов во фрагменте
     public interface OnStoryClickListener {
         void onStoryClick(Story story);
     }
@@ -46,7 +45,6 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHol
         return stories != null ? stories.size() : 0;
     }
 
-    // Метод для обновления данных из LiveData
     public void updateStories(List<Story> newStories) {
         this.stories.clear();
         if (newStories != null) {
@@ -64,15 +62,12 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHol
         }
 
         public void bind(final Story story, final OnStoryClickListener listener) {
-            // Загружаем картинку через Glide
-            // Благодаря ShapeableImageView в XML, трансформация в круг произойдет автоматически через стили
             Glide.with(itemView.getContext())
                     .load(story.getImageUrl())
-                    .placeholder(android.R.color.darker_gray) // Временная заглушка при загрузке
-                    .error(android.R.color.holo_red_light)    // Если ссылка битая
+                    .placeholder(android.R.color.darker_gray)
+                    .error(android.R.color.holo_red_light)
                     .into(ivStoryImage);
 
-            // Обработка нажатия на историю
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onStoryClick(story);

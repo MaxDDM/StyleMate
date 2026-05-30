@@ -22,17 +22,6 @@ import com.pupkov.stylemate.ui.RegisterActivity;
 import com.pupkov.stylemate.ui.test.TestQ1Activity;
 
 public class VerifyEmailDialog extends DialogFragment {
-    // Создаем интерфейс специально для этого окна
-    public interface OnVerifyListener {
-        void onCheckStatus();
-    }
-
-    private OnVerifyListener listener;
-
-    // Метод для установки слушателя
-    public void setListener(OnVerifyListener listener) {
-        this.listener = listener;
-    }
 
     @Nullable
     @Override
@@ -56,21 +45,9 @@ public class VerifyEmailDialog extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        Button btnContinue = view.findViewById(R.id.btnContinueVerify);
         Button btnRepeat = view.findViewById(R.id.btnRepeatVerify);
 
-
-        btnContinue.setOnClickListener(v -> {
-            // вызываем слушатель перед закрытием
-            if (listener != null) {
-                listener.onCheckStatus();
-            }
-            dismiss();
-        });
-
         btnRepeat.setOnClickListener(v -> {
-            RegisterActivity obj = new RegisterActivity();
-
             assert getArguments() != null;
             String email = getArguments().getString("email");
             String password = getArguments().getString("password");

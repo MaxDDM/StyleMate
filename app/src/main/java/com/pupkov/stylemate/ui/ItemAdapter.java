@@ -13,17 +13,11 @@ import com.pupkov.stylemate.model.Item;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Адаптер для горизонтального списка товаров (вещей), входящих в выбранный образ.
- */
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
 
     private List<Item> items = new ArrayList<>();
     private final OnItemClickListener listener;
 
-    /**
-     * Интерфейс для обратного вызова при клике на товар
-     */
     public interface OnItemClickListener {
         void onItemClick(String url);
     }
@@ -32,12 +26,9 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         this.listener = listener;
     }
 
-    /**
-     * Обновление данных в адаптере
-     */
     public void updateList(List<Item> newItems) {
         this.items = newItems;
-        notifyDataSetChanged(); // Полная перерисовка списка при изменении данных
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -57,7 +48,6 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         holder.tvPrice.setText(item.getPrice());
         holder.tvMaterial.setText(item.getMaterial());
 
-        // Передача ссылки во внешний обработчик при клике на карточку товара
         holder.itemView.setOnClickListener(v -> {
             if (listener != null && item.getLink() != null && !item.getLink().isEmpty()) {
                 listener.onItemClick(item.getLink());
@@ -70,9 +60,6 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         return items.size();
     }
 
-    /**
-     * Кэш для View-компонентов отдельной карточки товара, снижающий нагрузку при скролле
-     */
     static class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvPrice, tvBrand, tvMaterial;
 

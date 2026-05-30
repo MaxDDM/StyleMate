@@ -12,7 +12,6 @@ import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.ui.test.TestQ1Activity;
 
 public class NewSelectQ1Activity extends AppCompatActivity {
-    // Индекс выбора: 1 — по ситуации, 2 — по стилю
     int ans = -1;
 
     @Override
@@ -38,15 +37,12 @@ public class NewSelectQ1Activity extends AppCompatActivity {
             test2Button.setBackgroundResource(R.drawable.ic_pic6);
         });
 
-        // Главная развилка: направляем пользователя по нужному сценарию тестирования
         nextButton.setOnClickListener(v -> {
             if (ans != -1) {
                 if (ans == 1) {
-                    // Переход к выбору конкретных ситуаций
                     Intent intent = new Intent(NewSelectQ1Activity.this, NewSelectQ9Activity.class);
                     startActivity(intent);
                 } else {
-                    // Возврат к стандартному тесту определения общего стиля
                     Intent intent = new Intent(NewSelectQ1Activity.this, TestQ1Activity.class);
                     startActivity(intent);
                 }
@@ -55,7 +51,6 @@ public class NewSelectQ1Activity extends AppCompatActivity {
             }
         });
 
-        // При пропуске по умолчанию отправляем на сценарий выбора ситуаций
         skipButton.setOnClickListener(v -> {
             Intent intent = new Intent(NewSelectQ1Activity.this, NewSelectQ9Activity.class);
             startActivity(intent);

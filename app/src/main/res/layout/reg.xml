@@ -146,6 +146,14 @@
         />
 
     <ImageButton
+        android:id="@+id/google"
+        android:layout_width="344dp"
+        android:layout_height="90dp"
+        android:layout_marginTop="-30dp"
+        android:background="@drawable/google"
+        android:layout_gravity="center_horizontal"/>
+
+    <ImageButton
         android:id="@+id/skipRegButton"
         android:layout_width="344dp"
         android:layout_height="90dp"
