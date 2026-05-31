@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/ic_pic4"
+    android:background="@drawable/ic_pic53"
     tools:context=".ui.MainActivity">
 
     <TextView
@@ -17,7 +17,7 @@
         android:text="Какие цвета пробладают в вашем гареробе?"
         android:textSize="30sp"
         android:textAlignment="viewStart"
-        android:textColor="@color/black"/>
+        android:textColor="@color/white"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,7 +32,7 @@
             android:layout_height="33dp"
             android:layout_marginStart="0dp"
             android:layout_marginTop="0dp"
-            android:background="@drawable/bg_button_oval_light"
+            android:background="@drawable/ic_pic5"
             android:foregroundTint="@color/white"/>
 
         <TextView
@@ -44,7 +44,7 @@
             android:text="Тёмные и приглушённые"
             android:textSize="19sp"
             android:textAlignment="viewStart"
-            android:textColor="@color/black"/>
+            android:textColor="@color/white"/>
     </LinearLayout>
 
 
@@ -81,7 +81,7 @@
             android:text="Яркие"
             android:textSize="19sp"
             android:textAlignment="viewStart"
-            android:textColor="@color/black"/>
+            android:textColor="@color/white"/>
     </LinearLayout>
 
     <ImageButton
@@ -117,7 +117,7 @@
             android:text="Нейтральные и светлые"
             android:textSize="19sp"
             android:textAlignment="viewStart"
-            android:textColor="@color/black"/>
+            android:textColor="@color/white"/>
     </LinearLayout>
 
     <ImageButton
@@ -153,7 +153,7 @@
             android:text="Земляные тона"
             android:textSize="19sp"
             android:textAlignment="viewStart"
-            android:textColor="@color/black"/>
+            android:textColor="@color/white"/>
     </LinearLayout>
 
     <ImageButton
@@ -189,7 +189,7 @@
             android:text="Цвет не важен - ношу всё"
             android:textSize="19sp"
             android:textAlignment="viewStart"
-            android:textColor="@color/black"/>
+            android:textColor="@color/white"/>
     </LinearLayout>
 
     <ImageButton

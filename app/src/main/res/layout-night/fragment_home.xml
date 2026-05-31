@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:paddingTop="16dp">
+
+    <ImageButton
+        android:id="@+id/btnList"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_glass_circle"
+        android:src="@drawable/filter_icon"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ImageButton
+        android:id="@+id/btnDelete"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_glass_circle"
+        android:contentDescription="Удалить"
+        android:src="@drawable/ic_delete"
+        app:layout_constraintBottom_toBottomOf="@+id/btnList"
+        app:layout_constraintEnd_toStartOf="@+id/btnEdit"
+        app:layout_constraintTop_toTopOf="@+id/btnList"
+        app:tint="#555555" />
+
+    <ImageButton
+        android:id="@+id/btnEdit"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/bg_glass_circle"
+        android:contentDescription="Редактировать"
+        android:src="@drawable/ic_edit_small"
+        app:layout_constraintBottom_toBottomOf="@+id/btnList"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnList"
+        app:tint="#555555" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvStories"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:paddingHorizontal="8dp"
+        android:orientation="horizontal"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintTop_toBottomOf="@+id/btnList"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_story" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvOutfitsGrid"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="5dp"
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rvStories"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+
+    <View
+        android:id="@+id/vOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#00000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clEmptyState"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        android:background="@drawable/bg_bottom_sheet_gradient"
+
+        android:visibility="gone"
+        android:elevation="10dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvEmptyMessage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginBottom="32dp"
+            android:fontFamily="@font/ttcommons_regular"
+            android:gravity="center"
+            android:text="У вас больше нет подборок\nПройдите тест повторно, чтобы получить рекомендации"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toTopOf="@+id/btnContinueTest"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.5" />
+
+        <ImageButton
+            android:id="@+id/btnContinueTest"
+            android:layout_width="344dp"
+            android:layout_height="90dp"
+            android:layout_marginBottom="-30dp"
+
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_pic7"
+
+            app:layout_constraintBottom_toTopOf="@+id/btnLogout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+
+        <ImageButton
+            android:id="@+id/btnLogout"
+            android:layout_width="344dp"
+            android:layout_height="90dp"
+            android:layout_marginBottom="40dp"
+
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/logout_glass_button"
+
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvCollections"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:clipToOutline="true"
+        android:elevation="12dp"
+        android:background="@android:color/transparent"
+        android:overScrollMode="never"
+        app:layout_constraintEnd_toStartOf="@+id/btnDelete"
+        app:layout_constraintStart_toEndOf="@+id/btnList"
+        app:layout_constraintTop_toTopOf="@+id/btnList"
+        tools:itemCount="1"
+        tools:listitem="@layout/item_collection_name_list" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
