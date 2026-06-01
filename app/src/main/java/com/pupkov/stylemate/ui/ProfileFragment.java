@@ -1,6 +1,7 @@
 package com.pupkov.stylemate.ui;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -17,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.pupkov.stylemate.R;
 import com.pupkov.stylemate.model.ProfileViewModel;
+import com.pupkov.stylemate.repository.ActiveUserInfo;
 
 import java.util.ArrayList;
 
@@ -96,6 +99,21 @@ public class ProfileFragment extends Fragment {
             btnSettings.setOnClickListener(v -> {
                 Intent intent = new Intent(requireContext(), SettingsActivity.class);
                 startActivity(intent);
+            });
+        }
+
+        View btnChangeTheme = view.findViewById(R.id.btnChangeTheme);
+        if (btnChangeTheme != null) {
+            btnChangeTheme.setOnClickListener(v -> {
+                int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+                if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                    ActiveUserInfo.setDefaults("theme", "", requireContext());
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                    ActiveUserInfo.setDefaults("theme", "night", requireContext());
+                }
             });
         }
     }
