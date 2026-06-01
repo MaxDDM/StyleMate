@@ -52,8 +52,6 @@ public class SetSelectionNameActivity extends AppCompatActivity {
                     });
 
                     viewModel.getWinnerStyle().observe(this, winnerStyleIndex -> {
-                        Toast.makeText(this, "Тест завершен! Победил стиль №: " + winnerStyleIndex, Toast.LENGTH_LONG).show();
-
                         Intent intent = new Intent(SetSelectionNameActivity.this, MainActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
