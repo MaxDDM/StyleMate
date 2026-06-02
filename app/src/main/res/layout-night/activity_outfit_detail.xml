@@ -47,7 +47,7 @@
                     android:gravity="center"
                     android:paddingHorizontal="24dp"
                     android:text="7896 Р"
-                    android:textColor="#333333"
+                    android:textColor="@color/white"
                     android:textSize="20sp"
                     android:textStyle="bold"/>
 
@@ -58,7 +58,7 @@
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="20dp"
                     android:background="@drawable/bg_glass_circle"
-                    android:src="@drawable/ic_back_arrow"
+                    android:src="@drawable/ic_back_arr_dark"
                     android:padding="10dp"
                     android:scaleType="fitCenter"/>
 
@@ -70,7 +70,7 @@
                     android:layout_marginTop="20dp"
                     android:layout_marginEnd="20dp"
                     android:background="@drawable/bg_glass_circle"
-                    android:src="@drawable/ic_heart_outline"
+                    android:src="@drawable/ic_heart_outline_dark"
                     android:padding="10dp"
                     android:scaleType="fitCenter"/>
 
@@ -82,7 +82,7 @@
                     android:layout_marginTop="76dp"
                     android:layout_marginEnd="20dp"
                     android:background="@drawable/bg_glass_circle_dark"
-                    android:src="@drawable/ic_eye_closed_gray"
+                    android:src="@drawable/ic_eye_closed"
                     android:padding="10dp"
                     android:scaleType="fitCenter"/>
 
@@ -93,7 +93,7 @@
                     android:layout_marginBottom="20dp"
                     android:layout_marginEnd="20dp"
                     android:background="@drawable/bg_glass_circle"
-                    android:src="@drawable/share"
+                    android:src="@drawable/ic_button_share_dark"
                     android:padding="10dp"
                     android:layout_gravity="bottom|end"
                     android:scaleType="fitCenter"/>

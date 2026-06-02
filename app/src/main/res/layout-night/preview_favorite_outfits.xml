@@ -22,7 +22,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#FFFFFF">
+            android:background="@color/black">
 
             <ImageView
                 android:id="@+id/img1"
@@ -30,7 +30,7 @@
                 android:layout_height="0dp"
                 android:layout_margin="3dp"
                 android:scaleType="centerCrop"
-                android:background="#EEEEEE"
+                android:background="#5C5C5C"
                 android:src="#E0E0E0"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -43,7 +43,7 @@
                 android:layout_height="0dp"
                 android:layout_margin="3dp"
                 android:scaleType="centerCrop"
-                android:background="#EEEEEE"
+                android:background="#5C5C5C"
                 android:src="#E0E0E0"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/guideline_ver"
@@ -56,7 +56,7 @@
                 android:layout_height="0dp"
                 android:layout_margin="3dp"
                 android:scaleType="centerCrop"
-                android:background="#EEEEEE"
+                android:background="#5C5C5C"
                 android:src="#E0E0E0"
                 app:layout_constraintTop_toBottomOf="@+id/guideline_hor"
                 app:layout_constraintStart_toStartOf="parent"
@@ -69,7 +69,7 @@
                 android:layout_height="0dp"
                 android:layout_margin="3dp"
                 android:scaleType="centerCrop"
-                android:background="#EEEEEE"
+                android:background="#5C5C5C"
                 android:src="#E0E0E0"
                 app:layout_constraintTop_toBottomOf="@+id/guideline_hor"
                 app:layout_constraintStart_toEndOf="@+id/guideline_ver"
@@ -100,7 +100,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginStart="4dp"
         tools:text="На спорте 💪"
-        android:textColor="#000000"
+        android:textColor="@color/white"
         android:textSize="16sp"
         android:fontFamily="@font/ttcommons_regular"
         app:layout_constraintTop_toBottomOf="@id/cardContainer"

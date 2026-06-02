@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import androidx.core.content.ContextCompat;
 
 import com.pupkov.stylemate.R;
 
@@ -22,9 +23,6 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     private boolean isExpanded = false;
     private String selectedName;
-
-    private final int COLOR_BLUE = Color.parseColor("#3D7DFF");
-    private final int COLOR_GRAY = Color.parseColor("#595959");
 
     public interface OnItemClickListener {
         void onItemClick(String name);
@@ -85,26 +83,29 @@ public class CollectionsNameAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
         else {
             ItemViewHolder itemHolder = (ItemViewHolder) holder;
+            android.content.Context context = itemHolder.itemView.getContext();
+            int colorTextDynamic = ContextCompat.getColor(context, R.color.collection_text);
+            int colorBlue = Color.parseColor("#3D7DFF");
             String currentItemName;
 
             if (!isExpanded) {
                 currentItemName = selectedName;
-                itemHolder.tvCollectionName.setTextColor(COLOR_GRAY);
+                itemHolder.tvCollectionName.setTextColor(colorTextDynamic);
                 itemHolder.arrowContainer.setVisibility(View.VISIBLE);
-                itemHolder.ivArrow.setColorFilter(COLOR_GRAY);
+                itemHolder.ivArrow.setColorFilter(colorTextDynamic);
                 itemHolder.ivArrow.setRotation(0f);
             } else {
                 currentItemName = collectionNames.get(position);
 
                 if (currentItemName.equals(selectedName)) {
-                    itemHolder.tvCollectionName.setTextColor(COLOR_BLUE);
+                    itemHolder.tvCollectionName.setTextColor(colorBlue);
                 } else {
-                    itemHolder.tvCollectionName.setTextColor(COLOR_GRAY);
+                    itemHolder.tvCollectionName.setTextColor(colorTextDynamic);
                 }
 
                 if (position == 0) {
                     itemHolder.arrowContainer.setVisibility(View.VISIBLE);
-                    itemHolder.ivArrow.setColorFilter(COLOR_BLUE);
+                    itemHolder.ivArrow.setColorFilter(colorBlue);
                     itemHolder.ivArrow.setRotation(180f);
                 } else {
                     itemHolder.arrowContainer.setVisibility(View.GONE);

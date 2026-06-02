@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -31,7 +32,6 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
     private boolean isLongClickEnabled = true;
 
     private final int COLOR_BLUE = Color.parseColor("#3D7DFF");
-    private final int COLOR_GRAY = Color.parseColor("#5C5C5C");
 
     /**
      * Интерфейс обратного вызова для обработки пользовательских событий внутри элементов списка
@@ -86,12 +86,13 @@ public class OutfitAdapter extends RecyclerView.Adapter<OutfitAdapter.OutfitView
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .into(holder.imageView);
 
+        int colorTextDynamic = ContextCompat.getColor(context, R.color.collection_text);
         // Динамическое управление цветовым фильтром иконки добавления в избранное
         holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
         if (item.isLiked()) {
             holder.btnLike.setColorFilter(COLOR_BLUE);
         } else {
-            holder.btnLike.setColorFilter(COLOR_GRAY);
+            holder.btnLike.setColorFilter(colorTextDynamic);
         }
 
         // Логика отображения режима редактирования

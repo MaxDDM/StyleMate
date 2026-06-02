@@ -6,13 +6,16 @@
     android:layout_height="wrap_content"
     android:minHeight="44dp"
     android:paddingHorizontal="8dp"
-    android:background="?attr/selectableItemBackground"> <TextView
+    android:background="@color/collection_bg"
+    android:foreground="?attr/selectableItemBackground">
+
+    <TextView
     android:id="@+id/tvCollectionName"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:fontFamily="@font/ttcommons_regular"
     android:text="Название подборки"
-    android:textColor="@color/white"
+    android:textColor="@color/collection_text"
     android:textSize="20sp"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toStartOf="@+id/flArrowContainer"
@@ -32,7 +35,7 @@
             android:layout_width="14dp"
             android:layout_height="14dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_arrow_down"
+            android:src="@drawable/ic_arrow_down_dark"
             app:tint="#595959" />
     </FrameLayout>
 

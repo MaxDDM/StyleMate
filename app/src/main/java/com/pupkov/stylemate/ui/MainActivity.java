@@ -8,6 +8,7 @@ import android.content.Intent;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -93,15 +94,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateIcons(boolean isHomeActive) {
+        int activeColor = Color.parseColor("#3D5AFE");
+        int inactiveColor = ContextCompat.getColor(this, R.color.collection_text);
+
         if (isHomeActive) {
-            iconHome.setColorFilter(Color.parseColor("#3D5AFE"));
+            iconHome.setColorFilter(activeColor);
             bgHomeSelected.setVisibility(View.VISIBLE);
-            iconProfile.setColorFilter(Color.parseColor("#505050"));
+            iconProfile.setColorFilter(inactiveColor);
             bgProfileSelected.setVisibility(View.GONE);
         } else {
-            iconHome.setColorFilter(Color.parseColor("#505050"));
+            iconHome.setColorFilter(inactiveColor);
             bgHomeSelected.setVisibility(View.GONE);
-            iconProfile.setColorFilter(Color.parseColor("#3D5AFE"));
+            iconProfile.setColorFilter(activeColor);
             bgProfileSelected.setVisibility(View.VISIBLE);
         }
     }

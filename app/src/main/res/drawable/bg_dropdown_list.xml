@@ -2,9 +2,7 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
-    <!-- Белый цвет фона -->
-    <solid android:color="#FFFFFF"/>
+    <solid android:color="@color/collection_bg" />
 
-    <!-- Скругление углов (16dp как пример, можно больше/меньше) -->
     <corners android:radius="16dp"/>
 </shape>

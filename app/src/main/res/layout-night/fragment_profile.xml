@@ -49,8 +49,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_settings"
-            app:tint="#5C5C5C" />
+            android:src="@drawable/ic_settings_dark"/>
     </FrameLayout>
 
     <FrameLayout
@@ -68,8 +67,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="center"
-            android:src="@drawable/moon"
-            app:tint="#5C5C5C" />
+            android:src="@drawable/ic_theme_dark"/>
     </FrameLayout>
 
     <androidx.cardview.widget.CardView

@@ -47,7 +47,7 @@
                     android:gravity="center"
                     android:paddingHorizontal="24dp"
                     android:text="7896 Р"
-                    android:textColor="#333333"
+                    android:textColor="#616161"
                     android:textSize="20sp"
                     android:textStyle="bold"/>
 

@@ -65,7 +65,6 @@ public class OutfitDetailActivity extends AppCompatActivity {
     private boolean isLiked = false;
     private boolean isDisliked = false;
     private final int COLOR_BLUE = android.graphics.Color.parseColor("#3D7DFF");
-    private final int COLOR_GRAY = android.graphics.Color.parseColor("#5C5C5C");
     private final ItemsRepository repository = new ItemsRepository();
 
     @Override
@@ -161,8 +160,6 @@ public class OutfitDetailActivity extends AppCompatActivity {
 
                     ActiveUserInfo.setDefaults(prefKey, "true", this);
                 }
-            } else {
-                Toast.makeText(this, "Удалено из избранного", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -180,7 +177,10 @@ public class OutfitDetailActivity extends AppCompatActivity {
     }
 
     private void updateLikeButtonUI() {
-        btnLike.setColorFilter(isLiked ? COLOR_BLUE : COLOR_GRAY);
+        // Получаем динамический цвет (серый днем, белый ночью) вместо COLOR_GRAY
+        int inactiveColor = androidx.core.content.ContextCompat.getColor(this, R.color.collection_text);
+
+        btnLike.setColorFilter(isLiked ? COLOR_BLUE : inactiveColor);
         btnLike.setImageResource(R.drawable.ic_heart_outline);
         if (btnDislike != null) {
             if (isLiked) {
